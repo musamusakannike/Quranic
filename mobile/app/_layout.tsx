@@ -9,6 +9,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
+import { ThemeProvider } from "../lib/ThemeContext";
 
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -32,5 +33,9 @@ export default function RootLayout() {
     return null;
   }
 
-  return <Stack />;
+  return (
+    <ThemeProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ThemeProvider>
+  );
 }
