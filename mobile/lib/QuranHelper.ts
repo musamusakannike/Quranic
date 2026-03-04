@@ -1,4 +1,5 @@
 import quranDataRaw from "../docs/quran_optimized_array.json";
+import quranMetadataRaw from "../docs/quran_metadata_optimized.json";
 
 // Cast the imported JSON to an array of arrays of strings.
 // Note: Index 0 is null/undefined to allow 1-based indexing for chapters and verses.
@@ -10,6 +11,32 @@ export interface SearchResult {
   text: string;
 }
 
+export interface VerseMetadata {
+  line: number;
+  juz: number;
+  manzil: number;
+  page: number;
+  ruku: number;
+  maqra: number;
+  sajda: boolean | object;
+}
+
+export interface ChapterMetadata {
+  name: string;
+  englishname: string;
+  arabicname: string;
+  revelation: string;
+  verses: (VerseMetadata | null)[];
+}
+
+export interface QuranMetadata {
+  total_verses: number;
+  chapters: (ChapterMetadata | null)[];
+}
+
+// Cast JSON to typed metadata structures
+const quranMetadata = quranMetadataRaw as unknown as QuranMetadata;
+
 /**
  * Get a specific verse's text instantly (O(1) Time Complexity).
  *
@@ -20,6 +47,45 @@ export interface SearchResult {
 export const getVerseText = (chapter: number, verse: number): string | null => {
   try {
     return quranData[chapter][verse] || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Get metadata for a specific verse instantly (O(1) Time Complexity).
+ *
+ * @param chapter - The chapter number (1-114)
+ * @param verse - The verse number (from 1)
+ * @returns Metadata object for the verse, or null if it doesn't exist
+ */
+export const getVerseMetadata = (
+  chapter: number,
+  verse: number,
+): VerseMetadata | null => {
+  try {
+    const chapterMeta = quranMetadata.chapters[chapter];
+    return chapterMeta ? chapterMeta.verses[verse] || null : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Get metadata for a specific chapter instantly (O(1) Time Complexity).
+ * Note: This returns the chapter details (name, revelation info, etc.) without the large verses layout.
+ *
+ * @param chapter - The chapter number (1-114)
+ * @returns Metadata object for the chapter, or null if it doesn't exist
+ */
+export const getChapterMetadata = (
+  chapter: number,
+): Omit<ChapterMetadata, "verses"> | null => {
+  try {
+    const chapterMeta = quranMetadata.chapters[chapter];
+    if (!chapterMeta) return null;
+    const { verses, ...metaWithoutVerses } = chapterMeta;
+    return metaWithoutVerses;
   } catch (error) {
     return null;
   }
@@ -49,6 +115,13 @@ export const getVersesCount = (chapter: number): number => {
 };
 
 /**
+ * Get overall metadata like total verses overall.
+ */
+export const getTotalQuranVerses = (): number => {
+  return quranMetadata.total_verses;
+};
+
+/**
  * Search the entire Quran for a specific term.
  * Searching 6000+ string array elements in JS is very fast and should only take ~2-5ms in React Native.
  *
@@ -59,7 +132,7 @@ export const searchQuran = (searchTerm: string): SearchResult[] => {
   if (!searchTerm || searchTerm.trim() === "") return [];
 
   const results: SearchResult[] = [];
-  const normalizedTerm = searchTerm.toLowerCase(); // Note: Arabic might not need toLowerCase(), but good for standard text.
+  const normalizedTerm = searchTerm.toLowerCase();
 
   quranData.forEach((chapterVerses, chapterIndex) => {
     if (!chapterVerses) return;
