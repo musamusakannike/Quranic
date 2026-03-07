@@ -39,9 +39,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="quran"
+        name="chapters"
         options={{
-          title: "Quran",
+          title: "Chapters",
           tabBarIcon: ({ color }) => (
             <BookOpen size={24} color={color} strokeWidth={2.5} />
           ),
