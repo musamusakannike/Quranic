@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     lineHeight: 70,
   },
   englishText: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 16,
     textAlign: "center",
     lineHeight: 24,

@@ -3,12 +3,6 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import { AmiriQuran_400Regular } from "@expo-google-fonts/amiri-quran";
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from "@expo-google-fonts/inter";
 import { ThemeProvider } from "../lib/ThemeContext";
 
 // Prevent auto hiding splash screen
@@ -17,10 +11,9 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     AmiriQuran: AmiriQuran_400Regular,
-    Inter: Inter_400Regular,
-    InterMedium: Inter_500Medium,
-    InterSemiBold: Inter_600SemiBold,
-    InterBold: Inter_700Bold,
+    Satoshi: require("../assets/fonts/Satoshi-Regular.ttf"),
+    SatoshiMedium: require("../assets/fonts/Satoshi-Medium.ttf"),
+    SatoshiBold: require("../assets/fonts/Satoshi-Bold.ttf"),
   });
 
   useEffect(() => {

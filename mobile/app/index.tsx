@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 18,
     letterSpacing: 0.5,
   },

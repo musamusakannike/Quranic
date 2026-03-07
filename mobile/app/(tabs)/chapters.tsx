@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroTitle: {
-    fontFamily: "InterBold",
+    fontFamily: "SatoshiBold",
     fontSize: 30,
     letterSpacing: -0.3,
   },
   heroSubtitle: {
-    fontFamily: "Inter",
+    fontFamily: "Satoshi",
     fontSize: 14,
     lineHeight: 20,
   },
@@ -302,11 +302,11 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   statPillLabel: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 12,
   },
   statPillValue: {
-    fontFamily: "InterBold",
+    fontFamily: "SatoshiBold",
     fontSize: 18,
   },
   searchContainer: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: "Inter",
+    fontFamily: "Satoshi",
     fontSize: 14,
   },
   filtersRow: {
@@ -334,11 +334,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   filterText: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
   resultCount: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 13,
     marginBottom: 2,
   },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   numberText: {
-    fontFamily: "InterBold",
+    fontFamily: "SatoshiBold",
     fontSize: 16,
   },
   chapterBody: {
@@ -366,11 +366,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   chapterEnglishName: {
-    fontFamily: "InterSemiBold",
+    fontFamily: "SatoshiMedium",
     fontSize: 16,
   },
   chapterTranslitName: {
-    fontFamily: "Inter",
+    fontFamily: "Satoshi",
     fontSize: 13,
   },
   metaColumn: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   chapterMeta: {
-    fontFamily: "InterMedium",
+    fontFamily: "SatoshiMedium",
     fontSize: 12,
   },
 });

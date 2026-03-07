@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    fontFamily: "InterSemiBold",
+    fontFamily: "SatoshiMedium",
     fontSize: 20,
   },
 });

@@ -23,7 +23,7 @@ export default function TabLayout() {
           paddingTop: 12,
         },
         tabBarLabelStyle: {
-          fontFamily: "InterMedium",
+          fontFamily: "SatoshiMedium",
           fontSize: 12,
           marginTop: 4,
         },
