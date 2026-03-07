@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
 import Animated, {
   FadeIn,
@@ -44,6 +45,7 @@ interface ChapterCardProps {
     surface: string;
   };
   isDark: boolean;
+  onPress: (chapterId: number) => void;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -57,7 +59,7 @@ const withOpacity = (hexColor: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-function ChapterCard({ chapter, colors, isDark }: ChapterCardProps) {
+function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
   const pressed = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -74,6 +76,7 @@ function ChapterCard({ chapter, colors, isDark }: ChapterCardProps) {
       }}
       onPress={() => {
         void Haptics.selectionAsync();
+        onPress(chapter.id);
       }}
       entering={FadeInDown.delay(Math.min(chapter.id * 14, 320)).duration(320)}
       layout={LinearTransition.springify().damping(17)}
@@ -118,6 +121,7 @@ function ChapterCard({ chapter, colors, isDark }: ChapterCardProps) {
 
 export default function ChaptersScreen() {
   const { colors, isDark } = useTheme();
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
 
@@ -322,7 +326,19 @@ export default function ChaptersScreen() {
             </Text>
           </Animated.View>
         }
-        renderItem={({ item }) => <ChapterCard chapter={item} colors={colors} isDark={isDark} />}
+        renderItem={({ item }) => (
+          <ChapterCard
+            chapter={item}
+            colors={colors}
+            isDark={isDark}
+            onPress={(chapterId) => {
+              router.push({
+                pathname: "/chapter/[id]",
+                params: { id: String(chapterId) },
+              });
+            }}
+          />
+        )}
       />
     </SafeAreaView>
   );
