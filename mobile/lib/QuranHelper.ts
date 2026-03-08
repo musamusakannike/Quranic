@@ -1,9 +1,11 @@
 import quranDataRaw from "../docs/quran_optimized_array.json";
+import quranTranslationRaw from "../docs/eng-abdelhaleem_optimized_array.json";
 import quranMetadataRaw from "../docs/quran_metadata_optimized.json";
 
 // Cast the imported JSON to an array of arrays of strings.
 // Note: Index 0 is null/undefined to allow 1-based indexing for chapters and verses.
 const quranData = quranDataRaw as (string | null)[][];
+const quranTranslationData = quranTranslationRaw as (string | null)[][];
 
 export interface SearchResult {
   chapter: number;
@@ -112,10 +114,12 @@ export const getVerseTransliteration = (
 };
 
 export const getVerseTranslation = (
-  _chapter: number,
-  _verse: number,
+  chapter: number,
+  verse: number,
 ): string | null => {
-  return null;
+  const chapterTranslations = quranTranslationData[chapter];
+  if (!chapterTranslations) return null;
+  return chapterTranslations[verse] ?? null;
 };
 
 /**
