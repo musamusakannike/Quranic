@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -26,6 +26,7 @@ import {
   getVerseTransliteration,
   getVersesCount,
 } from "../../lib/QuranHelper";
+import { saveLastReadProgress } from "../../lib/ReadingProgress";
 
 type VerseItem = {
   key: string;
@@ -35,6 +36,7 @@ type VerseItem = {
   transliteration: string | null;
   page: number | null;
   juz: number | null;
+  hasSajda: boolean;
 };
 
 const withOpacity = (hexColor: string, opacity: number) => {
@@ -47,11 +49,14 @@ const withOpacity = (hexColor: string, opacity: number) => {
 };
 
 export default function ChapterDetailScreen() {
-  const { id } = useLocalSearchParams<{ id?: string | string[] }>();
+  const { id, verse } = useLocalSearchParams<{ id?: string | string[]; verse?: string | string[] }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { showTranslations, showTransliterations } = useAppSettings();
   const [searchValue, setSearchValue] = useState("");
+  const flashListRef = useRef<FlashList<VerseItem>>(null);
+  const latestSavedRef = useRef<{ chapter: number; verse: number } | null>(null);
+  const lastSaveAtRef = useRef(0);
 
   const chapterNumber = useMemo(() => {
     const rawId = Array.isArray(id) ? id[0] : id;
@@ -68,6 +73,14 @@ export default function ChapterDetailScreen() {
     if (!chapterNumber) return null;
     return getChapterMetadata(chapterNumber);
   }, [chapterNumber]);
+
+  const targetVerse = useMemo(() => {
+    const rawVerse = Array.isArray(verse) ? verse[0] : verse;
+    const parsed = Number(rawVerse);
+
+    if (!Number.isInteger(parsed) || parsed < 1) return null;
+    return parsed;
+  }, [verse]);
 
   const verseCount = useMemo(() => {
     if (!chapterNumber) return 0;
@@ -89,6 +102,7 @@ export default function ChapterDetailScreen() {
         transliteration: getVerseTransliteration(chapterNumber, verseNumber),
         page: metadata?.page ?? null,
         juz: metadata?.juz ?? null,
+        hasSajda: Boolean(metadata?.sajda),
       };
     });
   }, [chapterNumber]);
@@ -107,6 +121,54 @@ export default function ChapterDetailScreen() {
       );
     });
   }, [chapterVerses, searchValue]);
+
+  useEffect(() => {
+    if (!chapterNumber || !targetVerse || searchValue.trim()) return;
+
+    const targetIndex = chapterVerses.findIndex((item) => item.verseNumber === targetVerse);
+    if (targetIndex < 0) return;
+
+    const timeout = setTimeout(() => {
+      flashListRef.current?.scrollToIndex({ index: targetIndex, animated: false });
+    }, 180);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [chapterNumber, chapterVerses, searchValue, targetVerse]);
+
+  const persistReadingProgress = useCallback(
+    (item: VerseItem) => {
+      if (!chapterNumber) return;
+
+      const previous = latestSavedRef.current;
+      const now = Date.now();
+      const isSameVerse =
+        previous && previous.chapter === chapterNumber && previous.verse === item.verseNumber;
+
+      if (isSameVerse || now - lastSaveAtRef.current < 1200) return;
+
+      latestSavedRef.current = { chapter: chapterNumber, verse: item.verseNumber };
+      lastSaveAtRef.current = now;
+
+      void saveLastReadProgress({
+        chapter: chapterNumber,
+        verse: item.verseNumber,
+        page: item.page,
+        juz: item.juz,
+      });
+    },
+    [chapterNumber],
+  );
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: { isViewable: boolean; item: VerseItem }[] }) => {
+      const firstVisible = viewableItems.find((entry) => entry.isViewable)?.item;
+      if (!firstVisible) return;
+      persistReadingProgress(firstVisible);
+    },
+    [persistReadingProgress],
+  );
 
   const handleCopyVerse = useCallback(async (text: string, verseNumber: number) => {
     await Clipboard.setStringAsync(text);
@@ -149,6 +211,16 @@ export default function ChapterDetailScreen() {
           </View>
 
           <View style={styles.verseMetaRow}>
+            {item.hasSajda ? (
+              <View
+                style={[
+                  styles.sajdaBadge,
+                  { backgroundColor: withOpacity(colors.accent, isDark ? 0.28 : 0.18) },
+                ]}
+              >
+                <Text style={[styles.sajdaBadgeText, { color: colors.textMain }]}>Sajda</Text>
+              </View>
+            ) : null}
             {item.juz ? <Text style={[styles.verseMeta, { color: colors.textMuted }]}>Juz {item.juz}</Text> : null}
             {item.page ? (
               <Text style={[styles.verseMeta, { color: colors.textMuted }]}>Page {item.page}</Text>
@@ -229,10 +301,12 @@ export default function ChapterDetailScreen() {
       />
 
       <FlashList
+        ref={flashListRef}
         data={filteredVerses}
         keyExtractor={(item) => item.key}
         renderItem={renderVerse}
-        estimatedItemSize={188}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 55, minimumViewTime: 200 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
@@ -377,6 +451,17 @@ const styles = StyleSheet.create({
   verseMetaRow: {
     flexDirection: "row",
     gap: 8,
+    alignItems: "center",
+  },
+  sajdaBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  sajdaBadgeText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   verseMeta: {
     fontFamily: "SatoshiMedium",

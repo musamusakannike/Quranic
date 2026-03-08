@@ -38,6 +38,13 @@ export interface QuranMetadata {
   chapters: (ChapterMetadata | null)[];
 }
 
+export interface VerseReference {
+  chapter: number;
+  verse: number;
+  page: number;
+  juz: number;
+}
+
 // Cast JSON to typed metadata structures
 const quranMetadata = quranMetadataRaw as unknown as QuranMetadata;
 
@@ -141,6 +148,32 @@ export const getVersesCount = (chapter: number): number => {
  */
 export const getTotalQuranVerses = (): number => {
   return quranMetadata.total_verses;
+};
+
+/**
+ * Get the first verse location for a given Juz.
+ */
+export const getFirstVerseForJuz = (juz: number): VerseReference | null => {
+  if (!Number.isInteger(juz) || juz < 1 || juz > 30) return null;
+
+  for (let chapter = 1; chapter < quranMetadata.chapters.length; chapter += 1) {
+    const chapterMeta = quranMetadata.chapters[chapter];
+    if (!chapterMeta) continue;
+
+    for (let verse = 1; verse < chapterMeta.verses.length; verse += 1) {
+      const verseMeta = chapterMeta.verses[verse];
+      if (!verseMeta || verseMeta.juz !== juz) continue;
+
+      return {
+        chapter,
+        verse,
+        page: verseMeta.page,
+        juz: verseMeta.juz,
+      };
+    }
+  }
+
+  return null;
 };
 
 /**
