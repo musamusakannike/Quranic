@@ -6,14 +6,48 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
-import { getChapterMetadata, getFirstVerseForJuz, getVersesCount } from "../../lib/QuranHelper";
+import {
+  getChapterMetadata,
+  getFirstVerseForJuz,
+  getVersesCount,
+  getChapterVerses,
+  getVerseTranslation,
+} from "../../lib/QuranHelper";
 import {
   getLastReadProgress,
   type LastReadProgress,
 } from "../../lib/ReadingProgress";
+
+// Hash function to get a consistent random number per day
+const getDailyAyah = () => {
+  const today = new Date();
+  const seed =
+    today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate();
+  const random = Math.sin(seed) * 10000;
+  const ayahIndex = Math.floor((random - Math.floor(random)) * 6236);
+
+  // Quick lookup across chapters (1 to 114)
+  let currentIndex = 0;
+  for (let c = 1; c <= 114; c++) {
+    const verses = getVersesCount(c);
+    if (ayahIndex < currentIndex + verses) {
+      return { chapter: c, verse: ayahIndex - currentIndex + 1 };
+    }
+    currentIndex += verses;
+  }
+  return { chapter: 2, verse: 255 }; // Fallback to Ayatul Kursi
+};
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -98,7 +132,11 @@ export default function Index() {
   }, [lastRead, lastReadChapter]);
 
   const continueAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withTiming(continuePressed.value ? 0.986 : 1, { duration: 120 }) }],
+    transform: [
+      {
+        scale: withTiming(continuePressed.value ? 0.986 : 1, { duration: 120 }),
+      },
+    ],
   }));
 
   const juzItems = useMemo(
@@ -115,8 +153,22 @@ export default function Index() {
     [],
   );
 
+  const dailyAyah = useMemo(() => {
+    const target = getDailyAyah();
+    const meta = getChapterMetadata(target.chapter);
+    const verses = getChapterVerses(target.chapter);
+    return {
+      chapterName: meta?.englishname ?? "",
+      target,
+      text: verses[target.verse - 1] ?? "",
+      translation: getVerseTranslation(target.chapter, target.verse) ?? "",
+    };
+  }, []);
+
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -129,10 +181,16 @@ export default function Index() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View entering={FadeIn.duration(280)}>
           <LinearGradient
-            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.16 : 0.08)]}
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.16 : 0.08),
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -142,8 +200,10 @@ export default function Index() {
               },
             ]}
           >
-            <Text style={[styles.greetingText, { color: colors.textMain }]}>{greetingText}</Text>
-            <Text style={[styles.greetingSubtext, { color: colors.textMuted }]}> 
+            <Text style={[styles.greetingText, { color: colors.textMain }]}>
+              {greetingText}
+            </Text>
+            <Text style={[styles.greetingSubtext, { color: colors.textMuted }]}>
               Keep your recitation steady, even if it is just a few ayat.
             </Text>
 
@@ -161,7 +221,9 @@ export default function Index() {
               <Text
                 style={[
                   styles.reminderPillText,
-                  { color: reminderEnabled ? colors.success : colors.textMuted },
+                  {
+                    color: reminderEnabled ? colors.success : colors.textMuted,
+                  },
                 ]}
               >
                 {reminderText}
@@ -197,7 +259,10 @@ export default function Index() {
           style={continueAnimatedStyle}
         >
           <LinearGradient
-            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.12 : 0.06)]}
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.12 : 0.06),
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -207,22 +272,34 @@ export default function Index() {
               },
             ]}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Continue reading</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+              Continue reading
+            </Text>
 
             {lastRead && lastReadChapter ? (
               <>
-                <Text style={[styles.continueTitle, { color: colors.textMain }]}> 
+                <Text
+                  style={[styles.continueTitle, { color: colors.textMain }]}
+                >
                   Surah {lastReadChapter.englishname}
                 </Text>
-                <Text style={[styles.continueMeta, { color: colors.textMuted }]}> 
-                  Ayah {lastRead.verse} • Page {lastRead.page ?? "-"} • Juz {lastRead.juz ?? "-"}
+                <Text
+                  style={[styles.continueMeta, { color: colors.textMuted }]}
+                >
+                  Ayah {lastRead.verse} • Page {lastRead.page ?? "-"} • Juz{" "}
+                  {lastRead.juz ?? "-"}
                 </Text>
                 {readingProgress ? (
                   <>
                     <View
                       style={[
                         styles.progressTrack,
-                        { backgroundColor: withOpacity(colors.border, isDark ? 0.75 : 0.5) },
+                        {
+                          backgroundColor: withOpacity(
+                            colors.border,
+                            isDark ? 0.75 : 0.5,
+                          ),
+                        },
                       ]}
                     >
                       <View
@@ -235,19 +312,31 @@ export default function Index() {
                         ]}
                       />
                     </View>
-                    <Text style={[styles.progressLabel, { color: colors.textMuted }]}> 
+                    <Text
+                      style={[
+                        styles.progressLabel,
+                        { color: colors.textMuted },
+                      ]}
+                    >
                       {readingProgress.percentage}% through this surah
                     </Text>
                   </>
                 ) : null}
-                <Text style={[styles.continueCta, { color: colors.primary }]}>Resume from last read</Text>
+                <Text style={[styles.continueCta, { color: colors.primary }]}>
+                  Resume from last read
+                </Text>
               </>
             ) : (
               <>
-                <Text style={[styles.continueMeta, { color: colors.textMuted }]}> 
-                  Start from any surah and your reading position will be saved automatically.
+                <Text
+                  style={[styles.continueMeta, { color: colors.textMuted }]}
+                >
+                  Start from any surah and your reading position will be saved
+                  automatically.
                 </Text>
-                <Text style={[styles.continueCta, { color: colors.primary }]}>Open chapters</Text>
+                <Text style={[styles.continueCta, { color: colors.primary }]}>
+                  Open chapters
+                </Text>
               </>
             )}
           </LinearGradient>
@@ -255,7 +344,10 @@ export default function Index() {
 
         <Animated.View entering={FadeInDown.delay(120).duration(320)}>
           <LinearGradient
-            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.1 : 0.05)]}
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.1 : 0.05),
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -265,8 +357,12 @@ export default function Index() {
               },
             ]}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Quick Juz Navigator</Text>
-            <Text style={[styles.juzHint, { color: colors.textMuted }]}>Jump straight into any Juz</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+              Quick Juz Navigator
+            </Text>
+            <Text style={[styles.juzHint, { color: colors.textMuted }]}>
+              Jump straight into any Juz
+            </Text>
 
             <View style={styles.juzGrid}>
               {juzItems.map((item, index) => (
@@ -299,16 +395,123 @@ export default function Index() {
                       style={[
                         styles.juzChipInner,
                         {
-                          borderColor: withOpacity(colors.primary, isDark ? 0.45 : 0.22),
+                          borderColor: withOpacity(
+                            colors.primary,
+                            isDark ? 0.45 : 0.22,
+                          ),
                         },
                       ]}
                     >
-                      <Text style={[styles.juzChipText, { color: colors.primary }]}>Juz {item.juz}</Text>
+                      <Text
+                        style={[styles.juzChipText, { color: colors.primary }]}
+                      >
+                        Juz {item.juz}
+                      </Text>
                     </LinearGradient>
                   </Pressable>
                 </Animated.View>
               ))}
             </View>
+          </LinearGradient>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(160).duration(320)}>
+          <LinearGradient
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.1 : 0.04),
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.juzCard,
+              {
+                borderColor: withOpacity(colors.border, 0.85),
+                padding: 18,
+                marginTop: 4,
+              },
+            ]}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <View style={{ gap: 2 }}>
+                <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+                  Ayah of the Day
+                </Text>
+                <Text style={[styles.juzHint, { color: colors.textMuted }]}>
+                  Surah {dailyAyah.chapterName} • Ayah {dailyAyah.target.verse}
+                </Text>
+              </View>
+              <View
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 999,
+                  backgroundColor: withOpacity(colors.primary, 0.15),
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "SatoshiBold",
+                    fontSize: 12,
+                    color: colors.primary,
+                  }}
+                >
+                  Daily
+                </Text>
+              </View>
+            </View>
+
+            <Text
+              style={[styles.arabicDailyText, { color: colors.textMain }]}
+              numberOfLines={3}
+            >
+              {dailyAyah.text}
+            </Text>
+
+            <Text
+              style={[styles.translationDailyText, { color: colors.textMuted }]}
+              numberOfLines={3}
+            >
+              {dailyAyah.translation}
+            </Text>
+
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                router.push({
+                  pathname: "/chapter/[id]",
+                  params: {
+                    id: String(dailyAyah.target.chapter),
+                    verse: String(dailyAyah.target.verse),
+                  },
+                });
+              }}
+              style={{
+                marginTop: 10,
+                alignSelf: "flex-start",
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                backgroundColor: colors.primary,
+                borderRadius: 999,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "SatoshiBold",
+                  fontSize: 13,
+                  color: "#FFFFFF",
+                }}
+              >
+                Read Ayah
+              </Text>
+            </Pressable>
           </LinearGradient>
         </Animated.View>
       </ScrollView>
@@ -402,6 +605,18 @@ const styles = StyleSheet.create({
   juzHint: {
     fontFamily: "Satoshi",
     fontSize: 13,
+  },
+  arabicDailyText: {
+    fontFamily: "AmiriQuran",
+    fontSize: 25,
+    lineHeight: 40,
+    textAlign: "right",
+    marginBottom: 8,
+  },
+  translationDailyText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 14,
+    lineHeight: 22,
   },
   juzGrid: {
     marginTop: 4,

@@ -1,6 +1,7 @@
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import Slider from "@react-native-community/slider";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 
@@ -54,10 +55,17 @@ export default function SettingsScreen() {
     setReminderTime,
     enableReminder,
     disableReminder,
+    arabicFontSize,
+    translationFontSize,
+    setArabicFontSize,
+    setTranslationFontSize,
   } = useAppSettings();
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const reminderLabel = useMemo(() => formatReminderTime(reminderTime), [reminderTime]);
+  const reminderLabel = useMemo(
+    () => formatReminderTime(reminderTime),
+    [reminderTime],
+  );
 
   const handleReminderToggle = async (nextEnabled: boolean) => {
     if (!nextEnabled) {
@@ -104,9 +112,14 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.title, { color: colors.textMain }]}>Settings</Text>
 
         <View
@@ -118,8 +131,12 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Appearance</Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Choose app theme mode</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+            Appearance
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            Choose app theme mode
+          </Text>
 
           <View style={styles.segmentedRow}>
             {[
@@ -159,7 +176,9 @@ export default function SettingsScreen() {
             })}
           </View>
 
-          <Text style={[styles.helperText, { color: colors.textMuted }]}>Current: {resolvedTheme}</Text>
+          <Text style={[styles.helperText, { color: colors.textMuted }]}>
+            Current: {resolvedTheme}
+          </Text>
         </View>
 
         <View
@@ -171,36 +190,61 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Chapter display</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+            Chapter display
+          </Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>Show translations</Text>
-              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>Disabled by default</Text>
+              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
+                Show translations
+              </Text>
+              <Text
+                style={[styles.settingDescription, { color: colors.textMuted }]}
+              >
+                Disabled by default
+              </Text>
             </View>
             <Switch
               value={showTranslations}
               onValueChange={(nextValue) => {
                 void setShowTranslations(nextValue);
               }}
-              trackColor={{ false: withOpacity(colors.border, 0.8), true: withOpacity(colors.primary, 0.45) }}
+              trackColor={{
+                false: withOpacity(colors.border, 0.8),
+                true: withOpacity(colors.primary, 0.45),
+              }}
               thumbColor={showTranslations ? colors.primary : "#F4F4F5"}
             />
           </View>
 
-          <View style={[styles.divider, { backgroundColor: withOpacity(colors.border, 0.75) }]} />
+          <View
+            style={[
+              styles.divider,
+              { backgroundColor: withOpacity(colors.border, 0.75) },
+            ]}
+          />
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>Show transliterations</Text>
-              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>Latin script under each ayah</Text>
+              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
+                Show transliterations
+              </Text>
+              <Text
+                style={[styles.settingDescription, { color: colors.textMuted }]}
+              >
+                Latin script under each ayah
+              </Text>
             </View>
             <Switch
               value={showTransliterations}
               onValueChange={(nextValue) => {
                 void setShowTransliterations(nextValue);
               }}
-              trackColor={{ false: withOpacity(colors.border, 0.8), true: withOpacity(colors.primary, 0.45) }}
+              trackColor={{
+                false: withOpacity(colors.border, 0.8),
+                true: withOpacity(colors.primary, 0.45),
+              }}
               thumbColor={showTransliterations ? colors.primary : "#F4F4F5"}
             />
           </View>
@@ -215,20 +259,105 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Daily Quran reminder</Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Local notification to recite</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+            Typography
+          </Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>Enable reminder</Text>
-              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>Sends one reminder every day</Text>
+              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
+                Arabic text size
+              </Text>
+              <Text
+                style={[styles.settingDescription, { color: colors.textMuted }]}
+              >
+                {Math.round(arabicFontSize)}px
+              </Text>
+            </View>
+          </View>
+          <Slider
+            style={{ width: "100%", height: 40, marginTop: -8 }}
+            minimumValue={22}
+            maximumValue={50}
+            step={1}
+            value={arabicFontSize}
+            onSlidingComplete={setArabicFontSize}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={withOpacity(colors.border, 0.8)}
+            thumbTintColor={colors.primary}
+          />
+
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor: withOpacity(colors.border, 0.75),
+                marginVertical: 4,
+              },
+            ]}
+          />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingTextWrap}>
+              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
+                Translation text size
+              </Text>
+              <Text
+                style={[styles.settingDescription, { color: colors.textMuted }]}
+              >
+                {Math.round(translationFontSize)}px
+              </Text>
+            </View>
+          </View>
+          <Slider
+            style={{ width: "100%", height: 40, marginTop: -8 }}
+            minimumValue={12}
+            maximumValue={24}
+            step={1}
+            value={translationFontSize}
+            onSlidingComplete={setTranslationFontSize}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={withOpacity(colors.border, 0.8)}
+            thumbTintColor={colors.primary}
+          />
+        </View>
+
+        <View
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.border, 0.85),
+            },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+            Daily Quran reminder
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            Local notification to recite
+          </Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingTextWrap}>
+              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
+                Enable reminder
+              </Text>
+              <Text
+                style={[styles.settingDescription, { color: colors.textMuted }]}
+              >
+                Sends one reminder every day
+              </Text>
             </View>
             <Switch
               value={reminderEnabled}
               onValueChange={(nextValue) => {
                 void handleReminderToggle(nextValue);
               }}
-              trackColor={{ false: withOpacity(colors.border, 0.8), true: withOpacity(colors.primary, 0.45) }}
+              trackColor={{
+                false: withOpacity(colors.border, 0.8),
+                true: withOpacity(colors.primary, 0.45),
+              }}
               thumbColor={reminderEnabled ? colors.primary : "#F4F4F5"}
             />
           </View>
@@ -243,8 +372,12 @@ export default function SettingsScreen() {
               },
             ]}
           >
-            <Text style={[styles.timeButtonLabel, { color: colors.textMuted }]}>Reminder time</Text>
-            <Text style={[styles.timeButtonValue, { color: colors.textMain }]}>{reminderLabel}</Text>
+            <Text style={[styles.timeButtonLabel, { color: colors.textMuted }]}>
+              Reminder time
+            </Text>
+            <Text style={[styles.timeButtonValue, { color: colors.textMain }]}>
+              {reminderLabel}
+            </Text>
           </Pressable>
 
           {showTimePicker ? (
@@ -261,10 +394,19 @@ export default function SettingsScreen() {
                   onPress={() => setShowTimePicker(false)}
                   style={[
                     styles.doneButton,
-                    { backgroundColor: withOpacity(colors.primary, isDark ? 0.3 : 0.16) },
+                    {
+                      backgroundColor: withOpacity(
+                        colors.primary,
+                        isDark ? 0.3 : 0.16,
+                      ),
+                    },
                   ]}
                 >
-                  <Text style={[styles.doneButtonText, { color: colors.primary }]}>Done</Text>
+                  <Text
+                    style={[styles.doneButtonText, { color: colors.primary }]}
+                  >
+                    Done
+                  </Text>
                 </Pressable>
               ) : null}
             </View>

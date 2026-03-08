@@ -12,6 +12,7 @@ import Animated, {
   LinearTransition,
 } from "react-native-reanimated";
 import { useTheme } from "../../lib/ThemeContext";
+import { useAppSettings } from "../../lib/AppSettingsContext";
 import { useBookmarks } from "../../lib/BookmarksContext";
 import {
   getChapterMetadata,
@@ -33,6 +34,7 @@ const withOpacity = (hexColor: string, opacity: number) => {
 export default function BookmarksScreen() {
   const { colors, isDark } = useTheme();
   const { bookmarks, removeBookmark } = useBookmarks();
+  const { arabicFontSize, translationFontSize } = useAppSettings();
   const router = useRouter();
 
   if (bookmarks.length === 0) {
@@ -171,7 +173,14 @@ export default function BookmarksScreen() {
               </View>
 
               <Text
-                style={[styles.arabicText, { color: colors.textMain }]}
+                style={[
+                  styles.arabicText,
+                  {
+                    color: colors.textMain,
+                    fontSize: arabicFontSize,
+                    lineHeight: arabicFontSize * 1.6,
+                  },
+                ]}
                 numberOfLines={2}
               >
                 {arabicText}
@@ -179,7 +188,14 @@ export default function BookmarksScreen() {
 
               {translation && (
                 <Text
-                  style={[styles.translationText, { color: colors.textMuted }]}
+                  style={[
+                    styles.translationText,
+                    {
+                      color: colors.textMuted,
+                      fontSize: translationFontSize,
+                      lineHeight: translationFontSize * 1.5,
+                    },
+                  ]}
                   numberOfLines={2}
                 >
                   {translation}
@@ -288,13 +304,9 @@ const styles = StyleSheet.create({
   },
   arabicText: {
     fontFamily: "AmiriQuran",
-    fontSize: 24,
-    lineHeight: 38,
     textAlign: "right",
   },
   translationText: {
     fontFamily: "Satoshi",
-    fontSize: 14,
-    lineHeight: 22,
   },
 });

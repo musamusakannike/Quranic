@@ -62,7 +62,12 @@ export default function ChapterDetailScreen() {
   }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const { showTranslations, showTransliterations } = useAppSettings();
+  const {
+    showTranslations,
+    showTransliterations,
+    arabicFontSize,
+    translationFontSize,
+  } = useAppSettings();
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const [searchValue, setSearchValue] = useState("");
   const flashListRef = useRef<any>(null);
@@ -299,7 +304,16 @@ export default function ChapterDetailScreen() {
             </View>
           </View>
 
-          <Text style={[styles.arabicVerseText, { color: colors.textMain }]}>
+          <Text
+            style={[
+              styles.arabicVerseText,
+              {
+                color: colors.textMain,
+                fontSize: arabicFontSize,
+                lineHeight: arabicFontSize * 1.6,
+              },
+            ]}
+          >
             {item.text}
           </Text>
 
@@ -312,7 +326,16 @@ export default function ChapterDetailScreen() {
           ) : null}
 
           {showTranslations ? (
-            <Text style={[styles.translationText, { color: colors.textMain }]}>
+            <Text
+              style={[
+                styles.translationText,
+                {
+                  color: colors.textMain,
+                  fontSize: translationFontSize,
+                  lineHeight: translationFontSize * 1.5,
+                },
+              ]}
+            >
               {item.translation ??
                 "Translation is not available yet for this ayah."}
             </Text>
@@ -376,6 +399,8 @@ export default function ChapterDetailScreen() {
       addBookmark,
       removeBookmark,
       chapterNumber,
+      arabicFontSize,
+      translationFontSize,
     ],
   );
 
@@ -607,8 +632,6 @@ const styles = StyleSheet.create({
   },
   arabicVerseText: {
     fontFamily: "AmiriQuran",
-    fontSize: 31,
-    lineHeight: 50,
     textAlign: "right",
   },
   transliterationText: {
@@ -618,8 +641,6 @@ const styles = StyleSheet.create({
   },
   translationText: {
     fontFamily: "Satoshi",
-    fontSize: 14,
-    lineHeight: 21,
   },
   actionsRow: {
     flexDirection: "row",

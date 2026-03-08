@@ -21,6 +21,8 @@ type AppSettingsContextValue = {
   showTransliterations: boolean;
   reminderEnabled: boolean;
   reminderTime: ReminderTime;
+  arabicFontSize: number;
+  translationFontSize: number;
   hasSeenOnboarding: boolean;
   isLoaded: boolean;
   setShowTranslations: (enabled: boolean) => Promise<void>;
@@ -29,6 +31,8 @@ type AppSettingsContextValue = {
   enableReminder: (time: ReminderTime) => Promise<boolean>;
   disableReminder: () => Promise<void>;
   setHasSeenOnboarding: (hasSeen: boolean) => Promise<void>;
+  setArabicFontSize: (size: number) => Promise<void>;
+  setTranslationFontSize: (size: number) => Promise<void>;
 };
 
 type StoredSettings = {
@@ -38,6 +42,8 @@ type StoredSettings = {
   reminderTime: ReminderTime;
   reminderNotificationId: string | null;
   hasSeenOnboarding: boolean;
+  arabicFontSize: number;
+  translationFontSize: number;
 };
 
 const SETTINGS_STORAGE_KEY = "@app_reader_settings";
@@ -49,6 +55,8 @@ const DEFAULT_SETTINGS: StoredSettings = {
   reminderTime: { hour: 20, minute: 0 },
   reminderNotificationId: null,
   hasSeenOnboarding: false,
+  arabicFontSize: 31,
+  translationFontSize: 14,
 };
 
 Notifications.setNotificationHandler({
@@ -197,6 +205,23 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     [updateSettings],
   );
 
+  const setArabicFontSize = useCallback(
+    async (size: number) => {
+      await updateSettings((current) => ({ ...current, arabicFontSize: size }));
+    },
+    [updateSettings],
+  );
+
+  const setTranslationFontSize = useCallback(
+    async (size: number) => {
+      await updateSettings((current) => ({
+        ...current,
+        translationFontSize: size,
+      }));
+    },
+    [updateSettings],
+  );
+
   const enableReminder = useCallback(
     async (time: ReminderTime) => {
       const permissionGranted = await requestNotificationPermission();
@@ -244,6 +269,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       showTransliterations: settings.showTransliterations,
       reminderEnabled: settings.reminderEnabled,
       reminderTime: settings.reminderTime,
+      arabicFontSize: settings.arabicFontSize,
+      translationFontSize: settings.translationFontSize,
       hasSeenOnboarding: settings.hasSeenOnboarding,
       isLoaded,
       setShowTranslations,
@@ -252,12 +279,16 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       enableReminder,
       disableReminder,
       setHasSeenOnboarding,
+      setArabicFontSize,
+      setTranslationFontSize,
     }),
     [
       settings.showTranslations,
       settings.showTransliterations,
       settings.reminderEnabled,
       settings.reminderTime,
+      settings.arabicFontSize,
+      settings.translationFontSize,
       settings.hasSeenOnboarding,
       isLoaded,
       setShowTranslations,
@@ -266,6 +297,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       enableReminder,
       disableReminder,
       setHasSeenOnboarding,
+      setArabicFontSize,
+      setTranslationFontSize,
     ],
   );
 
