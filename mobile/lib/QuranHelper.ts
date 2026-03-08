@@ -1,59 +1,19 @@
 import quranDataRaw from "../docs/quran_optimized_array.json";
 import quranTranslationRaw from "../docs/eng-abdelhaleem_optimized_array.json";
+import quranTransliterationRaw from "../docs/ara-quran-la_optimized_array.json";
 import quranMetadataRaw from "../docs/quran_metadata_optimized.json";
 
 // Cast the imported JSON to an array of arrays of strings.
 // Note: Index 0 is null/undefined to allow 1-based indexing for chapters and verses.
 const quranData = quranDataRaw as (string | null)[][];
 const quranTranslationData = quranTranslationRaw as (string | null)[][];
+const quranTransliterationData = quranTransliterationRaw as (string | null)[][];
 
 export interface SearchResult {
   chapter: number;
   verse: number;
   text: string;
 }
-
-const ARABIC_TO_LATIN_MAP: Record<string, string> = {
-  ا: "a",
-  أ: "a",
-  إ: "i",
-  آ: "aa",
-  ب: "b",
-  ت: "t",
-  ث: "th",
-  ج: "j",
-  ح: "h",
-  خ: "kh",
-  د: "d",
-  ذ: "dh",
-  ر: "r",
-  ز: "z",
-  س: "s",
-  ش: "sh",
-  ص: "s",
-  ض: "d",
-  ط: "t",
-  ظ: "z",
-  ع: "'",
-  غ: "gh",
-  ف: "f",
-  ق: "q",
-  ك: "k",
-  ل: "l",
-  م: "m",
-  ن: "n",
-  ه: "h",
-  و: "w",
-  ي: "y",
-  ى: "a",
-  ة: "h",
-  "ء": "'",
-  "ؤ": "'",
-  "ئ": "'",
-  "ٱ": "a",
-};
-
-const ARABIC_DIACRITICS_REGEX = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 
 export interface VerseMetadata {
   line: number;
@@ -100,17 +60,9 @@ export const getVerseTransliteration = (
   chapter: number,
   verse: number,
 ): string | null => {
-  const verseText = getVerseText(chapter, verse);
-  if (!verseText) return null;
-
-  const normalized = verseText.replace(ARABIC_DIACRITICS_REGEX, "");
-  let transliterated = "";
-
-  for (const char of normalized) {
-    transliterated += ARABIC_TO_LATIN_MAP[char] ?? char;
-  }
-
-  return transliterated.replace(/\s+/g, " ").trim();
+  const chapterTransliterations = quranTransliterationData[chapter];
+  if (!chapterTransliterations) return null;
+  return chapterTransliterations[verse] ?? null;
 };
 
 export const getVerseTranslation = (
