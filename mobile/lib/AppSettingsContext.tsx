@@ -16,6 +16,8 @@ export type ReminderTime = {
   minute: number;
 };
 
+export type ReadingView = "list" | "verse_by_verse" | "page_by_page";
+
 type AppSettingsContextValue = {
   showTranslations: boolean;
   showTransliterations: boolean;
@@ -33,6 +35,8 @@ type AppSettingsContextValue = {
   setHasSeenOnboarding: (hasSeen: boolean) => Promise<void>;
   setArabicFontSize: (size: number) => Promise<void>;
   setTranslationFontSize: (size: number) => Promise<void>;
+  readingView: ReadingView;
+  setReadingView: (view: ReadingView) => Promise<void>;
 };
 
 type StoredSettings = {
@@ -44,6 +48,7 @@ type StoredSettings = {
   hasSeenOnboarding: boolean;
   arabicFontSize: number;
   translationFontSize: number;
+  readingView: ReadingView;
 };
 
 const SETTINGS_STORAGE_KEY = "@app_reader_settings";
@@ -57,6 +62,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   hasSeenOnboarding: false,
   arabicFontSize: 31,
   translationFontSize: 14,
+  readingView: "list",
 };
 
 Notifications.setNotificationHandler({
@@ -85,6 +91,7 @@ const parseStoredSettings = (raw: string | null): StoredSettings => {
         minute:
           parsed.reminderTime?.minute ?? DEFAULT_SETTINGS.reminderTime.minute,
       },
+      readingView: parsed.readingView ?? DEFAULT_SETTINGS.readingView,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -222,6 +229,16 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     [updateSettings],
   );
 
+  const setReadingView = useCallback(
+    async (view: ReadingView) => {
+      await updateSettings((current) => ({
+        ...current,
+        readingView: view,
+      }));
+    },
+    [updateSettings],
+  );
+
   const enableReminder = useCallback(
     async (time: ReminderTime) => {
       const permissionGranted = await requestNotificationPermission();
@@ -272,6 +289,7 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       arabicFontSize: settings.arabicFontSize,
       translationFontSize: settings.translationFontSize,
       hasSeenOnboarding: settings.hasSeenOnboarding,
+      readingView: settings.readingView,
       isLoaded,
       setShowTranslations,
       setShowTransliterations,
@@ -281,6 +299,7 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       setHasSeenOnboarding,
       setArabicFontSize,
       setTranslationFontSize,
+      setReadingView,
     }),
     [
       settings.showTranslations,
@@ -299,6 +318,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       setHasSeenOnboarding,
       setArabicFontSize,
       setTranslationFontSize,
+      settings.readingView,
+      setReadingView,
     ],
   );
 

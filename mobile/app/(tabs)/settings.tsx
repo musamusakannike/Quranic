@@ -17,7 +17,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../lib/ThemeContext";
-import { ReminderTime, useAppSettings } from "../../lib/AppSettingsContext";
+import {
+  ReminderTime,
+  ReadingView,
+  useAppSettings,
+} from "../../lib/AppSettingsContext";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -59,6 +63,8 @@ export default function SettingsScreen() {
     translationFontSize,
     setArabicFontSize,
     setTranslationFontSize,
+    readingView,
+    setReadingView,
   } = useAppSettings();
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -193,6 +199,63 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
             Chapter display
           </Text>
+
+          <Text
+            style={[
+              styles.sectionSubtitle,
+              { color: colors.textMuted, marginBottom: 4 },
+            ]}
+          >
+            Choose reading view
+          </Text>
+
+          <View style={[styles.segmentedRow, { marginBottom: 16 }]}>
+            {[
+              { key: "list", label: "List" },
+              { key: "verse_by_verse", label: "Verse by Verse" },
+              { key: "page_by_page", label: "Page by Page" },
+            ].map((option) => {
+              const selected = readingView === option.key;
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => {
+                    void setReadingView(option.key as ReadingView);
+                  }}
+                  style={[
+                    styles.segmentButton,
+                    {
+                      backgroundColor: selected
+                        ? withOpacity(colors.primary, isDark ? 0.3 : 0.14)
+                        : withOpacity(colors.background, 0.55),
+                      borderColor: selected
+                        ? withOpacity(colors.primary, 0.55)
+                        : withOpacity(colors.border, 0.8),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentLabel,
+                      { color: selected ? colors.primary : colors.textMuted },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor: withOpacity(colors.border, 0.75),
+                marginBottom: 16,
+              },
+            ]}
+          />
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextWrap}>

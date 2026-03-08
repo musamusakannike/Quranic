@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,6 +17,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import {
   ChevronLeft,
+  ChevronRight,
   Copy,
   Search,
   Share2,
@@ -67,6 +69,7 @@ export default function ChapterDetailScreen() {
     showTransliterations,
     arabicFontSize,
     translationFontSize,
+    readingView,
   } = useAppSettings();
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const [searchValue, setSearchValue] = useState("");
@@ -82,6 +85,8 @@ export default function ChapterDetailScreen() {
     chapterName: string;
     chapterNumber: number;
   } | null>(null);
+
+  const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
 
   const chapterNumber = useMemo(() => {
     const rawId = Array.isArray(id) ? id[0] : id;
@@ -158,16 +163,20 @@ export default function ChapterDetailScreen() {
     if (targetIndex < 0) return;
 
     const timeout = setTimeout(() => {
-      flashListRef.current?.scrollToIndex({
-        index: targetIndex,
-        animated: false,
-      });
+      if (readingView === "list" || readingView === "page_by_page") {
+        flashListRef.current?.scrollToIndex({
+          index: targetIndex,
+          animated: false,
+        });
+      } else {
+        setCurrentVerseIndex(targetIndex);
+      }
     }, 180);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [chapterNumber, chapterVerses, searchValue, targetVerse]);
+  }, [chapterNumber, chapterVerses, searchValue, targetVerse, readingView]);
 
   const persistReadingProgress = useCallback(
     (item: VerseItem) => {
@@ -235,6 +244,14 @@ export default function ChapterDetailScreen() {
     },
     [chapterMeta?.englishname, chapterNumber],
   );
+
+  const toArabicNumber = (num: number) => {
+    const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    return String(num)
+      .split("")
+      .map((char) => arabicDigits[Number(char)])
+      .join("");
+  };
 
   const renderVerse = useCallback(
     ({ item }: { item: VerseItem }) => {
@@ -412,6 +429,112 @@ export default function ChapterDetailScreen() {
     ],
   );
 
+  const pages = useMemo(() => {
+    if (readingView !== "page_by_page") return [];
+
+    const groups: Record<number, VerseItem[]> = {};
+    for (const v of filteredVerses) {
+      const groupPage = v.page || 0;
+      if (!groups[groupPage]) groups[groupPage] = [];
+      groups[groupPage].push(v);
+    }
+    return Object.entries(groups)
+      .map(([pageStr, verses]) => ({
+        page: Number(pageStr),
+        verses,
+        key: `page-${pageStr}`,
+      }))
+      .sort((a, b) => a.page - b.page);
+  }, [filteredVerses, readingView]);
+
+  const renderPage = useCallback(
+    ({ item }: { item: { page: number; verses: VerseItem[] } }) => {
+      return (
+        <View
+          style={[
+            styles.verseCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.border, 0.88),
+            },
+          ]}
+        >
+          <View style={[styles.verseHeaderRow, { marginBottom: 16 }]}>
+            <View style={styles.verseMetaRow}>
+              {item.page > 0 ? (
+                <Text style={[styles.verseMeta, { color: colors.textMuted }]}>
+                  Page {item.page}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          <Text
+            style={[
+              styles.arabicVerseText,
+              {
+                color: colors.textMain,
+                fontSize: arabicFontSize,
+                lineHeight: arabicFontSize * 1.8,
+                textAlign: "justify",
+              },
+            ]}
+          >
+            {item.verses
+              .map((v) => `${v.text} ﴿${toArabicNumber(v.verseNumber)}﴾`)
+              .join(" ")}
+          </Text>
+
+          {showTransliterations ? (
+            <Text
+              style={[
+                styles.transliterationText,
+                { color: colors.textMuted, marginTop: 16 },
+              ]}
+            >
+              {item.verses
+                .map((v) =>
+                  v.transliteration
+                    ? `${v.transliteration} (${v.verseNumber})`
+                    : "",
+                )
+                .filter(Boolean)
+                .join(" ")}
+            </Text>
+          ) : null}
+
+          {showTranslations ? (
+            <Text
+              style={[
+                styles.translationText,
+                {
+                  color: colors.textMain,
+                  fontSize: translationFontSize,
+                  lineHeight: translationFontSize * 1.5,
+                  marginTop: 16,
+                },
+              ]}
+            >
+              {item.verses
+                .map((v) =>
+                  v.translation ? `${v.verseNumber}. ${v.translation}` : "",
+                )
+                .filter(Boolean)
+                .join(" ")}
+            </Text>
+          ) : null}
+        </View>
+      );
+    },
+    [
+      colors,
+      arabicFontSize,
+      showTransliterations,
+      showTranslations,
+      translationFontSize,
+    ],
+  );
+
   if (!chapterNumber || !chapterMeta) {
     return (
       <SafeAreaView
@@ -439,6 +562,195 @@ export default function ChapterDetailScreen() {
     );
   }
 
+  const renderHeader = () => {
+    return (
+      <View style={styles.headerSection}>
+        <Pressable
+          onPress={() => {
+            void Haptics.selectionAsync();
+            router.back();
+          }}
+          style={[
+            styles.backButton,
+            {
+              borderColor: colors.border,
+              backgroundColor: withOpacity(colors.surface, 0.92),
+            },
+          ]}
+        >
+          <ChevronLeft size={18} color={colors.textMain} />
+          <Text style={[styles.backButtonText, { color: colors.textMain }]}>
+            Chapters
+          </Text>
+        </Pressable>
+
+        <View
+          style={[
+            styles.chapterHeaderCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.primary, 0.22),
+            },
+          ]}
+        >
+          <Text style={[styles.chapterEnglishName, { color: colors.textMain }]}>
+            {chapterNumber}. {chapterMeta.englishname}
+          </Text>
+          <Text style={[styles.chapterArabicName, { color: colors.textMain }]}>
+            {chapterMeta.arabicname}
+          </Text>
+          <Text style={[styles.chapterInfo, { color: colors.textMuted }]}>
+            {chapterMeta.name} • {chapterMeta.revelation} • {verseCount} verses
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.searchContainer,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Search size={18} color={colors.textMuted} />
+          <TextInput
+            value={searchValue}
+            onChangeText={setSearchValue}
+            placeholder="Search verses in this surah"
+            placeholderTextColor={colors.textMuted}
+            style={[styles.searchInput, { color: colors.textMain }]}
+          />
+        </View>
+
+        <Text style={[styles.resultsText, { color: colors.textMuted }]}>
+          {filteredVerses.length} verse
+          {filteredVerses.length === 1 ? "" : "s"}
+        </Text>
+      </View>
+    );
+  };
+
+  const renderContent = () => {
+    if (readingView === "verse_by_verse") {
+      const currentItem = filteredVerses[currentVerseIndex];
+      return (
+        <ScrollView
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderHeader()}
+          {currentItem ? (
+            <View>
+              {renderVerse({ item: currentItem })}
+              <View
+                style={[
+                  styles.actionsRow,
+                  { justifyContent: "space-between", marginTop: 16 },
+                ]}
+              >
+                <Pressable
+                  disabled={currentVerseIndex === 0}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setCurrentVerseIndex((p) => Math.max(0, p - 1));
+                  }}
+                  style={[
+                    styles.backButton,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      opacity: currentVerseIndex === 0 ? 0.5 : 1,
+                    },
+                  ]}
+                >
+                  <ChevronLeft size={18} color={colors.textMain} />
+                  <Text
+                    style={[styles.backButtonText, { color: colors.textMain }]}
+                  >
+                    Previous
+                  </Text>
+                </Pressable>
+                <Pressable
+                  disabled={currentVerseIndex === filteredVerses.length - 1}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setCurrentVerseIndex((p) =>
+                      Math.min(filteredVerses.length - 1, p + 1),
+                    );
+                  }}
+                  style={[
+                    styles.backButton,
+                    {
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      opacity:
+                        currentVerseIndex === filteredVerses.length - 1
+                          ? 0.5
+                          : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.backButtonText, { color: colors.textMain }]}
+                  >
+                    Next
+                  </Text>
+                  <ChevronRight size={18} color={colors.textMain} />
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Text
+              style={{
+                color: colors.textMain,
+                textAlign: "center",
+                marginTop: 24,
+              }}
+            >
+              No verses found.
+            </Text>
+          )}
+        </ScrollView>
+      );
+    }
+
+    if (readingView === "page_by_page") {
+      return (
+        <FlashList
+          ref={flashListRef}
+          data={pages}
+          keyExtractor={(item: { key: string }) => item.key}
+          renderItem={renderPage as any}
+          viewabilityConfig={{
+            itemVisiblePercentThreshold: 55,
+            minimumViewTime: 200,
+          }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={renderHeader()}
+        />
+      );
+    }
+
+    return (
+      <FlashList
+        ref={flashListRef}
+        data={filteredVerses}
+        keyExtractor={(item: VerseItem) => item.key}
+        renderItem={renderVerse}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 55,
+          minimumViewTime: 200,
+        }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={renderHeader()}
+      />
+    );
+  };
+
   return (
     <SafeAreaView
       style={[styles.screen, { backgroundColor: colors.background }]}
@@ -455,90 +767,7 @@ export default function ChapterDetailScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <FlashList
-        ref={flashListRef}
-        data={filteredVerses}
-        keyExtractor={(item) => item.key}
-        renderItem={renderVerse}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 55,
-          minimumViewTime: 200,
-        }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.headerSection}>
-            <Pressable
-              onPress={() => {
-                void Haptics.selectionAsync();
-                router.back();
-              }}
-              style={[
-                styles.backButton,
-                {
-                  borderColor: colors.border,
-                  backgroundColor: withOpacity(colors.surface, 0.92),
-                },
-              ]}
-            >
-              <ChevronLeft size={18} color={colors.textMain} />
-              <Text style={[styles.backButtonText, { color: colors.textMain }]}>
-                Chapters
-              </Text>
-            </Pressable>
-
-            <View
-              style={[
-                styles.chapterHeaderCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: withOpacity(colors.primary, 0.22),
-                },
-              ]}
-            >
-              <Text
-                style={[styles.chapterEnglishName, { color: colors.textMain }]}
-              >
-                {chapterNumber}. {chapterMeta.englishname}
-              </Text>
-              <Text
-                style={[styles.chapterArabicName, { color: colors.textMain }]}
-              >
-                {chapterMeta.arabicname}
-              </Text>
-              <Text style={[styles.chapterInfo, { color: colors.textMuted }]}>
-                {chapterMeta.name} • {chapterMeta.revelation} • {verseCount}{" "}
-                verses
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.searchContainer,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Search size={18} color={colors.textMuted} />
-              <TextInput
-                value={searchValue}
-                onChangeText={setSearchValue}
-                placeholder="Search verses in this surah"
-                placeholderTextColor={colors.textMuted}
-                style={[styles.searchInput, { color: colors.textMain }]}
-              />
-            </View>
-
-            <Text style={[styles.resultsText, { color: colors.textMuted }]}>
-              {filteredVerses.length} verse
-              {filteredVerses.length === 1 ? "" : "s"}
-            </Text>
-          </View>
-        }
-      />
+      {renderContent()}
 
       <ShareVerseModal
         visible={shareVerseData !== null}
