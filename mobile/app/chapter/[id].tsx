@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -34,6 +33,7 @@ import {
   getVersesCount,
 } from "../../lib/QuranHelper";
 import { saveLastReadProgress } from "../../lib/ReadingProgress";
+import ShareVerseModal from "../../components/ShareVerseModal";
 
 type VerseItem = {
   key: string;
@@ -75,6 +75,13 @@ export default function ChapterDetailScreen() {
     null,
   );
   const lastSaveAtRef = useRef(0);
+  const [shareVerseData, setShareVerseData] = useState<{
+    text: string;
+    translation: string | null;
+    verseNumber: number;
+    chapterName: string;
+    chapterNumber: number;
+  } | null>(null);
 
   const chapterNumber = useMemo(() => {
     const rawId = Array.isArray(id) ? id[0] : id;
@@ -216,16 +223,17 @@ export default function ChapterDetailScreen() {
   );
 
   const handleShareVerse = useCallback(
-    async (text: string, verseNumber: number) => {
-      try {
-        await Share.share({
-          message: `${chapterMeta?.englishname ?? "Surah"} ${verseNumber}\n\n${text}`,
-        });
-      } catch {
-        Alert.alert("Unable to share", "Please try again.");
-      }
+    (item: VerseItem) => {
+      void Haptics.selectionAsync();
+      setShareVerseData({
+        text: item.text,
+        translation: item.translation,
+        verseNumber: item.verseNumber,
+        chapterName: chapterMeta?.englishname ?? "Unknown",
+        chapterNumber: chapterNumber ?? 0,
+      });
     },
-    [chapterMeta?.englishname],
+    [chapterMeta?.englishname, chapterNumber],
   );
 
   const renderVerse = useCallback(
@@ -375,7 +383,7 @@ export default function ChapterDetailScreen() {
 
             <Pressable
               onPress={() => {
-                void handleShareVerse(item.text, item.verseNumber);
+                handleShareVerse(item);
               }}
               style={styles.actionButton}
             >
@@ -530,6 +538,14 @@ export default function ChapterDetailScreen() {
             </Text>
           </View>
         }
+      />
+
+      <ShareVerseModal
+        visible={shareVerseData !== null}
+        onClose={() => setShareVerseData(null)}
+        verse={shareVerseData}
+        arabicFontSize={arabicFontSize}
+        translationFontSize={translationFontSize}
       />
     </SafeAreaView>
   );
