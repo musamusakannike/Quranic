@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { Search } from "lucide-react-native";
+import { ArrowUpDown, Search } from "lucide-react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -25,6 +25,7 @@ import { useTheme } from "../../lib/ThemeContext";
 import { getChapterMetadata, getVersesCount } from "../../lib/QuranHelper";
 
 type FilterType = "all" | "mecca" | "madina";
+type SortDirection = "top-to-bottom" | "bottom-to-top";
 
 interface ChapterListItem {
   id: number;
@@ -124,6 +125,7 @@ export default function ChaptersScreen() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("top-to-bottom");
 
   const chapters = useMemo(() => {
     const list: ChapterListItem[] = [];
@@ -178,6 +180,11 @@ export default function ChaptersScreen() {
     });
   }, [chapters, filter, searchValue]);
 
+  const displayedChapters = useMemo(() => {
+    if (sortDirection === "top-to-bottom") return filteredChapters;
+    return [...filteredChapters].reverse();
+  }, [filteredChapters, sortDirection]);
+
   const filterOptions: { key: FilterType; label: string; count: number }[] = [
     { key: "all", label: "All", count: chapterStats.total },
     { key: "mecca", label: "Mecca", count: chapterStats.mecca },
@@ -199,7 +206,7 @@ export default function ChaptersScreen() {
       />
 
       <FlatList
-        data={filteredChapters}
+        data={displayedChapters}
         keyExtractor={(item) => String(item.id)}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
@@ -318,6 +325,29 @@ export default function ChaptersScreen() {
                   </Animated.View>
                 );
               })}
+
+              <Animated.View entering={FadeInDown.delay(300).duration(280)}>
+                <Pressable
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setSortDirection((prev) =>
+                      prev === "top-to-bottom" ? "bottom-to-top" : "top-to-bottom",
+                    );
+                  }}
+                  style={[
+                    styles.sortChip,
+                    {
+                      backgroundColor: withOpacity(colors.surface, 0.5),
+                      borderColor: withOpacity(colors.border, 0.8),
+                    },
+                  ]}
+                >
+                  <ArrowUpDown size={14} color={colors.textMain} strokeWidth={2.4} />
+                  {/* <Text style={[styles.filterText, { color: colors.textMain }]}>
+                    {sortDirection === "top-to-bottom" ? "Top → Bottom" : "Bottom → Top"}
+                  </Text> */}
+                </Pressable>
+              </Animated.View>
             </View>
 
             <Text style={[styles.resultCount, { color: colors.textMuted }]}>
@@ -411,12 +441,23 @@ const styles = StyleSheet.create({
   filtersRow: {
     flexDirection: "row",
     gap: 8,
+    alignItems: "center",
   },
   filterChip: {
     borderWidth: 1,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 999,
+  },
+  sortChip: {
+    marginLeft: "auto",
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   filterText: {
     fontFamily: "SatoshiMedium",
