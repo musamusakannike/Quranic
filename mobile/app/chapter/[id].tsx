@@ -17,10 +17,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { ChevronLeft, Copy, Search, Share2 } from "lucide-react-native";
 import { useTheme } from "../../lib/ThemeContext";
+import { useAppSettings } from "../../lib/AppSettingsContext";
 import {
   getChapterMetadata,
   getChapterVerses,
+  getVerseTranslation,
   getVerseMetadata,
+  getVerseTransliteration,
   getVersesCount,
 } from "../../lib/QuranHelper";
 
@@ -28,6 +31,8 @@ type VerseItem = {
   key: string;
   verseNumber: number;
   text: string;
+  translation: string | null;
+  transliteration: string | null;
   page: number | null;
   juz: number | null;
 };
@@ -45,6 +50,7 @@ export default function ChapterDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { showTranslations, showTransliterations } = useAppSettings();
   const [searchValue, setSearchValue] = useState("");
 
   const chapterNumber = useMemo(() => {
@@ -79,6 +85,8 @@ export default function ChapterDetailScreen() {
         key: `${chapterNumber}-${verseNumber}`,
         verseNumber,
         text,
+        translation: getVerseTranslation(chapterNumber, verseNumber),
+        transliteration: getVerseTransliteration(chapterNumber, verseNumber),
         page: metadata?.page ?? null,
         juz: metadata?.juz ?? null,
       };
@@ -90,10 +98,12 @@ export default function ChapterDetailScreen() {
 
     if (!normalizedSearch) return chapterVerses;
 
-    return chapterVerses.filter(({ text, verseNumber }) => {
+    return chapterVerses.filter(({ text, verseNumber, transliteration, translation }) => {
       return (
         text.toLowerCase().includes(normalizedSearch) ||
-        String(verseNumber).includes(normalizedSearch)
+        String(verseNumber).includes(normalizedSearch) ||
+        transliteration?.toLowerCase().includes(normalizedSearch) ||
+        translation?.toLowerCase().includes(normalizedSearch)
       );
     });
   }, [chapterVerses, searchValue]);
@@ -148,6 +158,18 @@ export default function ChapterDetailScreen() {
 
         <Text style={[styles.arabicVerseText, { color: colors.textMain }]}>{item.text}</Text>
 
+        {showTransliterations ? (
+          <Text style={[styles.transliterationText, { color: colors.textMuted }]}>
+            {item.transliteration ?? "Transliteration unavailable."}
+          </Text>
+        ) : null}
+
+        {showTranslations ? (
+          <Text style={[styles.translationText, { color: colors.textMain }]}>
+            {item.translation ?? "Translation is not available yet for this ayah."}
+          </Text>
+        ) : null}
+
         <View style={styles.actionsRow}>
           <Pressable
             onPress={() => {
@@ -171,7 +193,7 @@ export default function ChapterDetailScreen() {
         </View>
       </View>
     ),
-    [colors, handleCopyVerse, handleShareVerse, isDark],
+    [colors, handleCopyVerse, handleShareVerse, isDark, showTransliterations, showTranslations],
   );
 
   if (!chapterNumber || !chapterMeta) {
@@ -365,6 +387,16 @@ const styles = StyleSheet.create({
     fontSize: 31,
     lineHeight: 50,
     textAlign: "right",
+  },
+  transliterationText: {
+    fontFamily: "Satoshi",
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  translationText: {
+    fontFamily: "Satoshi",
+    fontSize: 14,
+    lineHeight: 21,
   },
   actionsRow: {
     flexDirection: "row",

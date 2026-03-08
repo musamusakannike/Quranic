@@ -4,6 +4,7 @@ import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import { AmiriQuran_400Regular } from "@expo-google-fonts/amiri-quran";
 import { ThemeProvider } from "../lib/ThemeContext";
+import { AppSettingsProvider } from "../lib/AppSettingsContext";
 
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -28,7 +29,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <AppSettingsProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppSettingsProvider>
     </ThemeProvider>
   );
 }

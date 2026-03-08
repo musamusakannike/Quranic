@@ -11,6 +11,48 @@ export interface SearchResult {
   text: string;
 }
 
+const ARABIC_TO_LATIN_MAP: Record<string, string> = {
+  ا: "a",
+  أ: "a",
+  إ: "i",
+  آ: "aa",
+  ب: "b",
+  ت: "t",
+  ث: "th",
+  ج: "j",
+  ح: "h",
+  خ: "kh",
+  د: "d",
+  ذ: "dh",
+  ر: "r",
+  ز: "z",
+  س: "s",
+  ش: "sh",
+  ص: "s",
+  ض: "d",
+  ط: "t",
+  ظ: "z",
+  ع: "'",
+  غ: "gh",
+  ف: "f",
+  ق: "q",
+  ك: "k",
+  ل: "l",
+  م: "m",
+  ن: "n",
+  ه: "h",
+  و: "w",
+  ي: "y",
+  ى: "a",
+  ة: "h",
+  "ء": "'",
+  "ؤ": "'",
+  "ئ": "'",
+  "ٱ": "a",
+};
+
+const ARABIC_DIACRITICS_REGEX = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+
 export interface VerseMetadata {
   line: number;
   juz: number;
@@ -47,9 +89,33 @@ const quranMetadata = quranMetadataRaw as unknown as QuranMetadata;
 export const getVerseText = (chapter: number, verse: number): string | null => {
   try {
     return quranData[chapter][verse] || null;
-  } catch (error) {
+  } catch {
     return null;
   }
+};
+
+export const getVerseTransliteration = (
+  chapter: number,
+  verse: number,
+): string | null => {
+  const verseText = getVerseText(chapter, verse);
+  if (!verseText) return null;
+
+  const normalized = verseText.replace(ARABIC_DIACRITICS_REGEX, "");
+  let transliterated = "";
+
+  for (const char of normalized) {
+    transliterated += ARABIC_TO_LATIN_MAP[char] ?? char;
+  }
+
+  return transliterated.replace(/\s+/g, " ").trim();
+};
+
+export const getVerseTranslation = (
+  _chapter: number,
+  _verse: number,
+): string | null => {
+  return null;
 };
 
 /**
@@ -66,7 +132,7 @@ export const getVerseMetadata = (
   try {
     const chapterMeta = quranMetadata.chapters[chapter];
     return chapterMeta ? chapterMeta.verses[verse] || null : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -86,7 +152,7 @@ export const getChapterMetadata = (
     if (!chapterMeta) return null;
     const { verses, ...metaWithoutVerses } = chapterMeta;
     return metaWithoutVerses;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
