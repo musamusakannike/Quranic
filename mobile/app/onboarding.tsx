@@ -17,6 +17,7 @@ import Animated, {
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler,
+  SharedValue,
 } from "react-native-reanimated";
 import { useTheme } from "../lib/ThemeContext";
 import { useAppSettings } from "../lib/AppSettingsContext";
@@ -58,6 +59,43 @@ const SLIDES = [
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const PaginationDot = ({
+  index,
+  scrollX,
+  screenWidth,
+  color,
+}: {
+  index: number;
+  scrollX: SharedValue<number>;
+  screenWidth: number;
+  color: string;
+}) => {
+  const dotStyle = useAnimatedStyle(() => {
+    const inputRange = [
+      (index - 1) * screenWidth,
+      index * screenWidth,
+      (index + 1) * screenWidth,
+    ];
+    const dotWidth = interpolate(
+      scrollX.value,
+      inputRange,
+      [8, 24, 8],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollX.value,
+      inputRange,
+      [0.3, 1, 0.3],
+      Extrapolation.CLAMP,
+    );
+    return { width: dotWidth, opacity };
+  });
+
+  return (
+    <Animated.View style={[styles.dot, { backgroundColor: color }, dotStyle]} />
+  );
+};
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -153,39 +191,15 @@ export default function OnboardingScreen() {
 
       <View style={styles.footer}>
         <View style={styles.pagination}>
-          {SLIDES.map((_, index) => {
-            const dotStyle = useAnimatedStyle(() => {
-              const inputRange = [
-                (index - 1) * width,
-                index * width,
-                (index + 1) * width,
-              ];
-              const dotWidth = interpolate(
-                scrollX.value,
-                inputRange,
-                [8, 24, 8],
-                Extrapolation.CLAMP,
-              );
-              const opacity = interpolate(
-                scrollX.value,
-                inputRange,
-                [0.3, 1, 0.3],
-                Extrapolation.CLAMP,
-              );
-              return { width: dotWidth, opacity };
-            });
-
-            return (
-              <Animated.View
-                key={index.toString()}
-                style={[
-                  styles.dot,
-                  { backgroundColor: colors.primary },
-                  dotStyle,
-                ]}
-              />
-            );
-          })}
+          {SLIDES.map((_, index) => (
+            <PaginationDot
+              key={index.toString()}
+              index={index}
+              scrollX={scrollX}
+              screenWidth={width}
+              color={colors.primary}
+            />
+          ))}
         </View>
 
         <AnimatedPressable

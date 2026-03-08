@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import { Search } from "lucide-react-native";
+import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -185,6 +186,24 @@ export default function Index() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <Animated.View entering={FadeInDown.delay(30).duration(280)}>
+          <Pressable
+            onPress={() => router.push("/search")}
+            style={[
+              styles.fakeSearchBar,
+              {
+                backgroundColor: colors.surface,
+                borderColor: withOpacity(colors.border, 0.8),
+              },
+            ]}
+          >
+            <Search size={18} color={colors.textMuted} />
+            <Text style={[styles.fakeSearchText, { color: colors.textMuted }]}>
+              Search Quran globally...
+            </Text>
+          </Pressable>
+        </Animated.View>
+
         <Animated.View entering={FadeIn.duration(280)}>
           <LinearGradient
             colors={[
@@ -528,6 +547,20 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 120,
     gap: 14,
+  },
+  fakeSearchBar: {
+    borderWidth: 1,
+    borderRadius: 999,
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    gap: 10,
+    marginBottom: 2,
+  },
+  fakeSearchText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 15,
   },
   greetingCard: {
     borderWidth: 1,

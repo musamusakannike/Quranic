@@ -13,6 +13,9 @@ export interface SearchResult {
   chapter: number;
   verse: number;
   text: string;
+  translation: string | null;
+  transliteration: string | null;
+  matchType: "arabic" | "translation" | "transliteration";
 }
 
 export interface VerseMetadata {
@@ -183,25 +186,59 @@ export const getFirstVerseForJuz = (juz: number): VerseReference | null => {
  * @param searchTerm - The text to search for
  * @returns Array of formatting search results
  */
-export const searchQuran = (searchTerm: string): SearchResult[] => {
+export const searchQuran = (
+  searchTerm: string,
+  limit: number = 50,
+): SearchResult[] => {
   if (!searchTerm || searchTerm.trim() === "") return [];
 
   const results: SearchResult[] = [];
   const normalizedTerm = searchTerm.toLowerCase();
 
-  quranData.forEach((chapterVerses, chapterIndex) => {
-    if (!chapterVerses) return;
+  for (let chapterIndex = 1; chapterIndex < quranData.length; chapterIndex++) {
+    const chapterVerses = quranData[chapterIndex];
+    const chapterTranslations = quranTranslationData[chapterIndex];
+    const chapterTransliterations = quranTransliterationData[chapterIndex];
 
-    chapterVerses.forEach((verseText, verseIndex) => {
-      if (verseText && verseText.toLowerCase().includes(normalizedTerm)) {
+    if (!chapterVerses) continue;
+
+    for (let verseIndex = 1; verseIndex < chapterVerses.length; verseIndex++) {
+      const arabicText = chapterVerses[verseIndex];
+      const translation = chapterTranslations?.[verseIndex] ?? null;
+      const transliteration = chapterTransliterations?.[verseIndex] ?? null;
+
+      let matchType: "arabic" | "translation" | "transliteration" | null = null;
+
+      if (arabicText && arabicText.toLowerCase().includes(normalizedTerm)) {
+        matchType = "arabic";
+      } else if (
+        translation &&
+        translation.toLowerCase().includes(normalizedTerm)
+      ) {
+        matchType = "translation";
+      } else if (
+        transliteration &&
+        transliteration.toLowerCase().includes(normalizedTerm)
+      ) {
+        matchType = "transliteration";
+      }
+
+      if (matchType) {
         results.push({
           chapter: chapterIndex,
           verse: verseIndex,
-          text: verseText,
+          text: arabicText ?? "",
+          translation,
+          transliteration,
+          matchType,
         });
+
+        if (results.length >= limit) {
+          return results; // Return early if limit is reached
+        }
       }
-    });
-  });
+    }
+  }
 
   return results;
 };
