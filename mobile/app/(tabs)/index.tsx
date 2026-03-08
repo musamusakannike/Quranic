@@ -1,13 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View, StyleSheet, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
-import { getChapterMetadata, getFirstVerseForJuz } from "../../lib/QuranHelper";
+import { getChapterMetadata, getFirstVerseForJuz, getVersesCount } from "../../lib/QuranHelper";
 import {
   getLastReadProgress,
   type LastReadProgress,
@@ -21,6 +23,8 @@ const withOpacity = (hexColor: string, opacity: number) => {
   const b = bigint & 255;
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -47,6 +51,7 @@ export default function Index() {
   const { colors, isDark } = useTheme();
   const { reminderEnabled, reminderTime } = useAppSettings();
   const [lastRead, setLastRead] = useState<LastReadProgress | null>(null);
+  const continuePressed = useSharedValue(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -77,6 +82,25 @@ export default function Index() {
     return getChapterMetadata(lastRead.chapter);
   }, [lastRead]);
 
+  const readingProgress = useMemo(() => {
+    if (!lastRead || !lastReadChapter) return null;
+
+    const totalVerses = getVersesCount(lastRead.chapter);
+    if (!totalVerses) return null;
+
+    const ratio = Math.min(Math.max(lastRead.verse / totalVerses, 0), 1);
+
+    return {
+      ratio,
+      percentage: Math.round(ratio * 100),
+      totalVerses,
+    };
+  }, [lastRead, lastReadChapter]);
+
+  const continueAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withTiming(continuePressed.value ? 0.986 : 1, { duration: 120 }) }],
+  }));
+
   const juzItems = useMemo(
     () =>
       Array.from({ length: 30 }, (_, index) => {
@@ -106,44 +130,57 @@ export default function Index() {
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View
-          style={[
-            styles.greetingCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.primary, 0.24),
-            },
-          ]}
-        >
-          <Text style={[styles.greetingText, { color: colors.textMain }]}>{greetingText}</Text>
-          <Text style={[styles.greetingSubtext, { color: colors.textMuted }]}>
-            Keep your recitation steady, even if it is just a few ayat.
-          </Text>
-
-          <View
+        <Animated.View entering={FadeIn.duration(280)}>
+          <LinearGradient
+            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.16 : 0.08)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={[
-              styles.reminderPill,
+              styles.greetingCard,
               {
-                backgroundColor: withOpacity(
-                  reminderEnabled ? colors.success : colors.border,
-                  isDark ? 0.24 : 0.15,
-                ),
+                borderColor: withOpacity(colors.primary, 0.24),
               },
             ]}
           >
-            <Text
+            <Text style={[styles.greetingText, { color: colors.textMain }]}>{greetingText}</Text>
+            <Text style={[styles.greetingSubtext, { color: colors.textMuted }]}> 
+              Keep your recitation steady, even if it is just a few ayat.
+            </Text>
+
+            <View
               style={[
-                styles.reminderPillText,
-                { color: reminderEnabled ? colors.success : colors.textMuted },
+                styles.reminderPill,
+                {
+                  backgroundColor: withOpacity(
+                    reminderEnabled ? colors.success : colors.border,
+                    isDark ? 0.24 : 0.15,
+                  ),
+                },
               ]}
             >
-              {reminderText}
-            </Text>
-          </View>
-        </View>
+              <Text
+                style={[
+                  styles.reminderPillText,
+                  { color: reminderEnabled ? colors.success : colors.textMuted },
+                ]}
+              >
+                {reminderText}
+              </Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
-        <Pressable
+        <AnimatedPressable
+          entering={FadeInDown.delay(70).duration(300)}
+          onPressIn={() => {
+            continuePressed.value = 1;
+          }}
+          onPressOut={() => {
+            continuePressed.value = 0;
+          }}
           onPress={() => {
+            void Haptics.selectionAsync();
+
             if (!lastRead) {
               router.push("/(tabs)/chapters");
               return;
@@ -157,76 +194,123 @@ export default function Index() {
               },
             });
           }}
-          style={[
-            styles.continueCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+          style={continueAnimatedStyle}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Continue reading</Text>
+          <LinearGradient
+            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.12 : 0.06)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.continueCard,
+              {
+                borderColor: withOpacity(colors.border, 0.85),
+              },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Continue reading</Text>
 
-          {lastRead && lastReadChapter ? (
-            <>
-              <Text style={[styles.continueTitle, { color: colors.textMain }]}>
-                Surah {lastReadChapter.englishname}
-              </Text>
-              <Text style={[styles.continueMeta, { color: colors.textMuted }]}>
-                Ayah {lastRead.verse} • Page {lastRead.page ?? "-"} • Juz {lastRead.juz ?? "-"}
-              </Text>
-              <Text style={[styles.continueCta, { color: colors.primary }]}>Resume from last read</Text>
-            </>
-          ) : (
-            <>
-              <Text style={[styles.continueMeta, { color: colors.textMuted }]}>
-                Start from any surah and your reading position will be saved automatically.
-              </Text>
-              <Text style={[styles.continueCta, { color: colors.primary }]}>Open chapters</Text>
-            </>
-          )}
-        </Pressable>
+            {lastRead && lastReadChapter ? (
+              <>
+                <Text style={[styles.continueTitle, { color: colors.textMain }]}> 
+                  Surah {lastReadChapter.englishname}
+                </Text>
+                <Text style={[styles.continueMeta, { color: colors.textMuted }]}> 
+                  Ayah {lastRead.verse} • Page {lastRead.page ?? "-"} • Juz {lastRead.juz ?? "-"}
+                </Text>
+                {readingProgress ? (
+                  <>
+                    <View
+                      style={[
+                        styles.progressTrack,
+                        { backgroundColor: withOpacity(colors.border, isDark ? 0.75 : 0.5) },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width: `${readingProgress.ratio * 100}%`,
+                            backgroundColor: colors.primary,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.progressLabel, { color: colors.textMuted }]}> 
+                      {readingProgress.percentage}% through this surah
+                    </Text>
+                  </>
+                ) : null}
+                <Text style={[styles.continueCta, { color: colors.primary }]}>Resume from last read</Text>
+              </>
+            ) : (
+              <>
+                <Text style={[styles.continueMeta, { color: colors.textMuted }]}> 
+                  Start from any surah and your reading position will be saved automatically.
+                </Text>
+                <Text style={[styles.continueCta, { color: colors.primary }]}>Open chapters</Text>
+              </>
+            )}
+          </LinearGradient>
+        </AnimatedPressable>
 
-        <View
-          style={[
-            styles.juzCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Quick Juz Navigator</Text>
-          <Text style={[styles.juzHint, { color: colors.textMuted }]}>Jump straight into any Juz</Text>
+        <Animated.View entering={FadeInDown.delay(120).duration(320)}>
+          <LinearGradient
+            colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.1 : 0.05)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.juzCard,
+              {
+                borderColor: withOpacity(colors.border, 0.85),
+              },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Quick Juz Navigator</Text>
+            <Text style={[styles.juzHint, { color: colors.textMuted }]}>Jump straight into any Juz</Text>
 
-          <View style={styles.juzGrid}>
-            {juzItems.map((item) => (
-              <Pressable
-                key={`juz-${item.juz}`}
-                onPress={() => {
-                  if (!item.chapter || !item.verse) return;
+            <View style={styles.juzGrid}>
+              {juzItems.map((item, index) => (
+                <Animated.View
+                  key={`juz-wrap-${item.juz}`}
+                  entering={FadeInDown.delay(170 + index * 16).duration(280)}
+                >
+                  <Pressable
+                    onPress={() => {
+                      if (!item.chapter || !item.verse) return;
 
-                  router.push({
-                    pathname: "/chapter/[id]",
-                    params: {
-                      id: String(item.chapter),
-                      verse: String(item.verse),
-                    },
-                  });
-                }}
-                style={[
-                  styles.juzChip,
-                  {
-                    backgroundColor: withOpacity(colors.primary, isDark ? 0.25 : 0.1),
-                    borderColor: withOpacity(colors.primary, isDark ? 0.45 : 0.22),
-                  },
-                ]}
-              >
-                <Text style={[styles.juzChipText, { color: colors.primary }]}>Juz {item.juz}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+                      void Haptics.selectionAsync();
+                      router.push({
+                        pathname: "/chapter/[id]",
+                        params: {
+                          id: String(item.chapter),
+                          verse: String(item.verse),
+                        },
+                      });
+                    }}
+                    style={styles.juzChip}
+                  >
+                    <LinearGradient
+                      colors={[
+                        withOpacity(colors.primary, isDark ? 0.3 : 0.14),
+                        withOpacity(colors.primary, isDark ? 0.2 : 0.06),
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.juzChipInner,
+                        {
+                          borderColor: withOpacity(colors.primary, isDark ? 0.45 : 0.22),
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.juzChipText, { color: colors.primary }]}>Juz {item.juz}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
+              ))}
+            </View>
+          </LinearGradient>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -275,6 +359,22 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 7,
   },
+  progressTrack: {
+    width: "100%",
+    height: 7,
+    borderRadius: 999,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
+  progressLabel: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 12,
+    marginTop: 2,
+  },
   sectionTitle: {
     fontFamily: "SatoshiBold",
     fontSize: 18,
@@ -310,8 +410,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   juzChip: {
-    borderWidth: 1,
     minWidth: "22%",
+    borderRadius: 999,
+  },
+  juzChipInner: {
+    borderWidth: 1,
     alignItems: "center",
     borderRadius: 999,
     paddingHorizontal: 10,

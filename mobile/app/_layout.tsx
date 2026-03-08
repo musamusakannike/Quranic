@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { AmiriQuran_400Regular } from "@expo-google-fonts/amiri-quran";
 import { ThemeProvider } from "../lib/ThemeContext";
 import { AppSettingsProvider } from "../lib/AppSettingsContext";
+import { BookmarksProvider } from "../lib/BookmarksContext";
 
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -18,10 +19,11 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded || error) {
+    // Only handle error here, we'll hide splash screen in a better place or app index
+    if (error) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, error]);
+  }, [error]);
 
   if (!loaded && !error) {
     return null;
@@ -29,9 +31,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppSettingsProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </AppSettingsProvider>
+      <BookmarksProvider>
+        <AppSettingsProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppSettingsProvider>
+      </BookmarksProvider>
     </ThemeProvider>
   );
 }

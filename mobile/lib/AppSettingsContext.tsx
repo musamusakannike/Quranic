@@ -21,12 +21,14 @@ type AppSettingsContextValue = {
   showTransliterations: boolean;
   reminderEnabled: boolean;
   reminderTime: ReminderTime;
+  hasSeenOnboarding: boolean;
   isLoaded: boolean;
   setShowTranslations: (enabled: boolean) => Promise<void>;
   setShowTransliterations: (enabled: boolean) => Promise<void>;
   setReminderTime: (time: ReminderTime) => Promise<void>;
   enableReminder: (time: ReminderTime) => Promise<boolean>;
   disableReminder: () => Promise<void>;
+  setHasSeenOnboarding: (hasSeen: boolean) => Promise<void>;
 };
 
 type StoredSettings = {
@@ -35,6 +37,7 @@ type StoredSettings = {
   reminderEnabled: boolean;
   reminderTime: ReminderTime;
   reminderNotificationId: string | null;
+  hasSeenOnboarding: boolean;
 };
 
 const SETTINGS_STORAGE_KEY = "@app_reader_settings";
@@ -45,6 +48,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   reminderEnabled: false,
   reminderTime: { hour: 20, minute: 0 },
   reminderNotificationId: null,
+  hasSeenOnboarding: false,
 };
 
 Notifications.setNotificationHandler({
@@ -56,7 +60,9 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const AppSettingsContext = createContext<AppSettingsContextValue | undefined>(undefined);
+const AppSettingsContext = createContext<AppSettingsContextValue | undefined>(
+  undefined,
+);
 
 const parseStoredSettings = (raw: string | null): StoredSettings => {
   if (!raw) return DEFAULT_SETTINGS;
@@ -68,7 +74,8 @@ const parseStoredSettings = (raw: string | null): StoredSettings => {
       ...parsed,
       reminderTime: {
         hour: parsed.reminderTime?.hour ?? DEFAULT_SETTINGS.reminderTime.hour,
-        minute: parsed.reminderTime?.minute ?? DEFAULT_SETTINGS.reminderTime.minute,
+        minute:
+          parsed.reminderTime?.minute ?? DEFAULT_SETTINGS.reminderTime.minute,
       },
     };
   } catch {
@@ -83,12 +90,18 @@ const saveSettings = async (settings: StoredSettings) => {
 const requestNotificationPermission = async () => {
   const current = await Notifications.getPermissionsAsync();
 
-  if (current.granted || current.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+  if (
+    current.granted ||
+    current.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  ) {
     return true;
   }
 
   const request = await Notifications.requestPermissionsAsync();
-  return request.granted || request.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+  return (
+    request.granted ||
+    request.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  );
 };
 
 export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
@@ -120,24 +133,33 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     void loadSettings();
   }, []);
 
-  const updateSettings = useCallback(async (updater: (current: StoredSettings) => StoredSettings) => {
-    setSettings((current) => {
-      const next = updater(current);
-      void saveSettings(next);
-      return next;
-    });
-  }, []);
+  const updateSettings = useCallback(
+    async (updater: (current: StoredSettings) => StoredSettings) => {
+      setSettings((current) => {
+        const next = updater(current);
+        void saveSettings(next);
+        return next;
+      });
+    },
+    [],
+  );
 
   const setShowTranslations = useCallback(
     async (enabled: boolean) => {
-      await updateSettings((current) => ({ ...current, showTranslations: enabled }));
+      await updateSettings((current) => ({
+        ...current,
+        showTranslations: enabled,
+      }));
     },
     [updateSettings],
   );
 
   const setShowTransliterations = useCallback(
     async (enabled: boolean) => {
-      await updateSettings((current) => ({ ...current, showTransliterations: enabled }));
+      await updateSettings((current) => ({
+        ...current,
+        showTransliterations: enabled,
+      }));
     },
     [updateSettings],
   );
@@ -152,7 +174,9 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
   const disableReminder = useCallback(async () => {
     await updateSettings((current) => {
       if (current.reminderNotificationId) {
-        void Notifications.cancelScheduledNotificationAsync(current.reminderNotificationId);
+        void Notifications.cancelScheduledNotificationAsync(
+          current.reminderNotificationId,
+        );
       }
 
       return {
@@ -162,6 +186,16 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       };
     });
   }, [updateSettings]);
+
+  const setHasSeenOnboarding = useCallback(
+    async (hasSeen: boolean) => {
+      await updateSettings((current) => ({
+        ...current,
+        hasSeenOnboarding: hasSeen,
+      }));
+    },
+    [updateSettings],
+  );
 
   const enableReminder = useCallback(
     async (time: ReminderTime) => {
@@ -173,21 +207,24 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
 
       const currentNotificationId = settings.reminderNotificationId;
       if (currentNotificationId) {
-        await Notifications.cancelScheduledNotificationAsync(currentNotificationId);
+        await Notifications.cancelScheduledNotificationAsync(
+          currentNotificationId,
+        );
       }
 
-      const reminderNotificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Quran reminder",
-          body: "Take a moment to recite the Quran today.",
-        },
-        trigger: {
-          channelId: "daily-reminders",
-          hour: time.hour,
-          minute: time.minute,
-          repeats: true,
-        } as Notifications.NotificationTriggerInput,
-      });
+      const reminderNotificationId =
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Quran reminder",
+            body: "Take a moment to recite the Quran today.",
+          },
+          trigger: {
+            channelId: "daily-reminders",
+            hour: time.hour,
+            minute: time.minute,
+            repeats: true,
+          } as Notifications.NotificationTriggerInput,
+        });
 
       await updateSettings((current) => ({
         ...current,
@@ -207,24 +244,28 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       showTransliterations: settings.showTransliterations,
       reminderEnabled: settings.reminderEnabled,
       reminderTime: settings.reminderTime,
+      hasSeenOnboarding: settings.hasSeenOnboarding,
       isLoaded,
       setShowTranslations,
       setShowTransliterations,
       setReminderTime,
       enableReminder,
       disableReminder,
+      setHasSeenOnboarding,
     }),
     [
       settings.showTranslations,
       settings.showTransliterations,
       settings.reminderEnabled,
       settings.reminderTime,
+      settings.hasSeenOnboarding,
       isLoaded,
       setShowTranslations,
       setShowTransliterations,
       setReminderTime,
       enableReminder,
       disableReminder,
+      setHasSeenOnboarding,
     ],
   );
 
@@ -232,7 +273,11 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     return null;
   }
 
-  return <AppSettingsContext.Provider value={contextValue}>{children}</AppSettingsContext.Provider>;
+  return (
+    <AppSettingsContext.Provider value={contextValue}>
+      {children}
+    </AppSettingsContext.Provider>
+  );
 };
 
 export const useAppSettings = () => {

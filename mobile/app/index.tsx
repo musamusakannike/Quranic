@@ -8,7 +8,9 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { useTheme } from "../lib/ThemeContext";
+import { useAppSettings } from "../lib/AppSettingsContext";
 import { StatusBar } from "expo-status-bar";
+import * as ExpoSplashScreen from "expo-splash-screen";
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -16,7 +18,12 @@ export default function SplashScreen() {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
 
+  const { hasSeenOnboarding } = useAppSettings();
+
   useEffect(() => {
+    // Hide native splash screen as soon as this JS component mounts!
+    void ExpoSplashScreen.hideAsync();
+
     opacity.value = withTiming(1, { duration: 800 });
     translateY.value = withTiming(0, {
       duration: 800,
@@ -24,7 +31,11 @@ export default function SplashScreen() {
     });
 
     const timeout = setTimeout(() => {
-      router.replace("/(tabs)");
+      if (hasSeenOnboarding) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/onboarding");
+      }
     }, 2500);
 
     return () => clearTimeout(timeout);

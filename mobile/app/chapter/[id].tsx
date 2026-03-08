@@ -15,9 +15,16 @@ import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { ChevronLeft, Copy, Search, Share2 } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Copy,
+  Search,
+  Share2,
+  Bookmark,
+} from "lucide-react-native";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
+import { useBookmarks } from "../../lib/BookmarksContext";
 import {
   getChapterMetadata,
   getChapterVerses,
@@ -49,13 +56,19 @@ const withOpacity = (hexColor: string, opacity: number) => {
 };
 
 export default function ChapterDetailScreen() {
-  const { id, verse } = useLocalSearchParams<{ id?: string | string[]; verse?: string | string[] }>();
+  const { id, verse } = useLocalSearchParams<{
+    id?: string | string[];
+    verse?: string | string[];
+  }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { showTranslations, showTransliterations } = useAppSettings();
+  const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const [searchValue, setSearchValue] = useState("");
-  const flashListRef = useRef<FlashList<VerseItem>>(null);
-  const latestSavedRef = useRef<{ chapter: number; verse: number } | null>(null);
+  const flashListRef = useRef<any>(null);
+  const latestSavedRef = useRef<{ chapter: number; verse: number } | null>(
+    null,
+  );
   const lastSaveAtRef = useRef(0);
 
   const chapterNumber = useMemo(() => {
@@ -112,24 +125,31 @@ export default function ChapterDetailScreen() {
 
     if (!normalizedSearch) return chapterVerses;
 
-    return chapterVerses.filter(({ text, verseNumber, transliteration, translation }) => {
-      return (
-        text.toLowerCase().includes(normalizedSearch) ||
-        String(verseNumber).includes(normalizedSearch) ||
-        transliteration?.toLowerCase().includes(normalizedSearch) ||
-        translation?.toLowerCase().includes(normalizedSearch)
-      );
-    });
+    return chapterVerses.filter(
+      ({ text, verseNumber, transliteration, translation }) => {
+        return (
+          text.toLowerCase().includes(normalizedSearch) ||
+          String(verseNumber).includes(normalizedSearch) ||
+          transliteration?.toLowerCase().includes(normalizedSearch) ||
+          translation?.toLowerCase().includes(normalizedSearch)
+        );
+      },
+    );
   }, [chapterVerses, searchValue]);
 
   useEffect(() => {
     if (!chapterNumber || !targetVerse || searchValue.trim()) return;
 
-    const targetIndex = chapterVerses.findIndex((item) => item.verseNumber === targetVerse);
+    const targetIndex = chapterVerses.findIndex(
+      (item) => item.verseNumber === targetVerse,
+    );
     if (targetIndex < 0) return;
 
     const timeout = setTimeout(() => {
-      flashListRef.current?.scrollToIndex({ index: targetIndex, animated: false });
+      flashListRef.current?.scrollToIndex({
+        index: targetIndex,
+        animated: false,
+      });
     }, 180);
 
     return () => {
@@ -144,11 +164,16 @@ export default function ChapterDetailScreen() {
       const previous = latestSavedRef.current;
       const now = Date.now();
       const isSameVerse =
-        previous && previous.chapter === chapterNumber && previous.verse === item.verseNumber;
+        previous &&
+        previous.chapter === chapterNumber &&
+        previous.verse === item.verseNumber;
 
       if (isSameVerse || now - lastSaveAtRef.current < 1200) return;
 
-      latestSavedRef.current = { chapter: chapterNumber, verse: item.verseNumber };
+      latestSavedRef.current = {
+        chapter: chapterNumber,
+        verse: item.verseNumber,
+      };
       lastSaveAtRef.current = now;
 
       void saveLastReadProgress({
@@ -162,19 +187,28 @@ export default function ChapterDetailScreen() {
   );
 
   const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: { isViewable: boolean; item: VerseItem }[] }) => {
-      const firstVisible = viewableItems.find((entry) => entry.isViewable)?.item;
+    ({
+      viewableItems,
+    }: {
+      viewableItems: { isViewable: boolean; item: VerseItem }[];
+    }) => {
+      const firstVisible = viewableItems.find(
+        (entry) => entry.isViewable,
+      )?.item;
       if (!firstVisible) return;
       persistReadingProgress(firstVisible);
     },
     [persistReadingProgress],
   );
 
-  const handleCopyVerse = useCallback(async (text: string, verseNumber: number) => {
-    await Clipboard.setStringAsync(text);
-    void Haptics.selectionAsync();
-    Alert.alert("Copied", `Ayah ${verseNumber} copied to clipboard.`);
-  }, []);
+  const handleCopyVerse = useCallback(
+    async (text: string, verseNumber: number) => {
+      await Clipboard.setStringAsync(text);
+      void Haptics.selectionAsync();
+      Alert.alert("Copied", `Ayah ${verseNumber} copied to clipboard.`);
+    },
+    [],
+  );
 
   const handleShareVerse = useCallback(
     async (text: string, verseNumber: number) => {
@@ -190,96 +224,182 @@ export default function ChapterDetailScreen() {
   );
 
   const renderVerse = useCallback(
-    ({ item }: { item: VerseItem }) => (
-      <View
-        style={[
-          styles.verseCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: withOpacity(colors.border, 0.88),
-          },
-        ]}
-      >
-        <View style={styles.verseHeaderRow}>
-          <View
-            style={[
-              styles.verseBadge,
-              { backgroundColor: withOpacity(colors.primary, isDark ? 0.3 : 0.12) },
-            ]}
-          >
-            <Text style={[styles.verseBadgeText, { color: colors.primary }]}>{item.verseNumber}</Text>
+    ({ item }: { item: VerseItem }) => {
+      const verseId = `${chapterNumber}-${item.verseNumber}`;
+      const bookmarked = isBookmarked(verseId);
+
+      const handleToggleBookmark = async () => {
+        void Haptics.selectionAsync();
+        if (bookmarked) {
+          await removeBookmark(verseId);
+        } else {
+          if (chapterNumber) {
+            await addBookmark(chapterNumber, item.verseNumber);
+          }
+        }
+      };
+
+      return (
+        <View
+          style={[
+            styles.verseCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.border, 0.88),
+            },
+          ]}
+        >
+          <View style={styles.verseHeaderRow}>
+            <View
+              style={[
+                styles.verseBadge,
+                {
+                  backgroundColor: withOpacity(
+                    colors.primary,
+                    isDark ? 0.3 : 0.12,
+                  ),
+                },
+              ]}
+            >
+              <Text style={[styles.verseBadgeText, { color: colors.primary }]}>
+                {item.verseNumber}
+              </Text>
+            </View>
+
+            <View style={styles.verseMetaRow}>
+              {item.hasSajda ? (
+                <View
+                  style={[
+                    styles.sajdaBadge,
+                    {
+                      backgroundColor: withOpacity(
+                        colors.accent,
+                        isDark ? 0.28 : 0.18,
+                      ),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.sajdaBadgeText, { color: colors.textMain }]}
+                  >
+                    Sajda
+                  </Text>
+                </View>
+              ) : null}
+              {item.juz ? (
+                <Text style={[styles.verseMeta, { color: colors.textMuted }]}>
+                  Juz {item.juz}
+                </Text>
+              ) : null}
+              {item.page ? (
+                <Text style={[styles.verseMeta, { color: colors.textMuted }]}>
+                  Page {item.page}
+                </Text>
+              ) : null}
+            </View>
           </View>
 
-          <View style={styles.verseMetaRow}>
-            {item.hasSajda ? (
-              <View
+          <Text style={[styles.arabicVerseText, { color: colors.textMain }]}>
+            {item.text}
+          </Text>
+
+          {showTransliterations ? (
+            <Text
+              style={[styles.transliterationText, { color: colors.textMuted }]}
+            >
+              {item.transliteration ?? "Transliteration unavailable."}
+            </Text>
+          ) : null}
+
+          {showTranslations ? (
+            <Text style={[styles.translationText, { color: colors.textMain }]}>
+              {item.translation ??
+                "Translation is not available yet for this ayah."}
+            </Text>
+          ) : null}
+
+          <View style={styles.actionsRow}>
+            <Pressable
+              onPress={handleToggleBookmark}
+              style={styles.actionButton}
+            >
+              <Bookmark
+                size={16}
+                color={bookmarked ? colors.primary : colors.textMuted}
+                fill={bookmarked ? colors.primary : "transparent"}
+              />
+              <Text
                 style={[
-                  styles.sajdaBadge,
-                  { backgroundColor: withOpacity(colors.accent, isDark ? 0.28 : 0.18) },
+                  styles.actionText,
+                  { color: bookmarked ? colors.primary : colors.textMuted },
                 ]}
               >
-                <Text style={[styles.sajdaBadgeText, { color: colors.textMain }]}>Sajda</Text>
-              </View>
-            ) : null}
-            {item.juz ? <Text style={[styles.verseMeta, { color: colors.textMuted }]}>Juz {item.juz}</Text> : null}
-            {item.page ? (
-              <Text style={[styles.verseMeta, { color: colors.textMuted }]}>Page {item.page}</Text>
-            ) : null}
+                {bookmarked ? "Bookmarked" : "Bookmark"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                void handleCopyVerse(item.text, item.verseNumber);
+              }}
+              style={styles.actionButton}
+            >
+              <Copy size={16} color={colors.textMuted} />
+              <Text style={[styles.actionText, { color: colors.textMuted }]}>
+                Copy
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                void handleShareVerse(item.text, item.verseNumber);
+              }}
+              style={styles.actionButton}
+            >
+              <Share2 size={16} color={colors.textMuted} />
+              <Text style={[styles.actionText, { color: colors.textMuted }]}>
+                Share
+              </Text>
+            </Pressable>
           </View>
         </View>
-
-        <Text style={[styles.arabicVerseText, { color: colors.textMain }]}>{item.text}</Text>
-
-        {showTransliterations ? (
-          <Text style={[styles.transliterationText, { color: colors.textMuted }]}>
-            {item.transliteration ?? "Transliteration unavailable."}
-          </Text>
-        ) : null}
-
-        {showTranslations ? (
-          <Text style={[styles.translationText, { color: colors.textMain }]}>
-            {item.translation ?? "Translation is not available yet for this ayah."}
-          </Text>
-        ) : null}
-
-        <View style={styles.actionsRow}>
-          <Pressable
-            onPress={() => {
-              void handleCopyVerse(item.text, item.verseNumber);
-            }}
-            style={styles.actionButton}
-          >
-            <Copy size={16} color={colors.textMuted} />
-            <Text style={[styles.actionText, { color: colors.textMuted }]}>Copy</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              void handleShareVerse(item.text, item.verseNumber);
-            }}
-            style={styles.actionButton}
-          >
-            <Share2 size={16} color={colors.textMuted} />
-            <Text style={[styles.actionText, { color: colors.textMuted }]}>Share</Text>
-          </Pressable>
-        </View>
-      </View>
-    ),
-    [colors, handleCopyVerse, handleShareVerse, isDark, showTransliterations, showTranslations],
+      );
+    },
+    [
+      colors,
+      handleCopyVerse,
+      handleShareVerse,
+      isDark,
+      showTransliterations,
+      showTranslations,
+      isBookmarked,
+      addBookmark,
+      removeBookmark,
+      chapterNumber,
+    ],
   );
 
   if (!chapterNumber || !chapterMeta) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.screen, { backgroundColor: colors.background }]}
+      >
         <StatusBar style={isDark ? "light" : "dark"} />
         <View style={styles.invalidStateContainer}>
-          <Text style={[styles.invalidStateTitle, { color: colors.textMain }]}>Chapter not found</Text>
+          <Text style={[styles.invalidStateTitle, { color: colors.textMain }]}>
+            Chapter not found
+          </Text>
           <Pressable
             onPress={() => router.back()}
-            style={[styles.backButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+            style={[
+              styles.backButton,
+              { borderColor: colors.border, backgroundColor: colors.surface },
+            ]}
           >
             <ChevronLeft size={18} color={colors.textMain} />
-            <Text style={[styles.backButtonText, { color: colors.textMain }]}>Go back</Text>
+            <Text style={[styles.backButtonText, { color: colors.textMain }]}>
+              Go back
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -287,7 +407,9 @@ export default function ChapterDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}> 
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -306,7 +428,10 @@ export default function ChapterDetailScreen() {
         keyExtractor={(item) => item.key}
         renderItem={renderVerse}
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 55, minimumViewTime: 200 }}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 55,
+          minimumViewTime: 200,
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
@@ -325,21 +450,33 @@ export default function ChapterDetailScreen() {
               ]}
             >
               <ChevronLeft size={18} color={colors.textMain} />
-              <Text style={[styles.backButtonText, { color: colors.textMain }]}>Chapters</Text>
+              <Text style={[styles.backButtonText, { color: colors.textMain }]}>
+                Chapters
+              </Text>
             </Pressable>
 
             <View
               style={[
                 styles.chapterHeaderCard,
-                { backgroundColor: colors.surface, borderColor: withOpacity(colors.primary, 0.22) },
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: withOpacity(colors.primary, 0.22),
+                },
               ]}
             >
-              <Text style={[styles.chapterEnglishName, { color: colors.textMain }]}> 
+              <Text
+                style={[styles.chapterEnglishName, { color: colors.textMain }]}
+              >
                 {chapterNumber}. {chapterMeta.englishname}
               </Text>
-              <Text style={[styles.chapterArabicName, { color: colors.textMain }]}>{chapterMeta.arabicname}</Text>
-              <Text style={[styles.chapterInfo, { color: colors.textMuted }]}> 
-                {chapterMeta.name} • {chapterMeta.revelation} • {verseCount} verses
+              <Text
+                style={[styles.chapterArabicName, { color: colors.textMain }]}
+              >
+                {chapterMeta.arabicname}
+              </Text>
+              <Text style={[styles.chapterInfo, { color: colors.textMuted }]}>
+                {chapterMeta.name} • {chapterMeta.revelation} • {verseCount}{" "}
+                verses
               </Text>
             </View>
 
@@ -362,8 +499,9 @@ export default function ChapterDetailScreen() {
               />
             </View>
 
-            <Text style={[styles.resultsText, { color: colors.textMuted }]}> 
-              {filteredVerses.length} verse{filteredVerses.length === 1 ? "" : "s"}
+            <Text style={[styles.resultsText, { color: colors.textMuted }]}>
+              {filteredVerses.length} verse
+              {filteredVerses.length === 1 ? "" : "s"}
             </Text>
           </View>
         }
