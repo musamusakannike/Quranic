@@ -11,9 +11,29 @@ import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Search, Mic, ArrowLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../../lib/ThemeContext";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const withOpacity = (hexColor: string, opacity: number) => {
+  const sanitized = hexColor.replace("#", "");
+  const bigint = Number.parseInt(sanitized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 export interface Reciter {
   id: number;
@@ -29,6 +49,81 @@ export interface Moshaf {
   surah_total: number;
   moshaf_type: number;
   surah_list: string;
+}
+
+function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
+  const router = useRouter();
+  const pressed = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) },
+    ],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        pressed.value = 1;
+      }}
+      onPressOut={() => {
+        pressed.value = 0;
+      }}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        router.push({
+          pathname: "/audio/[reciterId]",
+          params: {
+            reciterId: String(item.id),
+            reciterName: item.name,
+            server: mainMoshaf.server,
+            surahList: mainMoshaf.surah_list,
+          },
+        });
+      }}
+      entering={FadeInDown.delay(Math.min(index * 14, 320)).duration(320)}
+      layout={LinearTransition.springify().damping(17)}
+      style={animatedStyle}
+    >
+      <LinearGradient
+        colors={[
+          colors.surface,
+          withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.reciterCard, { borderColor: colors.border }]}
+      >
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: withOpacity(
+                colors.primary,
+                isDark ? 0.35 : 0.14,
+              ),
+            },
+          ]}
+        >
+          <Mic size={24} color={colors.primary} />
+        </View>
+        <View style={styles.reciterInfo}>
+          <Text
+            style={[styles.reciterName, { color: colors.textMain }]}
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          <Text
+            style={[styles.reciterType, { color: colors.textMuted }]}
+            numberOfLines={1}
+          >
+            {mainMoshaf.name}
+          </Text>
+        </View>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
 }
 
 export default function AudioRecitersScreen() {
@@ -64,59 +159,13 @@ export default function AudioRecitersScreen() {
     if (!mainMoshaf) return null;
 
     return (
-      <Animated.View
-        entering={FadeInDown.delay(Math.min(index * 20, 200)).duration(300)}
-      >
-        <Pressable
-          style={({ pressed }) => [
-            styles.reciterCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-          onPress={() => {
-            void Haptics.selectionAsync();
-            router.push({
-              pathname: "/audio/[reciterId]",
-              params: {
-                reciterId: String(item.id),
-                reciterName: item.name,
-                server: mainMoshaf.server,
-                surahList: mainMoshaf.surah_list,
-              },
-            });
-          }}
-        >
-          <View
-            style={[
-              styles.iconContainer,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(0,0,0,0.05)",
-              },
-            ]}
-          >
-            <Mic size={24} color={colors.primary} />
-          </View>
-          <View style={styles.reciterInfo}>
-            <Text
-              style={[styles.reciterName, { color: colors.textMain }]}
-              numberOfLines={1}
-            >
-              {item.name}
-            </Text>
-            <Text
-              style={[styles.reciterType, { color: colors.textMuted }]}
-              numberOfLines={1}
-            >
-              {mainMoshaf.name}
-            </Text>
-          </View>
-        </Pressable>
-      </Animated.View>
+      <ReciterCard
+        item={item}
+        index={index}
+        mainMoshaf={mainMoshaf}
+        colors={colors}
+        isDark={isDark}
+      />
     );
   };
 
@@ -124,6 +173,18 @@ export default function AudioRecitersScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <LinearGradient
+        colors={[
+          colors.background,
+          withOpacity(colors.primary, isDark ? 0.12 : 0.06),
+          colors.background,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
       <View style={styles.header}>
         <Pressable
           onPress={() => {
@@ -142,26 +203,6 @@ export default function AudioRecitersScreen() {
         >
           <ArrowLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-          Select Reciter
-        </Text>
-        <View style={styles.headerSpacing} />
-      </View>
-
-      <View
-        style={[
-          styles.searchContainer,
-          { backgroundColor: colors.surface, borderColor: colors.border },
-        ]}
-      >
-        <Search size={20} color={colors.textMuted} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.textMain }]}
-          placeholder="Search Reciters..."
-          placeholderTextColor={colors.textMuted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
       </View>
 
       {loading ? (
@@ -175,6 +216,62 @@ export default function AudioRecitersScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <Animated.View
+              entering={FadeIn.duration(280)}
+              style={styles.headerWrapper}
+            >
+              <LinearGradient
+                colors={[
+                  colors.surface,
+                  withOpacity(colors.primary, isDark ? 0.16 : 0.08),
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  styles.heroCard,
+                  {
+                    borderColor: withOpacity(colors.primary, 0.2),
+                  },
+                ]}
+              >
+                <Text style={[styles.heroTitle, { color: colors.textMain }]}>
+                  Reciters
+                </Text>
+                <Text
+                  style={[styles.heroSubtitle, { color: colors.textMuted }]}
+                >
+                  Listen to the Holy Quran recited by your favorite
+                  world-renowned Qaris.
+                </Text>
+              </LinearGradient>
+
+              <Animated.View
+                entering={FadeInDown.delay(80).duration(280)}
+                style={[
+                  styles.searchContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Search size={18} color={colors.textMuted} strokeWidth={2.5} />
+                <TextInput
+                  style={[styles.searchInput, { color: colors.textMain }]}
+                  placeholder="Search Reciters..."
+                  placeholderTextColor={colors.textMuted}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </Animated.View>
+
+              <Text style={[styles.resultCount, { color: colors.textMuted }]}>
+                {filteredReciters.length} reciter
+                {filteredReciters.length === 1 ? "" : "s"} found
+              </Text>
+            </Animated.View>
+          }
         />
       )}
     </SafeAreaView>
@@ -198,28 +295,45 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  headerTitle: {
-    fontFamily: "SatoshiBold",
-    fontSize: 18,
-  },
-  headerSpacing: {
-    width: 44,
-  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  headerWrapper: {
+    marginBottom: 6,
+    gap: 14,
+  },
+  heroCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 18,
+    gap: 8,
+  },
+  heroTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 30,
+    letterSpacing: -0.3,
+  },
+  heroSubtitle: {
+    fontFamily: "Satoshi",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   searchContainer: {
+    borderWidth: 1,
+    borderRadius: 14,
+    minHeight: 52,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    margin: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    gap: 12,
+    gap: 10,
   },
   searchInput: {
     flex: 1,
+    fontFamily: "Satoshi",
+    fontSize: 14,
+  },
+  resultCount: {
     fontFamily: "SatoshiMedium",
-    fontSize: 16,
+    fontSize: 13,
+    marginBottom: 2,
   },
   reciterCard: {
     flexDirection: "row",
@@ -241,11 +355,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reciterName: {
-    fontFamily: "SatoshiBold",
+    fontFamily: "SatoshiMedium",
     fontSize: 16,
   },
   reciterType: {
-    fontFamily: "SatoshiMedium",
+    fontFamily: "Satoshi",
     fontSize: 13,
   },
 });

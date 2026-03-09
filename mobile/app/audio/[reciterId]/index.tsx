@@ -1,13 +1,24 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Play } from "lucide-react-native";
+import { Play, ArrowLeft, Search } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useTheme } from "../../../lib/ThemeContext";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -18,6 +29,101 @@ const withOpacity = (hexColor: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
+function SurahCard({
+  item,
+  index,
+  reciterId,
+  reciterName,
+  server,
+  colors,
+  isDark,
+}: any) {
+  const router = useRouter();
+  const pressed = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) },
+    ],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        pressed.value = 1;
+      }}
+      onPressOut={() => {
+        pressed.value = 0;
+      }}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        router.push({
+          pathname: "/audio/[reciterId]/[surahId]",
+          params: {
+            reciterId,
+            surahId: String(item.id),
+            reciterName,
+            server,
+            surahName: item.name,
+          },
+        });
+      }}
+      entering={FadeInDown.delay(Math.min(index * 14, 320)).duration(320)}
+      layout={LinearTransition.springify().damping(17)}
+      style={animatedStyle}
+    >
+      <LinearGradient
+        colors={[
+          colors.surface,
+          withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.surahCard, { borderColor: colors.border }]}
+      >
+        <View
+          style={[
+            styles.numberCircle,
+            {
+              backgroundColor: withOpacity(
+                colors.primary,
+                isDark ? 0.35 : 0.14,
+              ),
+            },
+          ]}
+        >
+          <Text style={[styles.numberText, { color: colors.primary }]}>
+            {item.id}
+          </Text>
+        </View>
+        <View style={styles.surahInfo}>
+          <Text
+            style={[styles.surahName, { color: colors.textMain }]}
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          <Text
+            style={[styles.surahArabic, { color: colors.textMuted }]}
+            numberOfLines={1}
+          >
+            {item.arabicName}
+          </Text>
+        </View>
+        <View
+          style={{
+            padding: 8,
+            backgroundColor: withOpacity(colors.primary, 0.1),
+            borderRadius: 999,
+          }}
+        >
+          <Play size={18} color={colors.primary} />
+        </View>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
+}
+
 export default function AudioSurahsScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
@@ -27,6 +133,8 @@ export default function AudioSurahsScreen() {
     server: string;
     surahList: string;
   }>();
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const surahs = useMemo(() => {
     if (!surahList) return [];
@@ -41,6 +149,16 @@ export default function AudioSurahsScreen() {
     });
   }, [surahList]);
 
+  const filteredSurahs = useMemo(() => {
+    if (!searchQuery.trim()) return surahs;
+    const lowerQuery = searchQuery.toLowerCase();
+    return surahs.filter(
+      (s) =>
+        s.name.toLowerCase().includes(lowerQuery) ||
+        s.arabicName.includes(lowerQuery),
+    );
+  }, [surahs, searchQuery]);
+
   const renderItem = ({
     item,
     index,
@@ -49,90 +167,113 @@ export default function AudioSurahsScreen() {
     index: number;
   }) => {
     return (
-      <Animated.View
-        entering={FadeInDown.delay(Math.min(index * 20, 200)).duration(300)}
-      >
-        <Pressable
-          style={({ pressed }) => [
-            styles.surahCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-          onPress={() => {
-            void Haptics.selectionAsync();
-            router.push({
-              pathname: "/audio/[reciterId]/[surahId]",
-              params: {
-                reciterId,
-                surahId: String(item.id),
-                reciterName,
-                server,
-                surahName: item.name,
-              },
-            });
-          }}
-        >
-          <View
-            style={[
-              styles.numberCircle,
-              {
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(0,0,0,0.05)",
-              },
-            ]}
-          >
-            <Text style={[styles.numberText, { color: colors.textMuted }]}>
-              {item.id}
-            </Text>
-          </View>
-          <View style={styles.surahInfo}>
-            <Text
-              style={[styles.surahName, { color: colors.textMain }]}
-              numberOfLines={1}
-            >
-              {item.name}
-            </Text>
-            <Text
-              style={[styles.surahArabic, { color: colors.textMuted }]}
-              numberOfLines={1}
-            >
-              {item.arabicName}
-            </Text>
-          </View>
-          <View
-            style={{
-              padding: 8,
-              backgroundColor: withOpacity(colors.primary, 0.1),
-              borderRadius: 999,
-            }}
-          >
-            <Play size={18} color={colors.primary} />
-          </View>
-        </Pressable>
-      </Animated.View>
+      <SurahCard
+        item={item}
+        index={index}
+        reciterId={reciterId}
+        reciterName={reciterName}
+        server={server}
+        colors={colors}
+        isDark={isDark}
+      />
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={{ padding: 16 }}>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-          {reciterName}
-        </Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
-          Select a Surah to listen
-        </Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <LinearGradient
+        colors={[
+          colors.background,
+          withOpacity(colors.primary, isDark ? 0.12 : 0.06),
+          colors.background,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => {
+            void Haptics.selectionAsync();
+            router.back();
+          }}
+          style={({ pressed }) => [
+            styles.headerButton,
+            {
+              opacity: pressed ? 0.6 : 1,
+              backgroundColor: isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
+            },
+          ]}
+        >
+          <ArrowLeft color={colors.textMain} size={24} />
+        </Pressable>
       </View>
+
       <FlashList
-        data={surahs}
+        data={filteredSurahs}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Animated.View
+            entering={FadeIn.duration(280)}
+            style={styles.headerWrapper}
+          >
+            <LinearGradient
+              colors={[
+                colors.surface,
+                withOpacity(colors.primary, isDark ? 0.16 : 0.08),
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.heroCard,
+                {
+                  borderColor: withOpacity(colors.primary, 0.2),
+                },
+              ]}
+            >
+              <Text style={[styles.heroTitle, { color: colors.textMain }]}>
+                {reciterName}
+              </Text>
+              <Text style={[styles.heroSubtitle, { color: colors.textMuted }]}>
+                Select a Surah to listen to this reciter.
+              </Text>
+            </LinearGradient>
+
+            <Animated.View
+              entering={FadeInDown.delay(80).duration(280)}
+              style={[
+                styles.searchContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Search size={18} color={colors.textMuted} strokeWidth={2.5} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.textMain }]}
+                placeholder="Search Surahs..."
+                placeholderTextColor={colors.textMuted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </Animated.View>
+
+            <Text style={[styles.resultCount, { color: colors.textMuted }]}>
+              {filteredSurahs.length} surah
+              {filteredSurahs.length === 1 ? "" : "s"} found
+            </Text>
+          </Animated.View>
+        }
       />
     </SafeAreaView>
   );
@@ -140,8 +281,60 @@ export default function AudioSurahsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerTitle: { fontFamily: "SatoshiBold", fontSize: 24, marginBottom: 4 },
-  headerSubtitle: { fontFamily: "SatoshiMedium", fontSize: 15 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerWrapper: {
+    marginBottom: 6,
+    gap: 14,
+  },
+  heroCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 18,
+    gap: 8,
+  },
+  heroTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 24,
+    letterSpacing: -0.3,
+  },
+  heroSubtitle: {
+    fontFamily: "Satoshi",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  searchContainer: {
+    borderWidth: 1,
+    borderRadius: 14,
+    minHeight: 52,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: "Satoshi",
+    fontSize: 14,
+  },
+  resultCount: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+    marginBottom: 2,
+  },
   surahCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -159,18 +352,18 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontFamily: "SatoshiBold",
-    fontSize: 14,
+    fontSize: 16,
   },
   surahInfo: {
     flex: 1,
     gap: 4,
   },
   surahName: {
-    fontFamily: "SatoshiBold",
+    fontFamily: "SatoshiMedium",
     fontSize: 16,
   },
   surahArabic: {
     fontFamily: "AmiriQuran",
-    fontSize: 16,
+    fontSize: 20,
   },
 });
