@@ -19,7 +19,7 @@ import Slider from "@react-native-community/slider";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../../../lib/ThemeContext";
 
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { useAudio } from "../../../lib/AudioContext";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -43,28 +43,35 @@ const formatTime = (seconds: number) => {
 export default function AudioPlayerScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { surahId, reciterName, server, surahName } = useLocalSearchParams<{
-    surahId: string;
-    reciterName: string;
-    server: string;
-    surahName: string;
-  }>();
+  const { reciterId, surahId, reciterName, server, surahName } =
+    useLocalSearchParams<{
+      reciterId: string;
+      surahId: string;
+      reciterName: string;
+      server: string;
+      surahName: string;
+    }>();
 
   // URL format for mp3quran full surah is serverURL+001.mp3
   const formattedSurahId = surahId.padStart(3, "0");
   const audioUrl = `${server}${formattedSurahId}.mp3`;
 
-  const player = useAudioPlayer(audioUrl);
-  const status = useAudioPlayerStatus(player);
+  const { player, status, currentTrack, playTrack } = useAudio();
   const [isSeeking, setIsSeeking] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
 
   useEffect(() => {
-    // Automatically start playing when loaded or buffering mostly finishes
-    if (status.isLoaded && !status.playing) {
-      player.play();
+    if (currentTrack?.audioUrl !== audioUrl) {
+      playTrack({
+        audioUrl,
+        surahId,
+        surahName,
+        reciterName,
+        reciterId,
+        server,
+      });
     }
-  }, [player, status.isLoaded, status.playing]);
+  }, [audioUrl, surahId, surahName, reciterName, reciterId, server]);
 
   const togglePlayback = () => {
     void Haptics.selectionAsync();

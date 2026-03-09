@@ -6,6 +6,9 @@ import { AmiriQuran_400Regular } from "@expo-google-fonts/amiri-quran";
 import { ThemeProvider } from "../lib/ThemeContext";
 import { AppSettingsProvider } from "../lib/AppSettingsContext";
 import { BookmarksProvider } from "../lib/BookmarksContext";
+import { AudioProvider } from "../lib/AudioContext";
+import MiniPlayer from "../components/MiniPlayer";
+import { View } from "react-native";
 
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -31,11 +34,16 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <BookmarksProvider>
-        <AppSettingsProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-        </AppSettingsProvider>
-      </BookmarksProvider>
+      <AudioProvider>
+        <BookmarksProvider>
+          <AppSettingsProvider>
+            <View style={{ flex: 1 }}>
+              <Stack screenOptions={{ headerShown: false }} />
+              <MiniPlayer />
+            </View>
+          </AppSettingsProvider>
+        </BookmarksProvider>
+      </AudioProvider>
     </ThemeProvider>
   );
 }
