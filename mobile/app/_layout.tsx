@@ -7,6 +7,8 @@ import { ThemeProvider } from "../lib/ThemeContext";
 import { AppSettingsProvider } from "../lib/AppSettingsContext";
 import { BookmarksProvider } from "../lib/BookmarksContext";
 import { AudioProvider } from "../lib/AudioContext";
+import { ToastProvider } from "../lib/ToastContext";
+import { DownloadsProvider } from "../lib/DownloadsContext";
 import MiniPlayer from "../components/MiniPlayer";
 import { View } from "react-native";
 
@@ -34,16 +36,20 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AudioProvider>
-        <BookmarksProvider>
-          <AppSettingsProvider>
-            <View style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false }} />
-              <MiniPlayer />
-            </View>
-          </AppSettingsProvider>
-        </BookmarksProvider>
-      </AudioProvider>
+      <ToastProvider>
+        <DownloadsProvider>
+          <AudioProvider>
+            <BookmarksProvider>
+              <AppSettingsProvider>
+                <View style={{ flex: 1 }}>
+                  <Stack screenOptions={{ headerShown: false }} />
+                  <MiniPlayer />
+                </View>
+              </AppSettingsProvider>
+            </BookmarksProvider>
+          </AudioProvider>
+        </DownloadsProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

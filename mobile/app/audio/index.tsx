@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Search, Mic, ArrowLeft } from "lucide-react-native";
+import { Search, Mic, ArrowLeft, Download } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -23,6 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../../lib/ThemeContext";
+import { useToast } from "../../lib/ToastContext";
+import * as Network from "expo-network";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -128,6 +130,7 @@ function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
 
 export default function AudioRecitersScreen() {
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
   const router = useRouter();
 
   const [reciters, setReciters] = useState<Reciter[]>([]);
@@ -135,16 +138,29 @@ export default function AudioRecitersScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetch("https://mp3quran.net/api/v3/reciters?language=eng")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchReciters = async () => {
+      try {
+        const networkState = await Network.getNetworkStateAsync();
+        if (!networkState.isConnected || !networkState.isInternetReachable) {
+          showToast("You are offline. Cannot fetch new reciters.", "offline");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(
+          "https://mp3quran.net/api/v3/reciters?language=eng",
+        );
+        const data = await res.json();
         setReciters(data.reciters || []);
-        setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching reciters", err);
+        showToast("Error fetching reciters.", "error");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchReciters();
   }, []);
 
   const filteredReciters = useMemo(() => {
@@ -202,6 +218,23 @@ export default function AudioRecitersScreen() {
           ]}
         >
           <ArrowLeft color={colors.textMain} size={24} />
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            void Haptics.selectionAsync();
+            router.push("/audio/downloads");
+          }}
+          style={({ pressed }) => [
+            styles.headerButton,
+            {
+              opacity: pressed ? 0.6 : 1,
+              backgroundColor: isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
+            },
+          ]}
+        >
+          <Download color={colors.textMain} size={20} />
         </Pressable>
       </View>
 

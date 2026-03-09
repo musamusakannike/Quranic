@@ -14,6 +14,9 @@ import {
   SkipBack,
   SkipForward,
   ChevronDown,
+  Download,
+  Trash2,
+  CheckCircle2,
 } from "lucide-react-native";
 import Slider from "@react-native-community/slider";
 import * as Haptics from "expo-haptics";
@@ -27,6 +30,7 @@ import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../../../lib/ThemeContext";
 
 import { useAudio } from "../../../lib/AudioContext";
+import { useDownloads } from "../../../lib/DownloadsContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -63,7 +67,20 @@ export default function AudioPlayerScreen() {
 
   // URL format for mp3quran full surah is serverURL+001.mp3
   const formattedSurahId = surahId.padStart(3, "0");
-  const audioUrl = `${server}${formattedSurahId}.mp3`;
+  const defaultAudioUrl = `${server}${formattedSurahId}.mp3`;
+  const downloadId = `${reciterId}-${surahId}`;
+
+  const {
+    isDownloaded,
+    downloadAudio,
+    deleteAudio,
+    activeDownloads,
+    downloads,
+  } = useDownloads();
+  const isDownloadedTrack = isDownloaded(downloadId);
+  const audioUrl = isDownloadedTrack
+    ? downloads.find((d) => d.id === downloadId)?.localUri || defaultAudioUrl
+    : defaultAudioUrl;
 
   const { player, status, currentTrack, playTrack } = useAudio();
   const [isSeeking, setIsSeeking] = useState(false);
@@ -177,6 +194,39 @@ export default function AudioPlayerScreen() {
           Now Playing
         </Text>
         <View style={styles.headerSpacing} />
+      </View>
+
+      <View style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
+        {isDownloadedTrack ? (
+          <Pressable
+            onPress={() => deleteAudio(downloadId)}
+            style={styles.downloadButton}
+          >
+            <Trash2 color={colors.primary} size={22} />
+          </Pressable>
+        ) : activeDownloads[downloadId] !== undefined ? (
+          <View style={styles.downloadButton}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={{ fontSize: 10, color: colors.primary, marginTop: 4 }}>
+              {Math.round(activeDownloads[downloadId] * 100)}%
+            </Text>
+          </View>
+        ) : (
+          <Pressable
+            onPress={() =>
+              downloadAudio({
+                reciterId,
+                reciterName,
+                surahId,
+                surahName,
+                server,
+              })
+            }
+            style={styles.downloadButton}
+          >
+            <Download color={colors.textMain} size={24} />
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.artworkContainer}>
@@ -333,6 +383,13 @@ const styles = StyleSheet.create({
   },
   headerSpacing: {
     width: 44,
+  },
+  downloadButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
   },
   artworkContainer: {
     flex: 1,

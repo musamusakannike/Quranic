@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Play, ArrowLeft, Search } from "lucide-react-native";
+import { Play, ArrowLeft, Search, Download, Trash2 } from "lucide-react-native";
+import { ActivityIndicator } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
   FadeIn,
@@ -12,8 +13,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useTheme } from "../../../lib/ThemeContext";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
+import { useTheme } from "../../../lib/ThemeContext";
+import { useDownloads } from "../../../lib/DownloadsContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -46,6 +48,11 @@ function SurahCard({
       { scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) },
     ],
   }));
+
+  const { isDownloaded, downloadAudio, deleteAudio, activeDownloads } =
+    useDownloads();
+  const downloadId = `${reciterId}-${item.id}`;
+  const isDownloadedTrack = isDownloaded(downloadId);
 
   return (
     <AnimatedPressable
@@ -110,14 +117,71 @@ function SurahCard({
             {item.arabicName}
           </Text>
         </View>
-        <View
-          style={{
-            padding: 8,
-            backgroundColor: withOpacity(colors.primary, 0.1),
-            borderRadius: 999,
-          }}
-        >
-          <Play size={18} color={colors.primary} />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {isDownloadedTrack ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                deleteAudio(downloadId);
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: withOpacity(colors.primary, 0.1),
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Trash2 size={16} color={colors.primary} />
+            </Pressable>
+          ) : activeDownloads[downloadId] !== undefined ? (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: withOpacity(colors.primary, 0.1),
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                downloadAudio({
+                  reciterId,
+                  reciterName,
+                  surahId: String(item.id),
+                  surahName: item.name,
+                  server,
+                });
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: withOpacity(colors.border, 0.5),
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Download size={16} color={colors.textMain} />
+            </Pressable>
+          )}
+
+          <View
+            style={{
+              padding: 8,
+              backgroundColor: withOpacity(colors.primary, 0.1),
+              borderRadius: 999,
+            }}
+          >
+            <Play size={18} color={colors.primary} />
+          </View>
         </View>
       </LinearGradient>
     </AnimatedPressable>
