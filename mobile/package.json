@@ -49,6 +49,7 @@
     "expo-symbols": "~55.0.5",
     "expo-system-ui": "~55.0.9",
     "expo-task-manager": "~55.0.9",
+    "expo-updates": "~55.0.12",
     "expo-video": "~55.0.10",
     "expo-web-browser": "~55.0.9",
     "lucide-react-native": "^0.576.0",
