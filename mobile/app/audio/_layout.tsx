@@ -15,26 +15,12 @@ export default function AudioLayout() {
           fontFamily: "SatoshiBold",
         },
         headerShadowVisible: false,
+        headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Select Reciter",
-        }}
-      />
-      <Stack.Screen
-        name="[reciterId]/index"
-        options={{
-          title: "Select Surah",
-        }}
-      />
-      <Stack.Screen
-        name="[reciterId]/[surahId]"
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[reciterId]/index" />
+      <Stack.Screen name="[reciterId]/[surahId]" />
     </Stack>
   );
 }

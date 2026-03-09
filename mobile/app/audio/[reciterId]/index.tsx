@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "../../../lib/ThemeContext";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -117,7 +118,7 @@ export default function AudioSurahsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={{ padding: 16 }}>
         <Text style={[styles.headerTitle, { color: colors.textMain }]}>
           {reciterName}
@@ -129,12 +130,11 @@ export default function AudioSurahsScreen() {
       <FlashList
         data={surahs}
         renderItem={renderItem}
-        estimatedItemSize={70}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

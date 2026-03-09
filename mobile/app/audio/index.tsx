@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Search, Mic } from "lucide-react-native";
+import { Search, Mic, ArrowLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../lib/ThemeContext";
 
 export interface Reciter {
@@ -78,7 +79,7 @@ export default function AudioRecitersScreen() {
           onPress={() => {
             void Haptics.selectionAsync();
             router.push({
-              pathname: "/audio/[reciterId]/",
+              pathname: "/audio/[reciterId]",
               params: {
                 reciterId: String(item.id),
                 reciterName: item.name,
@@ -120,7 +121,33 @@ export default function AudioRecitersScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => {
+            void Haptics.selectionAsync();
+            router.back();
+          }}
+          style={({ pressed }) => [
+            styles.headerButton,
+            {
+              opacity: pressed ? 0.6 : 1,
+              backgroundColor: isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
+            },
+          ]}
+        >
+          <ArrowLeft color={colors.textMain} size={24} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: colors.textMain }]}>
+          Select Reciter
+        </Text>
+        <View style={styles.headerSpacing} />
+      </View>
+
       <View
         style={[
           styles.searchContainer,
@@ -145,18 +172,39 @@ export default function AudioRecitersScreen() {
         <FlashList
           data={filteredReciters}
           renderItem={renderItem}
-          estimatedItemSize={70}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 18,
+  },
+  headerSpacing: {
+    width: 44,
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   searchContainer: {
     flexDirection: "row",
