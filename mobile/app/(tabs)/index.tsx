@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Search } from "lucide-react-native";
+import { Search, Headphones } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -358,6 +358,55 @@ export default function Index() {
                 </Text>
               </>
             )}
+          </LinearGradient>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          entering={FadeInDown.delay(95).duration(300)}
+          onPress={() => {
+            void Haptics.selectionAsync();
+            router.push("/audio");
+          }}
+          style={({ pressed }) => [
+            { transform: [{ scale: pressed ? 0.986 : 1 }] },
+          ]}
+        >
+          <LinearGradient
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.12 : 0.06),
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.continueCard,
+              {
+                borderColor: withOpacity(colors.border, 0.85),
+                marginTop: 4,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              },
+            ]}
+          >
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+                Audio Recitations
+              </Text>
+              <Text style={[styles.continueMeta, { color: colors.textMuted }]}>
+                Listen to beautiful recitations from world-renowned Qaris.
+              </Text>
+            </View>
+            <View
+              style={{
+                padding: 12,
+                backgroundColor: withOpacity(colors.primary, 0.15),
+                borderRadius: 999,
+                marginLeft: 16,
+              }}
+            >
+              <Headphones color={colors.primary} size={24} />
+            </View>
           </LinearGradient>
         </AnimatedPressable>
 

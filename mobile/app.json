@@ -44,7 +44,12 @@
       "expo-notifications",
       "expo-secure-store",
       "@react-native-community/datetimepicker",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
       "expo-video"
     ],
     "experiments": {
