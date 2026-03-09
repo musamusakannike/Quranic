@@ -11,22 +11,12 @@ import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Search, Mic, ArrowLeft, Download } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../../lib/ThemeContext";
 import { useToast } from "../../lib/ToastContext";
 import * as Network from "expo-network";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -55,22 +45,9 @@ export interface Moshaf {
 
 function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
   const router = useRouter();
-  const pressed = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) },
-    ],
-  }));
 
   return (
-    <AnimatedPressable
-      onPressIn={() => {
-        pressed.value = 1;
-      }}
-      onPressOut={() => {
-        pressed.value = 0;
-      }}
+    <Pressable
       onPress={() => {
         void Haptics.selectionAsync();
         router.push({
@@ -83,9 +60,6 @@ function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
           },
         });
       }}
-      entering={FadeInDown.delay(Math.min(index * 14, 320)).duration(320)}
-      layout={LinearTransition.springify().damping(17)}
-      style={animatedStyle}
     >
       <LinearGradient
         colors={[
@@ -124,7 +98,7 @@ function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
           </Text>
         </View>
       </LinearGradient>
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
@@ -250,10 +224,7 @@ export default function AudioRecitersScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <Animated.View
-              entering={FadeIn.duration(280)}
-              style={styles.headerWrapper}
-            >
+            <View style={styles.headerWrapper}>
               <LinearGradient
                 colors={[
                   colors.surface,
@@ -279,8 +250,7 @@ export default function AudioRecitersScreen() {
                 </Text>
               </LinearGradient>
 
-              <Animated.View
-                entering={FadeInDown.delay(80).duration(280)}
+              <View
                 style={[
                   styles.searchContainer,
                   {
@@ -297,13 +267,13 @@ export default function AudioRecitersScreen() {
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
-              </Animated.View>
+              </View>
 
               <Text style={[styles.resultCount, { color: colors.textMuted }]}>
                 {filteredReciters.length} reciter
                 {filteredReciters.length === 1 ? "" : "s"} found
               </Text>
-            </Animated.View>
+            </View>
           }
         />
       )}

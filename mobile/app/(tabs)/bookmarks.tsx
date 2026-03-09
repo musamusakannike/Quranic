@@ -6,11 +6,6 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Bookmark, ChevronRight, BookOpen } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  LinearTransition,
-} from "react-native-reanimated";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
 import { useBookmarks } from "../../lib/BookmarksContext";
@@ -19,8 +14,6 @@ import {
   getChapterVerses,
   getVerseTranslation,
 } from "../../lib/QuranHelper";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -97,17 +90,14 @@ export default function BookmarksScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View
-          entering={FadeIn.duration(280)}
-          style={styles.headerWrapper}
-        >
+        <View style={styles.headerWrapper}>
           <Text style={[styles.headerTitle, { color: colors.textMain }]}>
             Bookmarks
           </Text>
           <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
             {bookmarks.length} saved verse{bookmarks.length === 1 ? "" : "s"}
           </Text>
-        </Animated.View>
+        </View>
 
         {bookmarks.map((bookmark, index) => {
           const meta = getChapterMetadata(bookmark.chapter);
@@ -119,10 +109,8 @@ export default function BookmarksScreen() {
           );
 
           return (
-            <AnimatedPressable
+            <Pressable
               key={bookmark.id}
-              entering={FadeInDown.delay(100 + index * 50).duration(300)}
-              layout={LinearTransition.springify()}
               onPress={() => {
                 void Haptics.selectionAsync();
                 router.push({
@@ -201,7 +189,7 @@ export default function BookmarksScreen() {
                   {translation}
                 </Text>
               )}
-            </AnimatedPressable>
+            </Pressable>
           );
         })}
       </ScrollView>

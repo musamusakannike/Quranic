@@ -5,22 +5,12 @@ import { FlashList } from "@shopify/flash-list";
 import { Play, ArrowLeft, Search, Download, Trash2 } from "lucide-react-native";
 import { ActivityIndicator } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
 import { useTheme } from "../../../lib/ThemeContext";
 import { useDownloads } from "../../../lib/DownloadsContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -41,13 +31,6 @@ function SurahCard({
   isDark,
 }: any) {
   const router = useRouter();
-  const pressed = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) },
-    ],
-  }));
 
   const { isDownloaded, downloadAudio, deleteAudio, activeDownloads } =
     useDownloads();
@@ -55,13 +38,7 @@ function SurahCard({
   const isDownloadedTrack = isDownloaded(downloadId);
 
   return (
-    <AnimatedPressable
-      onPressIn={() => {
-        pressed.value = 1;
-      }}
-      onPressOut={() => {
-        pressed.value = 0;
-      }}
+    <Pressable
       onPress={() => {
         void Haptics.selectionAsync();
         router.push({
@@ -75,9 +52,6 @@ function SurahCard({
           },
         });
       }}
-      entering={FadeInDown.delay(Math.min(index * 14, 320)).duration(320)}
-      layout={LinearTransition.springify().damping(17)}
-      style={animatedStyle}
     >
       <LinearGradient
         colors={[
@@ -184,7 +158,7 @@ function SurahCard({
           </View>
         </View>
       </LinearGradient>
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
@@ -286,10 +260,7 @@ export default function AudioSurahsScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <Animated.View
-            entering={FadeIn.duration(280)}
-            style={styles.headerWrapper}
-          >
+          <View style={styles.headerWrapper}>
             <LinearGradient
               colors={[
                 colors.surface,
@@ -312,8 +283,7 @@ export default function AudioSurahsScreen() {
               </Text>
             </LinearGradient>
 
-            <Animated.View
-              entering={FadeInDown.delay(80).duration(280)}
+            <View
               style={[
                 styles.searchContainer,
                 {
@@ -330,13 +300,13 @@ export default function AudioSurahsScreen() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
-            </Animated.View>
+            </View>
 
             <Text style={[styles.resultCount, { color: colors.textMuted }]}>
               {filteredSurahs.length} surah
               {filteredSurahs.length === 1 ? "" : "s"} found
             </Text>
-          </Animated.View>
+          </View>
         }
       />
     </SafeAreaView>

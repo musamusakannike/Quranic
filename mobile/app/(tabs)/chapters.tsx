@@ -13,14 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { ArrowUpDown, Search } from "lucide-react-native";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+
 import { useTheme } from "../../lib/ThemeContext";
 import { getChapterMetadata, getVersesCount } from "../../lib/QuranHelper";
 
@@ -49,8 +42,6 @@ interface ChapterCardProps {
   onPress: (chapterId: number) => void;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
   const bigint = Number.parseInt(sanitized, 16);
@@ -61,30 +52,18 @@ const withOpacity = (hexColor: string, opacity: number) => {
 };
 
 function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
-  const pressed = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withTiming(pressed.value ? 0.985 : 1, { duration: 120 }) }],
-  }));
-
   return (
-    <AnimatedPressable
-      onPressIn={() => {
-        pressed.value = 1;
-      }}
-      onPressOut={() => {
-        pressed.value = 0;
-      }}
+    <Pressable
       onPress={() => {
         void Haptics.selectionAsync();
         onPress(chapter.id);
       }}
-      entering={FadeInDown.delay(Math.min(chapter.id * 14, 320)).duration(320)}
-      layout={LinearTransition.springify().damping(17)}
-      style={animatedStyle}
     >
       <LinearGradient
-        colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.08 : 0.04)]}
+        colors={[
+          colors.surface,
+          withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+        ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.chapterCard, { borderColor: colors.border }]}
@@ -92,17 +71,26 @@ function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
         <View
           style={[
             styles.numberBadge,
-            { backgroundColor: withOpacity(colors.primary, isDark ? 0.35 : 0.14) },
+            {
+              backgroundColor: withOpacity(
+                colors.primary,
+                isDark ? 0.35 : 0.14,
+              ),
+            },
           ]}
         >
-          <Text style={[styles.numberText, { color: colors.primary }]}>{chapter.id}</Text>
+          <Text style={[styles.numberText, { color: colors.primary }]}>
+            {chapter.id}
+          </Text>
         </View>
 
         <View style={styles.chapterBody}>
           <Text style={[styles.chapterEnglishName, { color: colors.textMain }]}>
             {chapter.englishName}
           </Text>
-          <Text style={[styles.chapterTranslitName, { color: colors.textMuted }]}>
+          <Text
+            style={[styles.chapterTranslitName, { color: colors.textMuted }]}
+          >
             {chapter.name}
           </Text>
         </View>
@@ -116,7 +104,7 @@ function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
           </Text>
         </View>
       </LinearGradient>
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
@@ -125,7 +113,8 @@ export default function ChaptersScreen() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("top-to-bottom");
+  const [sortDirection, setSortDirection] =
+    useState<SortDirection>("top-to-bottom");
 
   const chapters = useMemo(() => {
     const list: ChapterListItem[] = [];
@@ -149,8 +138,12 @@ export default function ChaptersScreen() {
   }, []);
 
   const chapterStats = useMemo(() => {
-    const mecca = chapters.filter(({ revelation }) => revelation === "Mecca").length;
-    const madina = chapters.filter(({ revelation }) => revelation === "Madina").length;
+    const mecca = chapters.filter(
+      ({ revelation }) => revelation === "Mecca",
+    ).length;
+    const madina = chapters.filter(
+      ({ revelation }) => revelation === "Madina",
+    ).length;
 
     return {
       total: chapters.length,
@@ -192,7 +185,9 @@ export default function ChaptersScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -211,9 +206,12 @@ export default function ChaptersScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          <Animated.View entering={FadeIn.duration(280)} style={styles.headerWrapper}>
+          <View style={styles.headerWrapper}>
             <LinearGradient
-              colors={[colors.surface, withOpacity(colors.primary, isDark ? 0.16 : 0.08)]}
+              colors={[
+                colors.surface,
+                withOpacity(colors.primary, isDark ? 0.16 : 0.08),
+              ]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[
@@ -223,7 +221,9 @@ export default function ChaptersScreen() {
                 },
               ]}
             >
-              <Text style={[styles.heroTitle, { color: colors.textMain }]}>Chapters</Text>
+              <Text style={[styles.heroTitle, { color: colors.textMain }]}>
+                Chapters
+              </Text>
               <Text style={[styles.heroSubtitle, { color: colors.textMuted }]}>
                 Explore all 114 surahs with quick filters and instant search.
               </Text>
@@ -232,41 +232,73 @@ export default function ChaptersScreen() {
                 <View
                   style={[
                     styles.statPill,
-                    { backgroundColor: withOpacity(colors.primary, isDark ? 0.2 : 0.1) },
+                    {
+                      backgroundColor: withOpacity(
+                        colors.primary,
+                        isDark ? 0.2 : 0.1,
+                      ),
+                    },
                   ]}
                 >
-                  <Text style={[styles.statPillLabel, { color: colors.textMuted }]}>Total</Text>
-                  <Text style={[styles.statPillValue, { color: colors.primary }]}>
+                  <Text
+                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                  >
+                    Total
+                  </Text>
+                  <Text
+                    style={[styles.statPillValue, { color: colors.primary }]}
+                  >
                     {chapterStats.total}
                   </Text>
                 </View>
                 <View
                   style={[
                     styles.statPill,
-                    { backgroundColor: withOpacity(colors.accent, isDark ? 0.22 : 0.14) },
+                    {
+                      backgroundColor: withOpacity(
+                        colors.accent,
+                        isDark ? 0.22 : 0.14,
+                      ),
+                    },
                   ]}
                 >
-                  <Text style={[styles.statPillLabel, { color: colors.textMuted }]}>Mecca</Text>
-                  <Text style={[styles.statPillValue, { color: colors.textMain }]}>
+                  <Text
+                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                  >
+                    Mecca
+                  </Text>
+                  <Text
+                    style={[styles.statPillValue, { color: colors.textMain }]}
+                  >
                     {chapterStats.mecca}
                   </Text>
                 </View>
                 <View
                   style={[
                     styles.statPill,
-                    { backgroundColor: withOpacity(colors.success, isDark ? 0.22 : 0.14) },
+                    {
+                      backgroundColor: withOpacity(
+                        colors.success,
+                        isDark ? 0.22 : 0.14,
+                      ),
+                    },
                   ]}
                 >
-                  <Text style={[styles.statPillLabel, { color: colors.textMuted }]}>Madina</Text>
-                  <Text style={[styles.statPillValue, { color: colors.textMain }]}>
+                  <Text
+                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                  >
+                    Madina
+                  </Text>
+                  <Text
+                    style={[styles.statPillValue, { color: colors.textMain }]}
+                  >
                     {chapterStats.madina}
                   </Text>
                 </View>
               </View>
             </LinearGradient>
 
-            <Animated.View
-              entering={FadeInDown.delay(80).duration(280)}
+            <View
               style={[
                 styles.searchContainer,
                 {
@@ -283,17 +315,14 @@ export default function ChaptersScreen() {
                 placeholderTextColor={colors.textMuted}
                 style={[styles.searchInput, { color: colors.textMain }]}
               />
-            </Animated.View>
+            </View>
 
             <View style={styles.filtersRow}>
               {filterOptions.map((option, index) => {
                 const isActive = filter === option.key;
 
                 return (
-                  <Animated.View
-                    key={option.key}
-                    entering={FadeInDown.delay(120 + index * 60).duration(280)}
-                  >
+                  <View key={option.key}>
                     <Pressable
                       onPress={() => {
                         if (!isActive) {
@@ -322,16 +351,18 @@ export default function ChaptersScreen() {
                         {option.label} ({option.count})
                       </Text>
                     </Pressable>
-                  </Animated.View>
+                  </View>
                 );
               })}
 
-              <Animated.View entering={FadeInDown.delay(300).duration(280)}>
+              <View>
                 <Pressable
                   onPress={() => {
                     void Haptics.selectionAsync();
                     setSortDirection((prev) =>
-                      prev === "top-to-bottom" ? "bottom-to-top" : "top-to-bottom",
+                      prev === "top-to-bottom"
+                        ? "bottom-to-top"
+                        : "top-to-bottom",
                     );
                   }}
                   style={[
@@ -342,19 +373,23 @@ export default function ChaptersScreen() {
                     },
                   ]}
                 >
-                  <ArrowUpDown size={14} color={colors.textMain} strokeWidth={2.4} />
+                  <ArrowUpDown
+                    size={14}
+                    color={colors.textMain}
+                    strokeWidth={2.4}
+                  />
                   {/* <Text style={[styles.filterText, { color: colors.textMain }]}>
                     {sortDirection === "top-to-bottom" ? "Top → Bottom" : "Bottom → Top"}
                   </Text> */}
                 </Pressable>
-              </Animated.View>
+              </View>
             </View>
 
             <Text style={[styles.resultCount, { color: colors.textMuted }]}>
               {filteredChapters.length} chapter
               {filteredChapters.length === 1 ? "" : "s"} found
             </Text>
-          </Animated.View>
+          </View>
         }
         renderItem={({ item }) => (
           <ChapterCard

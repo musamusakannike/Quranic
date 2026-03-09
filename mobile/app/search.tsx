@@ -12,11 +12,6 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  LinearTransition,
-} from "react-native-reanimated";
 import { Search, ChevronLeft, X } from "lucide-react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useTheme } from "../lib/ThemeContext";
@@ -25,8 +20,6 @@ import {
   getChapterMetadata,
   SearchResult,
 } from "../lib/QuranHelper";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -68,9 +61,7 @@ export default function GlobalSearchScreen() {
   const renderResult = ({ item }: { item: SearchResult }) => {
     const meta = getChapterMetadata(item.chapter);
     return (
-      <AnimatedPressable
-        entering={FadeInDown.duration(300)}
-        layout={LinearTransition.springify()}
+      <Pressable
         onPress={() => {
           void Haptics.selectionAsync();
           router.push({
@@ -125,7 +116,7 @@ export default function GlobalSearchScreen() {
             {item.translation}
           </Text>
         )}
-      </AnimatedPressable>
+      </Pressable>
     );
   };
 

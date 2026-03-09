@@ -7,13 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
 import {
@@ -59,8 +53,6 @@ const withOpacity = (hexColor: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 const getGreeting = () => {
   const hour = new Date().getHours();
 
@@ -86,7 +78,6 @@ export default function Index() {
   const { colors, isDark } = useTheme();
   const { reminderEnabled, reminderTime } = useAppSettings();
   const [lastRead, setLastRead] = useState<LastReadProgress | null>(null);
-  const continuePressed = useSharedValue(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -131,14 +122,6 @@ export default function Index() {
       totalVerses,
     };
   }, [lastRead, lastReadChapter]);
-
-  const continueAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withTiming(continuePressed.value ? 0.986 : 1, { duration: 120 }),
-      },
-    ],
-  }));
 
   const juzItems = useMemo(
     () =>
@@ -186,7 +169,7 @@ export default function Index() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.delay(30).duration(280)}>
+        <View>
           <Pressable
             onPress={() => router.push("/search")}
             style={[
@@ -202,9 +185,9 @@ export default function Index() {
               Search Quran globally...
             </Text>
           </Pressable>
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeIn.duration(280)}>
+        <View>
           <LinearGradient
             colors={[
               colors.surface,
@@ -249,16 +232,9 @@ export default function Index() {
               </Text>
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
-        <AnimatedPressable
-          entering={FadeInDown.delay(70).duration(300)}
-          onPressIn={() => {
-            continuePressed.value = 1;
-          }}
-          onPressOut={() => {
-            continuePressed.value = 0;
-          }}
+        <Pressable
           onPress={() => {
             void Haptics.selectionAsync();
 
@@ -275,7 +251,6 @@ export default function Index() {
               },
             });
           }}
-          style={continueAnimatedStyle}
         >
           <LinearGradient
             colors={[
@@ -359,17 +334,13 @@ export default function Index() {
               </>
             )}
           </LinearGradient>
-        </AnimatedPressable>
+        </Pressable>
 
-        <AnimatedPressable
-          entering={FadeInDown.delay(95).duration(300)}
+        <Pressable
           onPress={() => {
             void Haptics.selectionAsync();
             router.push("/audio");
           }}
-          style={({ pressed }) => [
-            { transform: [{ scale: pressed ? 0.986 : 1 }] },
-          ]}
         >
           <LinearGradient
             colors={[
@@ -408,9 +379,9 @@ export default function Index() {
               <Headphones color={colors.primary} size={24} />
             </View>
           </LinearGradient>
-        </AnimatedPressable>
+        </Pressable>
 
-        <Animated.View entering={FadeInDown.delay(120).duration(320)}>
+        <View>
           <LinearGradient
             colors={[
               colors.surface,
@@ -434,10 +405,7 @@ export default function Index() {
 
             <View style={styles.juzGrid}>
               {juzItems.map((item, index) => (
-                <Animated.View
-                  key={`juz-wrap-${item.juz}`}
-                  entering={FadeInDown.delay(170 + index * 16).duration(280)}
-                >
+                <View key={`juz-wrap-${item.juz}`}>
                   <Pressable
                     onPress={() => {
                       if (!item.chapter || !item.verse) return;
@@ -477,13 +445,13 @@ export default function Index() {
                       </Text>
                     </LinearGradient>
                   </Pressable>
-                </Animated.View>
+                </View>
               ))}
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeInDown.delay(160).duration(320)}>
+        <View>
           <LinearGradient
             colors={[
               colors.surface,
@@ -581,7 +549,7 @@ export default function Index() {
               </Text>
             </Pressable>
           </LinearGradient>
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
