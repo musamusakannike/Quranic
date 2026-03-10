@@ -24,6 +24,7 @@ import {
   BookOpen,
   X,
   Compass,
+  Clock,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
@@ -405,7 +406,7 @@ export default function Index() {
         <View style={styles.quickActionsRow}>
           {/* Audio card */}
           <Pressable
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: "45%" }}
             onPress={() => {
               void Haptics.selectionAsync();
               router.push("/audio");
@@ -444,7 +445,7 @@ export default function Index() {
 
           {/* Chapters card */}
           <Pressable
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: "45%" }}
             onPress={() => {
               void Haptics.selectionAsync();
               router.push("/(tabs)/chapters");
@@ -483,7 +484,7 @@ export default function Index() {
 
           {/* Qiblah Card */}
           <Pressable
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: "45%" }}
             onPress={() => {
               void Haptics.selectionAsync();
               router.push("/qiblah");
@@ -516,6 +517,45 @@ export default function Index() {
                 style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
               >
                 Direction
+              </Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* Solah Card */}
+          <Pressable
+            style={{ flex: 1, minWidth: "45%" }}
+            onPress={() => {
+              void Haptics.selectionAsync();
+              router.push("/solah");
+            }}
+          >
+            <LinearGradient
+              colors={[
+                colors.surface,
+                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.quickCard,
+                { borderColor: withOpacity(colors.border, 0.85) },
+              ]}
+            >
+              <View
+                style={[
+                  styles.quickIconWrap,
+                  { backgroundColor: withOpacity(colors.primary, 0.15) },
+                ]}
+              >
+                <Clock color={colors.primary} size={20} />
+              </View>
+              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
+                Solah
+              </Text>
+              <Text
+                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
+              >
+                Prayer times
               </Text>
             </LinearGradient>
           </Pressable>
@@ -919,6 +959,7 @@ const styles = StyleSheet.create({
   quickActionsRow: {
     flexDirection: "row",
     gap: 12,
+    flexWrap: "wrap",
   },
   quickCard: {
     borderWidth: 1,
