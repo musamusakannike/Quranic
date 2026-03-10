@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   Pressable,
   Alert,
+  Switch,
+  ScrollView,
 } from "react-native";
 import * as Location from "expo-location";
 import { Coordinates, CalculationMethod, PrayerTimes } from "adhan";
@@ -16,6 +18,103 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ChevronLeft, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type PrayerKey = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
+type PrayerListKey = PrayerKey | "sunrise";
+
+type ReminderItem = {
+  enabled: boolean;
+  notificationId: string | null;
+};
+
+type PrayerReminderMap = Record<PrayerKey, ReminderItem>;
+type PrayerTimesMap = Record<PrayerListKey, Date>;
+
+const REMINDER_STORAGE_KEY = "@solah_daily_reminders_v1";
+
+const PRAYER_ROWS: { key: PrayerListKey; label: string; remindable: boolean }[] = [
+  { key: "fajr", label: "Fajr", remindable: true },
+  { key: "sunrise", label: "Sunrise", remindable: false },
+  { key: "dhuhr", label: "Dhuhr", remindable: true },
+  { key: "asr", label: "Asr", remindable: true },
+  { key: "maghrib", label: "Maghrib", remindable: true },
+  { key: "isha", label: "Isha", remindable: true },
+];
+
+const REMINDABLE_PRAYERS: PrayerKey[] = [
+  "fajr",
+  "dhuhr",
+  "asr",
+  "maghrib",
+  "isha",
+];
+
+const DEFAULT_REMINDERS: PrayerReminderMap = {
+  fajr: { enabled: false, notificationId: null },
+  dhuhr: { enabled: false, notificationId: null },
+  asr: { enabled: false, notificationId: null },
+  maghrib: { enabled: false, notificationId: null },
+  isha: { enabled: false, notificationId: null },
+};
+
+const parseStoredReminders = (raw: string | null): PrayerReminderMap => {
+  if (!raw) return DEFAULT_REMINDERS;
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<PrayerReminderMap>;
+    return {
+      fajr: {
+        enabled: parsed.fajr?.enabled ?? false,
+        notificationId: parsed.fajr?.notificationId ?? null,
+      },
+      dhuhr: {
+        enabled: parsed.dhuhr?.enabled ?? false,
+        notificationId: parsed.dhuhr?.notificationId ?? null,
+      },
+      asr: {
+        enabled: parsed.asr?.enabled ?? false,
+        notificationId: parsed.asr?.notificationId ?? null,
+      },
+      maghrib: {
+        enabled: parsed.maghrib?.enabled ?? false,
+        notificationId: parsed.maghrib?.notificationId ?? null,
+      },
+      isha: {
+        enabled: parsed.isha?.enabled ?? false,
+        notificationId: parsed.isha?.notificationId ?? null,
+      },
+    };
+  } catch {
+    return DEFAULT_REMINDERS;
+  }
+};
+
+const saveReminders = async (reminders: PrayerReminderMap) => {
+  await AsyncStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify(reminders));
+};
+
+const formatTime = (dateObj: Date) =>
+  dateObj.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const requestNotificationPermission = async () => {
+  const existing = await Notifications.getPermissionsAsync();
+  if (
+    existing.granted ||
+    existing.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  ) {
+    return true;
+  }
+
+  const requested = await Notifications.requestPermissionsAsync();
+  return (
+    requested.granted ||
+    requested.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  );
+};
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -30,13 +129,33 @@ export default function SolahTimesScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
 
-  const [prayerTimes, setPrayerTimes] = useState<any>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesMap | null>(null);
   const [nextPrayer, setNextPrayer] = useState<{
-    name: string;
+    key: PrayerKey;
+    label: string;
     time: Date;
   } | null>(null);
+  const [reminders, setReminders] = useState<PrayerReminderMap>(DEFAULT_REMINDERS);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isScheduling, setIsScheduling] = useState(false);
+  const [busyPrayer, setBusyPrayer] = useState<PrayerKey | null>(null);
+
+  const activeReminderCount = useMemo(
+    () => REMINDABLE_PRAYERS.filter((key) => reminders[key].enabled).length,
+    [reminders],
+  );
+
+  useEffect(() => {
+    const loadReminders = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(REMINDER_STORAGE_KEY);
+        setReminders(parseStoredReminders(raw));
+      } catch {
+        setReminders(DEFAULT_REMINDERS);
+      }
+    };
+
+    void loadReminders();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -59,35 +178,29 @@ export default function SolahTimesScreen() {
 
         const times = new PrayerTimes(coordinates, date, params);
 
-        const formatTime = (dateObj: Date) =>
-          dateObj.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
         setPrayerTimes({
-          fajr: formatTime(times.fajr),
-          sunrise: formatTime(times.sunrise),
-          dhuhr: formatTime(times.dhuhr),
-          asr: formatTime(times.asr),
-          maghrib: formatTime(times.maghrib),
-          isha: formatTime(times.isha),
+          fajr: times.fajr,
+          sunrise: times.sunrise,
+          dhuhr: times.dhuhr,
+          asr: times.asr,
+          maghrib: times.maghrib,
+          isha: times.isha,
         });
 
         const now = new Date();
         let nextP = [
-          { name: "Fajr", time: times.fajr },
-          { name: "Dhuhr", time: times.dhuhr },
-          { name: "Asr", time: times.asr },
-          { name: "Maghrib", time: times.maghrib },
-          { name: "Isha", time: times.isha },
+          { key: "fajr" as const, label: "Fajr", time: times.fajr },
+          { key: "dhuhr" as const, label: "Dhuhr", time: times.dhuhr },
+          { key: "asr" as const, label: "Asr", time: times.asr },
+          { key: "maghrib" as const, label: "Maghrib", time: times.maghrib },
+          { key: "isha" as const, label: "Isha", time: times.isha },
         ].find((p) => p.time > now);
 
         if (!nextP) {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
           const tomorrowTimes = new PrayerTimes(coordinates, tomorrow, params);
-          nextP = { name: "Fajr", time: tomorrowTimes.fajr };
+          nextP = { key: "fajr", label: "Fajr", time: tomorrowTimes.fajr };
         }
         setNextPrayer(nextP);
       } catch (err) {
@@ -96,56 +209,79 @@ export default function SolahTimesScreen() {
     })();
   }, []);
 
-  const handleRemindNextSalah = async () => {
-    if (!nextPrayer) return;
-    setIsScheduling(true);
+  const togglePrayerReminder = async (
+    prayerKey: PrayerKey,
+    nextEnabled: boolean,
+  ) => {
+    if (!prayerTimes) return;
+
+    setBusyPrayer(prayerKey);
 
     try {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Please enable notifications to set reminders.",
-        );
-        setIsScheduling(false);
+      const current = reminders[prayerKey];
+
+      if (!nextEnabled) {
+        if (current.notificationId) {
+          await Notifications.cancelScheduledNotificationAsync(
+            current.notificationId,
+          );
+        }
+
+        const nextState = {
+          ...reminders,
+          [prayerKey]: { enabled: false, notificationId: null },
+        };
+        setReminders(nextState);
+        await saveReminders(nextState);
         return;
       }
 
-      await Notifications.scheduleNotificationAsync({
+      const permissionGranted = await requestNotificationPermission();
+      if (!permissionGranted) {
+        Alert.alert(
+          "Permission required",
+          "Please enable notifications to set daily salah reminders.",
+        );
+        return;
+      }
+
+      if (current.notificationId) {
+        await Notifications.cancelScheduledNotificationAsync(current.notificationId);
+      }
+
+      const prayerTime = prayerTimes[prayerKey];
+      const label = PRAYER_ROWS.find((row) => row.key === prayerKey)?.label ?? "Salah";
+      const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: "Salah Reminder",
-          body: `It's time for ${nextPrayer.name} prayer.`,
+          title: `${label} Salah Reminder`,
+          body: `It's time for ${label} prayer.`,
           sound: true,
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: nextPrayer.time,
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           channelId: "daily-reminders",
+          hour: prayerTime.getHours(),
+          minute: prayerTime.getMinutes(),
         } as Notifications.NotificationTriggerInput,
       });
 
-      const formatTime = (dateObj: Date) =>
-        dateObj.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-      Alert.alert(
-        "Reminder Set",
-        `You will be reminded for ${nextPrayer.name} at ${formatTime(nextPrayer.time)}.`,
-      );
-    } catch (error) {
-      Alert.alert("Error", "Could not set reminder.");
+      const nextState = {
+        ...reminders,
+        [prayerKey]: { enabled: true, notificationId },
+      };
+      setReminders(nextState);
+      await saveReminders(nextState);
+    } catch {
+      Alert.alert("Error", "Could not update this reminder right now.");
+    } finally {
+      setBusyPrayer(null);
     }
-
-    setIsScheduling(false);
   };
+
+  const reminderSummaryText =
+    activeReminderCount === 0
+      ? "No daily reminders active"
+      : `${activeReminderCount} daily reminder${activeReminderCount > 1 ? "s" : ""} active`;
 
   return (
     <SafeAreaView
@@ -171,31 +307,53 @@ export default function SolahTimesScreen() {
         >
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-          Solat Times
-        </Text>
+        <Text style={[styles.headerTitle, { color: colors.textMain }]}>Solat Times</Text>
         <View style={styles.headerRight} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {errorMsg ? (
           <View style={styles.center}>
-            <Text style={[styles.errorText, { color: colors.textMuted }]}>
+            <Text style={[styles.errorText, { color: colors.textMuted }]}> 
               {errorMsg}
             </Text>
           </View>
         ) : !prayerTimes ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}> 
               Calculating times...
             </Text>
           </View>
         ) : (
           <View style={styles.timesContainer}>
-            <Text style={[styles.title, { color: colors.textMain }]}>
-              Today's Prayer Times
-            </Text>
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: withOpacity(colors.border, 0.6),
+                },
+              ]}
+            >
+              <View style={styles.summaryTopRow}>
+                <Bell size={18} color={colors.primary} />
+                <Text style={[styles.summaryTitle, { color: colors.textMain }]}> 
+                  Solah reminders
+                </Text>
+              </View>
+              <Text style={[styles.summaryText, { color: colors.textMuted }]}> 
+                {reminderSummaryText}
+              </Text>
+              {nextPrayer ? (
+                <Text style={[styles.nextPrayerText, { color: colors.textMain }]}> 
+                  Next: {nextPrayer.label} · {formatTime(nextPrayer.time)}
+                </Text>
+              ) : null}
+            </View>
 
             <View
               style={[
@@ -206,108 +364,72 @@ export default function SolahTimesScreen() {
                 },
               ]}
             >
-              <View
-                style={[
-                  styles.prayerRow,
-                  { borderBottomColor: withOpacity(colors.border, 0.3) },
-                ]}
-              >
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Fajr
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.fajr}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.prayerRow,
-                  { borderBottomColor: withOpacity(colors.border, 0.3) },
-                ]}
-              >
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Sunrise
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.sunrise}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.prayerRow,
-                  { borderBottomColor: withOpacity(colors.border, 0.3) },
-                ]}
-              >
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Dhuhr
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.dhuhr}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.prayerRow,
-                  { borderBottomColor: withOpacity(colors.border, 0.3) },
-                ]}
-              >
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Asr
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.asr}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.prayerRow,
-                  { borderBottomColor: withOpacity(colors.border, 0.3) },
-                ]}
-              >
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Maghrib
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.maghrib}
-                </Text>
-              </View>
-              <View style={[styles.prayerRow, { borderBottomWidth: 0 }]}>
-                <Text style={[styles.prayerName, { color: colors.textMuted }]}>
-                  Isha
-                </Text>
-                <Text style={[styles.prayerTime, { color: colors.textMain }]}>
-                  {prayerTimes.isha}
-                </Text>
-              </View>
-            </View>
+              <Text style={[styles.cardTitle, { color: colors.textMain }]}> 
+                Today's prayer times
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}> 
+                Toggle any solah to receive a daily local reminder at that time.
+              </Text>
 
-            {nextPrayer && (
-              <Pressable
-                style={[
-                  styles.remindBtn,
-                  {
-                    backgroundColor: colors.primary,
-                    opacity: isScheduling ? 0.7 : 1,
-                  },
-                ]}
-                onPress={handleRemindNextSalah}
-                disabled={isScheduling}
-              >
-                {isScheduling ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <Bell color="#fff" size={20} />
-                    <Text style={styles.remindBtnText}>
-                      Remind me for Next Salah ({nextPrayer.name})
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            )}
+              {PRAYER_ROWS.map((row, index) => {
+                const isLast = index === PRAYER_ROWS.length - 1;
+                const isBusy = row.remindable && busyPrayer === row.key;
+                const isEnabled = row.remindable
+                  ? reminders[row.key as PrayerKey].enabled
+                  : false;
+
+                return (
+                  <View
+                    key={row.key}
+                    style={[
+                      styles.prayerRow,
+                      {
+                        borderBottomWidth: isLast ? 0 : 1,
+                        borderBottomColor: withOpacity(colors.border, 0.3),
+                      },
+                    ]}
+                  >
+                    <View>
+                      <Text style={[styles.prayerName, { color: colors.textMain }]}> 
+                        {row.label}
+                      </Text>
+                      <Text style={[styles.prayerTime, { color: colors.textMuted }]}> 
+                        {formatTime(prayerTimes[row.key])}
+                      </Text>
+                    </View>
+
+                    {row.remindable ? (
+                      isBusy ? (
+                        <ActivityIndicator color={colors.primary} />
+                      ) : (
+                        <Switch
+                          value={isEnabled}
+                          onValueChange={(nextValue) => {
+                            void togglePrayerReminder(
+                              row.key as PrayerKey,
+                              nextValue,
+                            );
+                          }}
+                          disabled={busyPrayer !== null}
+                          trackColor={{
+                            false: withOpacity(colors.border, 0.8),
+                            true: withOpacity(colors.primary, 0.45),
+                          }}
+                          thumbColor={isEnabled ? colors.primary : "#F4F4F5"}
+                        />
+                      )
+                    ) : (
+                      <Text style={[styles.sunriseLabel, { color: colors.textMuted }]}> 
+                        No reminder
+                      </Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -338,7 +460,7 @@ const styles = StyleSheet.create({
     width: 44,
   },
   content: {
-    flex: 1,
+    paddingBottom: 24,
     paddingHorizontal: 16,
     paddingTop: 20,
   },
@@ -359,48 +481,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   timesContainer: {
-    alignItems: "center",
-    paddingTop: 20,
+    gap: 16,
   },
-  title: {
+  summaryCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 6,
+  },
+  summaryTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  summaryTitle: {
     fontFamily: "SatoshiBold",
-    fontSize: 24,
-    marginBottom: 30,
+    fontSize: 16,
+  },
+  summaryText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 14,
+  },
+  nextPrayerText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 15,
   },
   timesCard: {
-    padding: 24,
+    padding: 16,
     borderRadius: 20,
     borderWidth: 1,
     width: "100%",
+    gap: 4,
+  },
+  cardTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 18,
+  },
+  cardSubtitle: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+    marginBottom: 8,
   },
   prayerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    alignItems: "center",
+    paddingVertical: 14,
   },
   prayerName: {
-    fontFamily: "SatoshiMedium",
-    fontSize: 18,
+    fontFamily: "SatoshiBold",
+    fontSize: 17,
   },
   prayerTime: {
-    fontFamily: "SatoshiBold",
-    fontSize: 18,
+    fontFamily: "SatoshiMedium",
+    fontSize: 14,
   },
-  remindBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    marginTop: 24,
-    gap: 8,
-    width: "100%",
-  },
-  remindBtnText: {
-    fontFamily: "SatoshiBold",
-    fontSize: 16,
-    color: "#fff",
+  sunriseLabel: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 12,
   },
 });
