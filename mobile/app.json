@@ -64,7 +64,13 @@
       "expo-image",
       "expo-sharing",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Quranic to use your location."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
