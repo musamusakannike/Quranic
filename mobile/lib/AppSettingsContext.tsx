@@ -261,10 +261,10 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
             sound: true,
           },
           trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
             channelId: "daily-reminders",
             hour: time.hour,
             minute: time.minute,
-            repeats: true,
           } as Notifications.NotificationTriggerInput,
         });
 

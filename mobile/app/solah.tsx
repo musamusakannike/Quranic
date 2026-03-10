@@ -5,6 +5,7 @@ import {
   View,
   ActivityIndicator,
   Pressable,
+  Alert,
 } from "react-native";
 import * as Location from "expo-location";
 import { Coordinates, CalculationMethod, PrayerTimes } from "adhan";
@@ -12,8 +13,9 @@ import { useTheme } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -29,7 +31,12 @@ export default function SolahTimesScreen() {
   const router = useRouter();
 
   const [prayerTimes, setPrayerTimes] = useState<any>(null);
+  const [nextPrayer, setNextPrayer] = useState<{
+    name: string;
+    time: Date;
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isScheduling, setIsScheduling] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -66,11 +73,79 @@ export default function SolahTimesScreen() {
           maghrib: formatTime(times.maghrib),
           isha: formatTime(times.isha),
         });
+
+        const now = new Date();
+        let nextP = [
+          { name: "Fajr", time: times.fajr },
+          { name: "Dhuhr", time: times.dhuhr },
+          { name: "Asr", time: times.asr },
+          { name: "Maghrib", time: times.maghrib },
+          { name: "Isha", time: times.isha },
+        ].find((p) => p.time > now);
+
+        if (!nextP) {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowTimes = new PrayerTimes(coordinates, tomorrow, params);
+          nextP = { name: "Fajr", time: tomorrowTimes.fajr };
+        }
+        setNextPrayer(nextP);
       } catch (err) {
         setErrorMsg("Could not fetch location.");
       }
     })();
   }, []);
+
+  const handleRemindNextSalah = async () => {
+    if (!nextPrayer) return;
+    setIsScheduling(true);
+
+    try {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        Alert.alert(
+          "Permission required",
+          "Please enable notifications to set reminders.",
+        );
+        setIsScheduling(false);
+        return;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Salah Reminder",
+          body: `It's time for ${nextPrayer.name} prayer.`,
+          sound: true,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: nextPrayer.time,
+          channelId: "daily-reminders",
+        } as Notifications.NotificationTriggerInput,
+      });
+
+      const formatTime = (dateObj: Date) =>
+        dateObj.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+      Alert.alert(
+        "Reminder Set",
+        `You will be reminded for ${nextPrayer.name} at ${formatTime(nextPrayer.time)}.`,
+      );
+    } catch (error) {
+      Alert.alert("Error", "Could not set reminder.");
+    }
+
+    setIsScheduling(false);
+  };
 
   return (
     <SafeAreaView
@@ -205,6 +280,31 @@ export default function SolahTimesScreen() {
                 </Text>
               </View>
             </View>
+
+            {nextPrayer && (
+              <Pressable
+                style={[
+                  styles.remindBtn,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: isScheduling ? 0.7 : 1,
+                  },
+                ]}
+                onPress={handleRemindNextSalah}
+                disabled={isScheduling}
+              >
+                {isScheduling ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Bell color="#fff" size={20} />
+                    <Text style={styles.remindBtnText}>
+                      Remind me for Next Salah ({nextPrayer.name})
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            )}
           </View>
         )}
       </View>
@@ -286,5 +386,21 @@ const styles = StyleSheet.create({
   prayerTime: {
     fontFamily: "SatoshiBold",
     fontSize: 18,
+  },
+  remindBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginTop: 24,
+    gap: 8,
+    width: "100%",
+  },
+  remindBtnText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 16,
+    color: "#fff",
   },
 });
