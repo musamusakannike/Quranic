@@ -128,8 +128,7 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
 
     void Notifications.setNotificationChannelAsync("daily-reminders", {
       name: "Daily reminders",
-      importance: Notifications.AndroidImportance.DEFAULT,
-      sound: "default",
+      importance: Notifications.AndroidImportance.MAX,
     });
   }, []);
 
@@ -259,6 +258,7 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
           content: {
             title: "Quran reminder",
             body: "Take a moment to recite the Quran today.",
+            sound: true,
           },
           trigger: {
             channelId: "daily-reminders",
