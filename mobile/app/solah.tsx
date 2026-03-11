@@ -365,7 +365,7 @@ export default function SolahTimesScreen() {
               ]}
             >
               <Text style={[styles.cardTitle, { color: colors.textMain }]}> 
-                Today's prayer times
+                Today&apos;s prayer times
               </Text>
               <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}> 
                 Toggle any solah to receive a daily local reminder at that time.

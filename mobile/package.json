@@ -58,6 +58,7 @@
     "expo-video": "~55.0.10",
     "expo-web-browser": "~55.0.9",
     "lucide-react-native": "^0.576.0",
+    "moment-hijri": "^3.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",

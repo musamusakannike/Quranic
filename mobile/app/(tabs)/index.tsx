@@ -4,6 +4,7 @@ import {
   Text,
   View,
   StyleSheet,
+  ImageBackground,
   Pressable,
   FlatList,
   Modal,
@@ -13,7 +14,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import {
-  SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -25,6 +25,7 @@ import {
   X,
   Compass,
   Clock,
+  CalendarDays,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
@@ -218,7 +219,7 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={[styles.screen, { backgroundColor: colors.background }]}
     >
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -237,170 +238,193 @@ export default function Index() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* ─── Header Row ─── */}
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextBlock}>
-            <Text style={[styles.greetingLabel, { color: colors.textMuted }]}>
-              Assalamu alaikum
-            </Text>
-            <Text style={[styles.greetingHeading, { color: colors.textMain }]}>
-              {greetingText} 🌙
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => router.push("/search")}
-            style={[
-              styles.searchIconBtn,
-              {
-                backgroundColor: colors.surface,
-                borderColor: withOpacity(colors.border, 0.8),
-              },
-            ]}
-          >
-            <Search size={20} color={colors.textMuted} />
-          </Pressable>
-        </View>
-
-        {/* ─── Reminder pill ─── */}
-        <View
-          style={[
-            styles.reminderPill,
-            {
-              backgroundColor: withOpacity(
-                reminderEnabled ? colors.success : colors.border,
-                isDark ? 0.18 : 0.12,
-              ),
-              alignSelf: "flex-start",
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.reminderDot,
-              {
-                backgroundColor: reminderEnabled
-                  ? colors.success
-                  : colors.textMuted,
-              },
-            ]}
-          />
-          <Text
-            style={[
-              styles.reminderPillText,
-              { color: reminderEnabled ? colors.success : colors.textMuted },
-            ]}
-          >
-            {reminderText}
-          </Text>
-        </View>
-
-        {/* ─── Continue Reading Card ─── */}
-        <Pressable
-          onPress={() => {
-            void Haptics.selectionAsync();
-            if (!lastRead) {
-              router.push("/(tabs)/chapters");
-              return;
-            }
-            router.push({
-              pathname: "/chapter/[id]",
-              params: {
-                id: String(lastRead.chapter),
-                verse: String(lastRead.verse),
-              },
-            });
-          }}
+        <ImageBackground
+          source={require("../../assets/images/masjid-nabawi.jpg")}
+          resizeMode="cover"
+          style={[styles.heroSection, { paddingTop: insets.top }]}
+          imageStyle={styles.heroSectionImage}
         >
           <LinearGradient
             colors={[
-              withOpacity(colors.primary, isDark ? 0.22 : 0.12),
-              withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+              withOpacity("#000000", isDark ? 0.5 : 0.55),
+              withOpacity("#000000", isDark ? 0.32 : 0.38),
+              withOpacity("#000000", isDark ? 0.62 : 0.7),
             ]}
+            locations={[0, 0.55, 1]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              styles.continueCard,
-              {
-                borderColor: withOpacity(colors.primary, isDark ? 0.35 : 0.22),
-              },
-            ]}
-          >
-            <View style={styles.continueCardTop}>
-              <View style={styles.continueCardLeft}>
-                <Text style={[styles.cardLabel, { color: colors.primary }]}>
-                  {lastRead ? "Continue reading" : "Start reading"}
+            end={{ x: 0, y: 1 }}
+            style={styles.heroOverlay}
+          />
+
+          <View style={styles.heroContent}>
+            {/* ─── Header Row ─── */}
+            <View style={styles.headerRow}>
+              <View style={styles.headerTextBlock}>
+                <Text style={[styles.greetingLabel, styles.heroGreetingLabel]}>
+                  Assalamu alaikum
                 </Text>
-                {lastRead && lastReadChapter ? (
-                  <>
-                    <Text
-                      style={[styles.continueTitle, { color: colors.textMain }]}
-                    >
-                      Surah {lastReadChapter.englishname}
-                    </Text>
-                    <Text
-                      style={[styles.continueMeta, { color: colors.textMuted }]}
-                    >
-                      Ayah {lastRead.verse} • Juz {lastRead.juz ?? "–"} • Pg{" "}
-                      {lastRead.page ?? "–"}
-                    </Text>
-                  </>
-                ) : (
-                  <Text
-                    style={[styles.continueMeta, { color: colors.textMuted }]}
-                  >
-                    Your position is saved automatically
-                  </Text>
-                )}
+                <Text style={[styles.greetingHeading, styles.heroGreetingHeading]}>
+                  {greetingText} 🌙
+                </Text>
               </View>
-              <View
+              <Pressable
+                onPress={() => router.push("/search")}
                 style={[
-                  styles.continueIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.18) },
+                  styles.searchIconBtn,
+                  {
+                    backgroundColor: withOpacity(colors.surface, isDark ? 0.72 : 0.85),
+                    borderColor: withOpacity(colors.border, 0.9),
+                  },
                 ]}
               >
-                <BookOpen color={colors.primary} size={22} />
-              </View>
+                <Search size={20} color={colors.textMuted} />
+              </Pressable>
             </View>
 
-            {readingProgress ? (
-              <View style={styles.progressSection}>
-                <View
-                  style={[
-                    styles.progressTrack,
-                    {
-                      backgroundColor: withOpacity(
-                        colors.border,
-                        isDark ? 0.65 : 0.4,
-                      ),
-                    },
-                  ]}
-                >
+            {/* ─── Reminder pill ─── */}
+            <View
+              style={[
+                styles.reminderPill,
+                {
+                  backgroundColor: withOpacity(
+                    reminderEnabled ? colors.success : colors.border,
+                    isDark ? 0.2 : 0.18,
+                  ),
+                  alignSelf: "flex-start",
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.reminderDot,
+                  {
+                    backgroundColor: reminderEnabled
+                      ? colors.success
+                      : colors.textMuted,
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.reminderPillText,
+                  { color: reminderEnabled ? colors.success : colors.textMuted },
+                ]}
+              >
+                {reminderText}
+              </Text>
+            </View>
+
+            {/* ─── Continue Reading Card ─── */}
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                if (!lastRead) {
+                  router.push("/(tabs)/chapters");
+                  return;
+                }
+                router.push({
+                  pathname: "/chapter/[id]",
+                  params: {
+                    id: String(lastRead.chapter),
+                    verse: String(lastRead.verse),
+                  },
+                });
+              }}
+            >
+              <View style={styles.continueCard}>
+                <View style={styles.continueCardTop}>
+                  <View style={styles.continueCardLeft}>
+                    <Text
+                      style={[
+                        styles.cardLabel,
+                        {
+                          color: "#BBB",
+                          textShadowColor: "rgba(0,0,0,0.72)",
+                          textShadowOffset: { width: 0, height: 2 },
+                          textShadowRadius: 10,
+                        },
+                      ]}
+                    >
+                      {lastRead ? "Continue reading" : "Start reading"}
+                    </Text>
+                    {lastRead && lastReadChapter ? (
+                      <>
+                        <Text
+                          style={[styles.continueTitle, {
+                            color: "#FFFFFF",
+                            textShadowColor: "rgba(0,0,0,0.72)",
+                            textShadowOffset: { width: 0, height: 2 },
+                            textShadowRadius: 10,
+                          }]}
+                        >
+                          {lastReadChapter.arabicname}
+                        </Text>
+                        <Text
+                          style={[styles.continueMeta, { color: "#BBB" }]}
+                        >
+                          Ayah {lastRead.verse} • Juz {lastRead.juz ?? "–"} • Pg{" "}
+                          {lastRead.page ?? "–"}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text
+                        style={[styles.continueMeta, { color: "#BBB" }]}
+                      >
+                        Your position is saved automatically
+                      </Text>
+                    )}
+                  </View>
                   <View
                     style={[
-                      styles.progressFill,
-                      {
-                        width: `${readingProgress.ratio * 100}%`,
-                        backgroundColor: colors.primary,
-                      },
+                      styles.continueIconWrap,
+                      { backgroundColor: withOpacity(colors.primary, 0.18) },
                     ]}
-                  />
+                  >
+                    <BookOpen color={colors.primary} size={22} />
+                  </View>
                 </View>
-                <Text
-                  style={[styles.progressLabel, { color: colors.textMuted }]}
-                >
-                  {readingProgress.percentage}% through surah
-                </Text>
-              </View>
-            ) : null}
 
-            <View style={styles.continueCtaRow}>
-              <Text style={[styles.continueCta, { color: colors.primary }]}>
-                {lastRead ? "Resume" : "Open chapters"}
-              </Text>
-              <ChevronRight size={15} color={colors.primary} />
-            </View>
-          </LinearGradient>
-        </Pressable>
+                {readingProgress ? (
+                  <View style={styles.progressSection}>
+                    <View
+                      style={[
+                        styles.progressTrack,
+                        {
+                          backgroundColor: withOpacity(
+                            colors.border,
+                            isDark ? 0.65 : 0.4,
+                          ),
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width: `${readingProgress.ratio * 100}%`,
+                            backgroundColor: colors.primary,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text
+                      style={[styles.progressLabel, { color: colors.textMuted }]}
+                    >
+                      {readingProgress.percentage}% through surah
+                    </Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.continueCtaRow}>
+                  <Text style={[styles.continueCta, { color: colors.success }]}>
+                    {lastRead ? "Resume" : "Open chapters"}
+                  </Text>
+                  <ChevronRight size={15} color={colors.success} />
+                </View>
+              </View>
+            </Pressable>
+          </View>
+        </ImageBackground>
 
         {/* ─── Quick Actions Row ─── */}
         <View style={styles.quickActionsRow}>
@@ -556,6 +580,45 @@ export default function Index() {
                 style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
               >
                 Prayer times
+              </Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* Hijri Calendar Card */}
+          <Pressable
+            style={{ flex: 1, minWidth: "45%" }}
+            onPress={() => {
+              void Haptics.selectionAsync();
+              router.push("/hijri-calendar");
+            }}
+          >
+            <LinearGradient
+              colors={[
+                colors.surface,
+                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.quickCard,
+                { borderColor: withOpacity(colors.border, 0.85) },
+              ]}
+            >
+              <View
+                style={[
+                  styles.quickIconWrap,
+                  { backgroundColor: withOpacity(colors.primary, 0.15) },
+                ]}
+              >
+                <CalendarDays color={colors.primary} size={20} />
+              </View>
+              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
+                Hijri
+              </Text>
+              <Text
+                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
+              >
+                Islamic calendar
               </Text>
             </LinearGradient>
           </Pressable>
@@ -821,7 +884,7 @@ export default function Index() {
           </Animated.View>
         </Modal>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -831,9 +894,23 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 12,
     paddingBottom: 140,
     gap: 16,
+  },
+  heroSection: {
+    marginHorizontal: -16,
+    borderRadius: 0,
+    overflow: "hidden",
+  },
+  heroSectionImage: {
+    borderRadius: 0,
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroContent: {
+    padding: 16,
+    gap: 14,
   },
 
   // Header
@@ -852,10 +929,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 0.3,
   },
+  heroGreetingLabel: {
+    color: "rgba(255,255,255,0.9)",
+    textShadowColor: "rgba(0,0,0,0.65)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
   greetingHeading: {
     fontFamily: "SatoshiBold",
     fontSize: 26,
     letterSpacing: -0.3,
+  },
+  heroGreetingHeading: {
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0,0,0,0.72)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
   searchIconBtn: {
     width: 44,
@@ -888,9 +977,8 @@ const styles = StyleSheet.create({
 
   // Continue Reading
   continueCard: {
-    borderWidth: 1,
     borderRadius: 20,
-    padding: 18,
+    padding: 12,
     gap: 10,
   },
   continueCardTop: {
@@ -907,11 +995,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   continueTitle: {
     fontFamily: "SatoshiBold",
-    fontSize: 20,
+    fontSize: 32,
     letterSpacing: -0.2,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   continueMeta: {
     fontFamily: "SatoshiMedium",
