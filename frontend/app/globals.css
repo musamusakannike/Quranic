@@ -1,13 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #056c5c;
-  --color-primary-light: #0a8f7a;
-  --color-primary-dark: #034036;
+  --color-primary-50: #f0fbf8;
+  --color-primary-100: #d9f5ef;
+  --color-primary-200: #b4eadf;
+  --color-primary-300: #83dacb;
+  --color-primary-400: #4ec3b0;
+  --color-primary-500: #26a795;
+  --color-primary-600: #178676;
+  --color-primary-700: #056c5c;
+  --color-primary-800: #0a564b;
+  --color-primary-900: #0d473f;
+  --color-primary-950: #034036;
+
+  --color-primary: var(--color-primary-700);
+  --color-primary-light: var(--color-primary-500);
+  --color-primary-dark: var(--color-primary-950);
   --color-accent: #d4af37;
 
   --color-background-light: #f9fafb;
-  --color-background-dark: #0b1914;
+  --color-background-dark: #07130f;
 
   --font-sans: var(--font-inter);
   --font-arabic: var(--font-amiri-quran);
@@ -29,4 +41,24 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-300 rounded-full select-none;
+  }
+  .btn:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+  .btn:disabled {
+    @apply opacity-60 cursor-not-allowed pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-primary text-white shadow-lg shadow-primary-700/20 hover:bg-primary-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-700/30;
+  }
+  .btn-secondary {
+    @apply bg-white text-gray-900 border border-gray-200 shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 dark:text-white dark:border-gray-800 dark:hover:bg-gray-800;
+  }
 }
