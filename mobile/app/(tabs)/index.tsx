@@ -13,9 +13,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import {
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   Search,
@@ -220,9 +218,7 @@ export default function Index() {
   };
 
   return (
-    <View
-      style={[styles.screen, { backgroundColor: colors.background }]}
-    >
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -264,7 +260,9 @@ export default function Index() {
                 <Text style={[styles.greetingLabel, styles.heroGreetingLabel]}>
                   Assalamu alaikum
                 </Text>
-                <Text style={[styles.greetingHeading, styles.heroGreetingHeading]}>
+                <Text
+                  style={[styles.greetingHeading, styles.heroGreetingHeading]}
+                >
                   {greetingText} 🌙
                 </Text>
               </View>
@@ -273,7 +271,10 @@ export default function Index() {
                 style={[
                   styles.searchIconBtn,
                   {
-                    backgroundColor: withOpacity(colors.surface, isDark ? 0.72 : 0.85),
+                    backgroundColor: withOpacity(
+                      colors.surface,
+                      isDark ? 0.72 : 0.85,
+                    ),
                     borderColor: withOpacity(colors.border, 0.9),
                   },
                 ]}
@@ -308,7 +309,9 @@ export default function Index() {
               <Text
                 style={[
                   styles.reminderPillText,
-                  { color: reminderEnabled ? colors.success : colors.textMuted },
+                  {
+                    color: reminderEnabled ? colors.success : colors.textMuted,
+                  },
                 ]}
               >
                 {reminderText}
@@ -351,26 +354,25 @@ export default function Index() {
                     {lastRead && lastReadChapter ? (
                       <>
                         <Text
-                          style={[styles.continueTitle, {
-                            color: "#FFFFFF",
-                            textShadowColor: "rgba(0,0,0,0.72)",
-                            textShadowOffset: { width: 0, height: 2 },
-                            textShadowRadius: 10,
-                          }]}
+                          style={[
+                            styles.continueTitle,
+                            {
+                              color: "#FFFFFF",
+                              textShadowColor: "rgba(0,0,0,0.72)",
+                              textShadowOffset: { width: 0, height: 2 },
+                              textShadowRadius: 10,
+                            },
+                          ]}
                         >
                           {lastReadChapter.arabicname}
                         </Text>
-                        <Text
-                          style={[styles.continueMeta, { color: "#BBB" }]}
-                        >
+                        <Text style={[styles.continueMeta, { color: "#BBB" }]}>
                           Ayah {lastRead.verse} • Juz {lastRead.juz ?? "–"} • Pg{" "}
                           {lastRead.page ?? "–"}
                         </Text>
                       </>
                     ) : (
-                      <Text
-                        style={[styles.continueMeta, { color: "#BBB" }]}
-                      >
+                      <Text style={[styles.continueMeta, { color: "#BBB" }]}>
                         Your position is saved automatically
                       </Text>
                     )}
@@ -409,7 +411,10 @@ export default function Index() {
                       />
                     </View>
                     <Text
-                      style={[styles.progressLabel, { color: colors.textMuted }]}
+                      style={[
+                        styles.progressLabel,
+                        { color: colors.textMuted },
+                      ]}
                     >
                       {readingProgress.percentage}% through surah
                     </Text>
@@ -428,7 +433,7 @@ export default function Index() {
         </ImageBackground>
 
         {/* ─── Quick Actions Carousel ─── */}
-        <View style={styles.sectionHeader}>
+        {/* <View style={styles.sectionHeader}>
           <View>
             <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
               Quick Actions
@@ -437,7 +442,7 @@ export default function Index() {
               Access essential features quickly
             </Text>
           </View>
-        </View>
+        </View> */}
 
         <FlatList
           data={[
@@ -539,155 +544,164 @@ export default function Index() {
           )}
         />
 
-
         {/* ─── Juz Navigator ─── */}
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-              Quick Juz
-            </Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-              Jump to any part of the Quran
-            </Text>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 140, gap: 16 }}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+                Quick Juz
+              </Text>
+              <Text
+                style={[styles.sectionSubtitle, { color: colors.textMuted }]}
+              >
+                Jump to any part of the Quran
+              </Text>
+            </View>
+            <Pressable onPress={openJuzSheet} style={styles.seeAllBtn}>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                See all
+              </Text>
+              <ChevronRight size={14} color={colors.primary} />
+            </Pressable>
           </View>
-          <Pressable onPress={openJuzSheet} style={styles.seeAllBtn}>
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>
-              See all
-            </Text>
-            <ChevronRight size={14} color={colors.primary} />
-          </Pressable>
-        </View>
 
-        <FlatList
-          data={juzItems}
-          keyExtractor={(item) => `juz-${item.juz}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.juzHScroll}
-          renderItem={({ item }) => (
+          <FlatList
+            data={juzItems}
+            keyExtractor={(item) => `juz-${item.juz}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.juzHScroll}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => {
+                  if (!item.chapter || !item.verse) return;
+                  void Haptics.selectionAsync();
+                  router.push({
+                    pathname: "/chapter/[id]",
+                    params: {
+                      id: String(item.chapter),
+                      verse: String(item.verse),
+                    },
+                  });
+                }}
+              >
+                <LinearGradient
+                  colors={[
+                    withOpacity(colors.primary, isDark ? 0.28 : 0.13),
+                    withOpacity(colors.primary, isDark ? 0.16 : 0.06),
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.juzScrollChip,
+                    {
+                      borderColor: withOpacity(
+                        colors.primary,
+                        isDark ? 0.42 : 0.22,
+                      ),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.juzScrollNumber, { color: colors.primary }]}
+                  >
+                    {item.juz}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.juzScrollLabel,
+                      { color: withOpacity(colors.primary, 0.75) },
+                    ]}
+                  >
+                    Juz
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            )}
+            scrollEventThrottle={16}
+          />
+
+          {/* ─── Ayah of the Day ─── */}
+          <ImageBackground
+            source={require("../../assets/images/ayah-of-the-day.jpg")}
+            style={[
+              styles.ayahCard,
+              { borderColor: withOpacity(colors.border, 0.85) },
+            ]}
+            imageStyle={styles.ayahCardImage}
+          >
+            <LinearGradient
+              colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <View style={styles.ayahCardTop}>
+              <View style={{ gap: 2, flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: "#FFFFFF" }]}>
+                  Ayah of the Day
+                </Text>
+                <Text
+                  style={[
+                    styles.sectionSubtitle,
+                    { color: "rgba(255,255,255,0.7)" },
+                  ]}
+                >
+                  Surah {dailyAyah.chapterName} · Ayah {dailyAyah.target.verse}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.dailyPill,
+                  { backgroundColor: withOpacity(colors.primary, 0.25) },
+                ]}
+              >
+                <Text style={[styles.dailyPillText, { color: "#FFFFFF" }]}>
+                  Daily
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.ayahDivider,
+                { backgroundColor: "rgba(255,255,255,0.15)" },
+              ]}
+            />
+
+            <Text
+              style={[styles.arabicDailyText, { color: "#FFFFFF" }]}
+              numberOfLines={4}
+            >
+              {dailyAyah.text}
+            </Text>
+
+            <Text
+              style={[
+                styles.translationDailyText,
+                { color: "rgba(255,255,255,0.85)" },
+              ]}
+              numberOfLines={3}
+            >
+              {dailyAyah.translation}
+            </Text>
+
             <Pressable
               onPress={() => {
-                if (!item.chapter || !item.verse) return;
                 void Haptics.selectionAsync();
                 router.push({
                   pathname: "/chapter/[id]",
                   params: {
-                    id: String(item.chapter),
-                    verse: String(item.verse),
+                    id: String(dailyAyah.target.chapter),
+                    verse: String(dailyAyah.target.verse),
                   },
                 });
               }}
+              style={[styles.readAyahBtn, { backgroundColor: colors.primary }]}
             >
-              <LinearGradient
-                colors={[
-                  withOpacity(colors.primary, isDark ? 0.28 : 0.13),
-                  withOpacity(colors.primary, isDark ? 0.16 : 0.06),
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[
-                  styles.juzScrollChip,
-                  {
-                    borderColor: withOpacity(
-                      colors.primary,
-                      isDark ? 0.42 : 0.22,
-                    ),
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.juzScrollNumber, { color: colors.primary }]}
-                >
-                  {item.juz}
-                </Text>
-                <Text
-                  style={[
-                    styles.juzScrollLabel,
-                    { color: withOpacity(colors.primary, 0.75) },
-                  ]}
-                >
-                  Juz
-                </Text>
-              </LinearGradient>
+              <Text style={styles.readAyahBtnText}>Read Ayah</Text>
+              <ChevronRight size={14} color="#fff" />
             </Pressable>
-          )}
-          scrollEventThrottle={16}
-        />
-
-        {/* ─── Ayah of the Day ─── */}
-        <ImageBackground
-          source={require("../../assets/images/ayah-of-the-day.jpg")}
-          style={[
-            styles.ayahCard,
-            { borderColor: withOpacity(colors.border, 0.85) },
-          ]}
-          imageStyle={styles.ayahCardImage}
-        >
-          <LinearGradient
-            colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View style={styles.ayahCardTop}>
-            <View style={{ gap: 2, flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: "#FFFFFF" }]}>
-                Ayah of the Day
-              </Text>
-              <Text
-                style={[styles.sectionSubtitle, { color: "rgba(255,255,255,0.7)" }]}
-              >
-                Surah {dailyAyah.chapterName} · Ayah {dailyAyah.target.verse}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.dailyPill,
-                { backgroundColor: withOpacity(colors.primary, 0.25) },
-              ]}
-            >
-              <Text style={[styles.dailyPillText, { color: "#FFFFFF" }]}>
-                Daily
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.ayahDivider,
-              { backgroundColor: "rgba(255,255,255,0.15)" },
-            ]}
-          />
-
-          <Text
-            style={[styles.arabicDailyText, { color: "#FFFFFF" }]}
-            numberOfLines={4}
-          >
-            {dailyAyah.text}
-          </Text>
-
-          <Text
-            style={[styles.translationDailyText, { color: "rgba(255,255,255,0.85)" }]}
-            numberOfLines={3}
-          >
-            {dailyAyah.translation}
-          </Text>
-
-          <Pressable
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push({
-                pathname: "/chapter/[id]",
-                params: {
-                  id: String(dailyAyah.target.chapter),
-                  verse: String(dailyAyah.target.verse),
-                },
-              });
-            }}
-            style={[styles.readAyahBtn, { backgroundColor: colors.primary }]}
-          >
-            <Text style={styles.readAyahBtnText}>Read Ayah</Text>
-            <ChevronRight size={14} color="#fff" />
-          </Pressable>
-        </ImageBackground>
+          </ImageBackground>
+        </View>
       </ScrollView>
 
       {/* ─── Juz Bottom Sheet ─── */}
@@ -809,14 +823,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingBottom: 140,
     gap: 16,
   },
   heroSection: {
     marginHorizontal: -16,
     borderRadius: 0,
     overflow: "hidden",
+    paddingHorizontal: 16,
   },
   heroSectionImage: {
     borderRadius: 0,
@@ -969,6 +982,7 @@ const styles = StyleSheet.create({
   quickActionsCarousel: {
     gap: 12,
     paddingRight: 16,
+    paddingLeft: 4,
     paddingBottom: 4,
   },
   quickActionCard: {
