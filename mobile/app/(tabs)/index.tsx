@@ -615,25 +615,25 @@ export default function Index() {
         />
 
         {/* ─── Ayah of the Day ─── */}
-        <LinearGradient
-          colors={[
-            colors.surface,
-            withOpacity(colors.primary, isDark ? 0.1 : 0.04),
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <ImageBackground
+          source={require("../../assets/images/ayah-of-the-day.jpg")}
           style={[
             styles.ayahCard,
             { borderColor: withOpacity(colors.border, 0.85) },
           ]}
+          imageStyle={styles.ayahCardImage}
         >
+          <LinearGradient
+            colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
+            style={StyleSheet.absoluteFillObject}
+          />
           <View style={styles.ayahCardTop}>
             <View style={{ gap: 2, flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+              <Text style={[styles.sectionTitle, { color: "#FFFFFF" }]}>
                 Ayah of the Day
               </Text>
               <Text
-                style={[styles.sectionSubtitle, { color: colors.textMuted }]}
+                style={[styles.sectionSubtitle, { color: "rgba(255,255,255,0.7)" }]}
               >
                 Surah {dailyAyah.chapterName} · Ayah {dailyAyah.target.verse}
               </Text>
@@ -641,10 +641,10 @@ export default function Index() {
             <View
               style={[
                 styles.dailyPill,
-                { backgroundColor: withOpacity(colors.primary, 0.15) },
+                { backgroundColor: withOpacity(colors.primary, 0.25) },
               ]}
             >
-              <Text style={[styles.dailyPillText, { color: colors.primary }]}>
+              <Text style={[styles.dailyPillText, { color: "#FFFFFF" }]}>
                 Daily
               </Text>
             </View>
@@ -653,19 +653,19 @@ export default function Index() {
           <View
             style={[
               styles.ayahDivider,
-              { backgroundColor: withOpacity(colors.primary, 0.15) },
+              { backgroundColor: "rgba(255,255,255,0.15)" },
             ]}
           />
 
           <Text
-            style={[styles.arabicDailyText, { color: colors.textMain }]}
+            style={[styles.arabicDailyText, { color: "#FFFFFF" }]}
             numberOfLines={4}
           >
             {dailyAyah.text}
           </Text>
 
           <Text
-            style={[styles.translationDailyText, { color: colors.textMuted }]}
+            style={[styles.translationDailyText, { color: "rgba(255,255,255,0.85)" }]}
             numberOfLines={3}
           >
             {dailyAyah.translation}
@@ -687,7 +687,7 @@ export default function Index() {
             <Text style={styles.readAyahBtnText}>Read Ayah</Text>
             <ChevronRight size={14} color="#fff" />
           </Pressable>
-        </LinearGradient>
+        </ImageBackground>
       </ScrollView>
 
       {/* ─── Juz Bottom Sheet ─── */}
@@ -1066,6 +1066,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     gap: 12,
+    overflow: "hidden",
+  },
+  ayahCardImage: {
+    borderRadius: 20,
   },
   ayahCardTop: {
     flexDirection: "row",
