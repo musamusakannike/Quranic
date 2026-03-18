@@ -4,7 +4,9 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../lib/ThemeContext";
 import { useDownloads } from "../../lib/DownloadsContext";
-import { ArrowLeft, Trash2, PlayCircle, Download } from "lucide-react-native";
+import { ArrowLeft, Trash2, PlayCircle, Download, MoreVertical, Play } from "lucide-react-native";
+import { Modal, ActivityIndicator } from "react-native";
+import { useAudio } from "../../lib/AudioContext";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
@@ -12,6 +14,25 @@ export default function DownloadsScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
   const { downloads, deleteAudio, activeDownloads } = useDownloads();
+  const { playNext } = useAudio();
+  const [selectedDownload, setSelectedDownload] = React.useState<any>(null);
+
+  const handlePlayNext = () => {
+    if (!selectedDownload) return;
+    
+    // Fallback if localUri gets lost or use remote
+    const audioUrl = selectedDownload.localUri || `${selectedDownload.server}${selectedDownload.surahId.padStart(3, "0")}.mp3`;
+    
+    playNext({
+      audioUrl: audioUrl,
+      surahId: selectedDownload.surahId,
+      surahName: selectedDownload.surahName,
+      reciterName: selectedDownload.reciterName,
+      reciterId: selectedDownload.reciterId,
+      server: selectedDownload.server,
+    });
+    setSelectedDownload(null);
+  };
 
   const handlePlay = (item: any) => {
     void Haptics.selectionAsync();
@@ -89,6 +110,15 @@ export default function DownloadsScreen() {
                 </Text>
               </View>
               <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setSelectedDownload(item);
+                }}
+                style={styles.moreOptionButton}
+              >
+                <MoreVertical size={20} color={colors.textMain} />
+              </Pressable>
+              <Pressable
                 onPress={() => deleteAudio(item.id)}
                 style={styles.deleteButton}
               >
@@ -98,6 +128,48 @@ export default function DownloadsScreen() {
           )}
         />
       )}
+
+      <Modal
+        visible={!!selectedDownload}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedDownload(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setSelectedDownload(null)}
+        >
+          <Pressable
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHandle} />
+            <Text style={[styles.modalTitle, { color: colors.textMain }]}>
+              {selectedDownload?.surahName}
+            </Text>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                {
+                  backgroundColor: pressed
+                    ? "rgba(59, 130, 246, 0.1)"
+                    : "transparent",
+                },
+              ]}
+              onPress={handlePlayNext}
+            >
+              <Play size={24} color={colors.primary} />
+              <Text style={[styles.modalOptionText, { color: colors.textMain }]}>
+                Play Next
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -167,5 +239,44 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  moreOptionButton: {
+    padding: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 48,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#ccc",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 18,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 16,
+  },
+  modalOptionText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 16,
   },
 });

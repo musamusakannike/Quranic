@@ -2,12 +2,13 @@ import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Play, ArrowLeft, Search, Download, Trash2 } from "lucide-react-native";
-import { ActivityIndicator } from "react-native";
+import { Play, ArrowLeft, Search, Download, Trash2, MoreVertical } from "lucide-react-native";
+import { ActivityIndicator, Modal } from "react-native";
 import * as Haptics from "expo-haptics";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
 import { useTheme } from "../../../lib/ThemeContext";
 import { useDownloads } from "../../../lib/DownloadsContext";
+import { useAudio } from "../../../lib/AudioContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -29,6 +30,7 @@ function SurahCard({
   server,
   colors,
   isDark,
+  onOptionsPress,
 }: any) {
   const router = useRouter();
 
@@ -156,6 +158,15 @@ function SurahCard({
           >
             <Play size={18} color={colors.primary} />
           </View>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onOptionsPress(item);
+            }}
+            style={{ padding: 4 }}
+          >
+            <MoreVertical size={20} color={colors.textMain} />
+          </Pressable>
         </View>
       </LinearGradient>
     </Pressable>
@@ -173,6 +184,30 @@ export default function AudioSurahsScreen() {
   }>();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSurah, setSelectedSurah] = useState<any>(null);
+  const { playNext } = useAudio();
+  const { isDownloaded, downloads } = useDownloads();
+
+  const handlePlayNext = () => {
+    if (!selectedSurah) return;
+    const surahIdStr = String(selectedSurah.id);
+    const formattedSurahId = surahIdStr.padStart(3, "0");
+    const downloadId = `${reciterId}-${surahIdStr}`;
+    const defaultAudioUrl = `${server}${formattedSurahId}.mp3`;
+    const audioUrl = isDownloaded(downloadId)
+      ? downloads.find((d) => d.id === downloadId)?.localUri || defaultAudioUrl
+      : defaultAudioUrl;
+
+    playNext({
+      audioUrl,
+      surahId: surahIdStr,
+      surahName: selectedSurah.name,
+      reciterName,
+      reciterId,
+      server,
+    });
+    setSelectedSurah(null);
+  };
 
   const surahs = useMemo(() => {
     if (!surahList) return [];
@@ -213,6 +248,7 @@ export default function AudioSurahsScreen() {
         server={server}
         colors={colors}
         isDark={isDark}
+        onOptionsPress={(surah: any) => setSelectedSurah(surah)}
       />
     );
   };
@@ -309,6 +345,48 @@ export default function AudioSurahsScreen() {
           </View>
         }
       />
+
+      <Modal
+        visible={!!selectedSurah}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedSurah(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setSelectedSurah(null)}
+        >
+          <Pressable
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHandle} />
+            <Text style={[styles.modalTitle, { color: colors.textMain }]}>
+              {selectedSurah?.name}
+            </Text>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalOption,
+                {
+                  backgroundColor: pressed
+                    ? withOpacity(colors.primary, 0.1)
+                    : "transparent",
+                },
+              ]}
+              onPress={handlePlayNext}
+            >
+              <Play size={24} color={colors.primary} />
+              <Text style={[styles.modalOptionText, { color: colors.textMain }]}>
+                Play Next
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -399,5 +477,41 @@ const styles = StyleSheet.create({
   surahArabic: {
     fontFamily: "AmiriQuran",
     fontSize: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 48,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#ccc",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 18,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 16,
+  },
+  modalOptionText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 16,
   },
 });

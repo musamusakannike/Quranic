@@ -29,6 +29,10 @@ interface AudioContextType {
   playTrack: (track: Track) => void;
   closePlayer: () => void;
   isMiniPlayerVisible: boolean;
+  queue: Track[];
+  playNext: (track: Track) => void;
+  addToQueue: (track: Track) => void;
+  removeFromQueue: (index: number) => void;
 }
 
 const AudioContext = createContext<AudioContextType | null>(null);
@@ -37,9 +41,11 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const player = useAudioPlayer(currentTrack?.audioUrl || null);
   const status = useAudioPlayerStatus(player);
+  const [queue, setQueue] = useState<Track[]>([]);
 
   // To handle auto-play safely after track switch without spamming
   const previousUrlRef = useRef<string | null>(null);
+  const hasFinishedRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Configure background audio mode
@@ -64,9 +70,40 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       if (status.isLoaded) {
         player.play();
         previousUrlRef.current = currentTrack.audioUrl;
+        hasFinishedRef.current = false;
       }
     }
-  }, [currentTrack, status.isLoaded, player]);
+
+    // Auto-advance to next track in queue when finished
+    if (
+      status.isLoaded &&
+      status.duration > 0 &&
+      status.currentTime >= status.duration - 0.5 &&
+      !status.playing &&
+      !hasFinishedRef.current
+    ) {
+      hasFinishedRef.current = true;
+      if (queue.length > 0) {
+        const nextTrack = queue[0];
+        setQueue((q) => q.slice(1));
+        
+        setCurrentTrack(nextTrack);
+        previousUrlRef.current = null;
+      }
+    }
+  }, [currentTrack, status, player, queue]);
+
+  const playNext = (track: Track) => {
+    setQueue((prev) => [track, ...prev]);
+  };
+
+  const addToQueue = (track: Track) => {
+    setQueue((prev) => [...prev, track]);
+  };
+
+  const removeFromQueue = (index: number) => {
+    setQueue((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const playTrack = (track: Track) => {
     // If playing the same track, ensure it's playing
@@ -96,6 +133,10 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
         playTrack,
         closePlayer,
         isMiniPlayerVisible: !!currentTrack,
+        queue,
+        playNext,
+        addToQueue,
+        removeFromQueue,
       }}
     >
       {children}
