@@ -11,7 +11,7 @@ import { useTheme } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { ChevronLeft, ChevronRight, Sun, Moon, Clock, BookOpen, Sparkles } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Sun, Moon, Clock, BookOpen, Sparkles, Shield } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 const ADHKAAR_CATEGORIES = [
@@ -52,13 +52,13 @@ const ADHKAAR_CATEGORIES = [
     height: 230,
   },
   {
-    id: "daily-adhkaar",
-    title: "Daily Adhkaar",
-    subtitle: "Essential daily supplications",
-    icon: Sparkles,
-    color: "#8B5CF6", // Violet
-    image: require("../assets/images/adhkaar/sunrise.jpg"), // Fallback to sunrise
-    height: 170,
+    id: "hisnul-muslim",
+    title: "Hisnul Muslim",
+    subtitle: "Fortress of the Muslim",
+    icon: Shield,
+    color: "#3B82F6", // Blue
+    image: require("../assets/images/adhkaar/sunrise.jpg"),
+    height: 200,
   },
 ];
 

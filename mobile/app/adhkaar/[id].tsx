@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   Pressable,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "../../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -587,28 +587,35 @@ export default function AdhkaarDetailScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
 
-  let adhkaarData = [];
-  let pageTitle = "Adhkaar";
+  const adhkaarData = useMemo(() => {
+    if (id === "morning") return MORNING_ADHKAAR;
+    if (id === "evening") return EVENING_ADHKAAR;
+    if (id === "after-solah") return AFTER_SOLAH_ADHKAAR;
+    if (id === "40-robbanahs") return FORTY_ROBBANAS_ADHKAAR;
+    if (id === "hisnul-muslim") {
+      const HISNUL_MUSLIM_DATA = require("../../docs/hisnulmuslim.json");
+      return HISNUL_MUSLIM_DATA.map((item: any) => ({
+        title: item.title,
+        arabic: item.arabic,
+        transliteration: "",
+        translation: item.english,
+        count: 1,
+        evidence: item.reference
+      }));
+    }
+    return MORNING_ADHKAAR; // Fallback
+  }, [id]);
 
-  if (id === "morning") {
-    adhkaarData = MORNING_ADHKAAR;
-    pageTitle = "Morning Adhkaar";
-  } else if (id === "evening") {
-    adhkaarData = EVENING_ADHKAAR;
-    pageTitle = "Evening Adhkaar";
-  } else if (id === "after-solah") {
-    adhkaarData = AFTER_SOLAH_ADHKAAR;
-    pageTitle = "After Solaah Adhkaar";
-  } else if (id === "40-robbanahs") {
-    adhkaarData = FORTY_ROBBANAS_ADHKAAR;
-    pageTitle = "40 Robbanahas";
-  } else {
-    adhkaarData = MORNING_ADHKAAR; // Fallback or display other adhkaar types
-  }
+  const pageTitle = useMemo(() => {
+    if (id === "morning") return "Morning Adhkaar";
+    if (id === "evening") return "Evening Adhkaar";
+    if (id === "after-solah") return "After Solaah Adhkaar";
+    if (id === "40-robbanahs") return "40 Robbanahas";
+    if (id === "hisnul-muslim") return "Hisnul Muslim";
+    return "Adhkaar";
+  }, [id]);
 
-  const [counts, setCounts] = useState<{ [key: number]: number }>(
-    adhkaarData.reduce((acc, _, index) => ({ ...acc, [index]: 0 }), {})
-  );
+  const [counts, setCounts] = useState<{ [key: number]: number }>({});
 
   const handleIncrement = (index: number, max: number) => {
     setCounts((prev) => ({
@@ -623,6 +630,31 @@ export default function AdhkaarDetailScreen() {
       [index]: 0,
     }));
   };
+
+  const renderItem = useCallback(({ item, index }: any) => {
+    return (
+      <View style={{ paddingBottom: 16 }}>
+        <AdhkaarCard
+          item={item}
+          count={counts[index] || 0}
+          onIncrement={() => handleIncrement(index, item.count)}
+          onReset={() => handleReset(index)}
+          colors={colors}
+        />
+      </View>
+    );
+  }, [counts, colors]);
+
+  const ListHeaderComponent = useCallback(() => (
+    <View style={styles.introSection}>
+      <Text style={[styles.introTitle, { color: colors.textMain }]}>
+        {pageTitle}
+      </Text>
+      <Text style={[styles.introSubtitle, { color: colors.textMuted }]}>
+        Tap on the card or counter to track your progress. Let your heart find peace in His remembrance.
+      </Text>
+    </View>
+  ), [pageTitle, colors]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -652,32 +684,16 @@ export default function AdhkaarDetailScreen() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.introSection}>
-          <Text style={[styles.introTitle, { color: colors.textMain }]}>
-            {pageTitle}
-          </Text>
-          <Text style={[styles.introSubtitle, { color: colors.textMuted }]}>
-            Tap on the card or counter to track your progress. Let your heart find peace in His remembrance.
-          </Text>
-        </View>
-
-        <View style={styles.list}>
-          {adhkaarData.map((item, index) => (
-            <AdhkaarCard
-              key={index}
-              item={item}
-              count={counts[index] || 0}
-              onIncrement={() => handleIncrement(index, item.count)}
-              onReset={() => handleReset(index)}
-              colors={colors}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <View style={{ flex: 1, paddingHorizontal: 16 }}>
+        {/* @ts-ignore */}
+        <FlashList
+          data={adhkaarData}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={ListHeaderComponent}
+        />
+      </View>
     </SafeAreaView>
   );
 }
