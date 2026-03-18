@@ -14,6 +14,7 @@ import {
   Github,
   Instagram,
 } from "lucide-react";
+import Link from "next/link";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -471,9 +472,12 @@ export default function Home() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
+                  <Link 
+                    href="/privacy-policy" 
+                    className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300"
+                  >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
