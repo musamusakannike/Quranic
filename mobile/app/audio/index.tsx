@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ActivityIndicator,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, FlatList } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Search, Mic, ArrowLeft, Download } from "lucide-react-native";
@@ -41,6 +34,18 @@ export interface Moshaf {
   surah_total: number;
   moshaf_type: number;
   surah_list: string;
+}
+
+export interface Riwayah {
+  id: number;
+  name: string;
+}
+
+export interface MoshafDefinition {
+  id: number;
+  moshaf_type: number;
+  moshaf_id: number;
+  name: string;
 }
 
 function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
@@ -108,11 +113,23 @@ export default function AudioRecitersScreen() {
   const router = useRouter();
 
   const [reciters, setReciters] = useState<Reciter[]>([]);
+  const [riwayat, setRiwayat] = useState<Riwayah[]>([]);
+  const [moshafs, setMoshafs] = useState<MoshafDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRiwayahId, setSelectedRiwayahId] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  const moshafTypes = useMemo(() => {
+    return [
+      { id: "murattal", name: "Murattal" },
+      { id: "mujawwad", name: "Mujawwad" },
+      { id: "mo-lim", name: "Teaching" },
+    ];
+  }, []);
 
   useEffect(() => {
-    const fetchReciters = async () => {
+    const fetchData = async () => {
       try {
         const networkState = await Network.getNetworkStateAsync();
         if (!networkState.isConnected || !networkState.isInternetReachable) {
@@ -121,31 +138,98 @@ export default function AudioRecitersScreen() {
           return;
         }
 
-        const res = await fetch(
-          "https://mp3quran.net/api/v3/reciters?language=eng",
-        );
-        const data = await res.json();
-        setReciters(data.reciters || []);
+        const [recitersRes, riwayatRes, moshafsRes] = await Promise.all([
+          fetch("https://mp3quran.net/api/v3/reciters?language=eng"),
+          fetch("https://mp3quran.net/api/v3/riwayat?language=eng"),
+          fetch("https://mp3quran.net/api/v3/moshaf?language=eng"),
+        ]);
+
+        const [recitersData, riwayatData, moshafsData] = await Promise.all([
+          recitersRes.json(),
+          riwayatRes.json(),
+          moshafsRes.json(),
+        ]);
+
+        setReciters(recitersData.reciters || []);
+        setRiwayat(riwayatData.riwayat || []);
+        setMoshafs(moshafsData.riwayat || []); // Note: API returns 'riwayat' key for both
       } catch (err) {
-        console.error("Error fetching reciters", err);
+        console.error("Error fetching data", err);
         showToast("Error fetching reciters.", "error");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchReciters();
+    fetchData();
   }, []);
 
   const filteredReciters = useMemo(() => {
-    if (!searchQuery.trim()) return reciters;
-    const lowerQuery = searchQuery.toLowerCase();
-    return reciters.filter((r) => r.name.toLowerCase().includes(lowerQuery));
-  }, [reciters, searchQuery]);
+    let result = reciters;
+
+    // Filter by Riwayah
+    if (selectedRiwayahId) {
+      // Find all moshaf IDs that belong to this Riwayah
+      const validMoshafIds = moshafs
+        .filter((m: MoshafDefinition) => m.moshaf_id === selectedRiwayahId)
+        .map((m: MoshafDefinition) => m.id);
+
+      result = result.filter((r: Reciter) =>
+        r.moshaf.some((m: Moshaf) => validMoshafIds.includes(m.moshaf_type)),
+      );
+    }
+
+    // Filter by Type (Murattal, Mujawwad, etc.)
+    if (selectedType) {
+      result = result.filter((r: Reciter) =>
+        r.moshaf.some((m: Moshaf) => {
+          const moshafDef = moshafs.find((def: MoshafDefinition) => def.id === m.moshaf_type);
+          if (!moshafDef) return false;
+          const nameLower = moshafDef.name.toLowerCase();
+          if (selectedType === "murattal") return nameLower.includes("murattal");
+          if (selectedType === "mujawwad") return nameLower.includes("mojawwad");
+          if (selectedType === "mo-lim") return nameLower.includes("mo'lim") || nameLower.includes("molim");
+          return false;
+        }),
+      );
+    }
+
+    // Filter by Search Query
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter((r: Reciter) => r.name.toLowerCase().includes(lowerQuery));
+    }
+
+    return result;
+  }, [reciters, searchQuery, selectedRiwayahId, selectedType, moshafs]);
 
   const renderItem = ({ item, index }: { item: Reciter; index: number }) => {
-    // We'll use the first moshaf for simplicity
-    const mainMoshaf = item.moshaf[0];
+    // Find the best moshaf to display based on filters
+    let mainMoshaf = item.moshaf[0];
+    
+    if (selectedRiwayahId || selectedType) {
+      const filteredMoshafs = item.moshaf.filter((m: Moshaf) => {
+        const moshafDef = moshafs.find((def: MoshafDefinition) => def.id === m.moshaf_type);
+        if (!moshafDef) return false;
+        
+        const matchesRiwayah = !selectedRiwayahId || moshafDef.moshaf_id === selectedRiwayahId;
+        
+        let matchesType = true;
+        if (selectedType) {
+          const nameLower = moshafDef.name.toLowerCase();
+          if (selectedType === "murattal") matchesType = nameLower.includes("murattal");
+          else if (selectedType === "mujawwad") matchesType = nameLower.includes("mojawwad");
+          else if (selectedType === "mo-lim") matchesType = nameLower.includes("mo'lim") || nameLower.includes("molim");
+        }
+        
+        return matchesRiwayah && matchesType;
+      });
+      
+      if (filteredMoshafs.length > 0) {
+        mainMoshaf = filteredMoshafs[0];
+      }
+    }
+
     if (!mainMoshaf) return null;
 
     return (
@@ -269,6 +353,100 @@ export default function AudioRecitersScreen() {
                 />
               </View>
 
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterLabel, { color: colors.textMain }]}>
+                  Riwayat (Narration)
+                </Text>
+                <FlatList
+                  data={[{ id: null as unknown as number, name: "All" }, ...riwayat]}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => {
+                        void Haptics.selectionAsync();
+                        setSelectedRiwayahId(item.id);
+                      }}
+                      style={[
+                        styles.filterChip,
+                        {
+                          backgroundColor:
+                            selectedRiwayahId === item.id
+                              ? colors.primary
+                              : colors.surface,
+                          borderColor:
+                            selectedRiwayahId === item.id
+                              ? colors.primary
+                              : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          {
+                            color:
+                              selectedRiwayahId === item.id
+                                ? "#fff"
+                                : colors.textMain,
+                          },
+                        ]}
+                      >
+                        {item.name}
+                      </Text>
+                    </Pressable>
+                  )}
+                  ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
+                  contentContainerStyle={{ paddingRight: 16 }}
+                />
+              </View>
+
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterLabel, { color: colors.textMain }]}>
+                  Moshaf (Style)
+                </Text>
+                <FlatList
+                  data={[{ id: null as unknown as string, name: "All" }, ...moshafTypes]}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => {
+                        void Haptics.selectionAsync();
+                        setSelectedType(item.id);
+                      }}
+                      style={[
+                        styles.filterChip,
+                        {
+                          backgroundColor:
+                            selectedType === item.id
+                              ? colors.primary
+                              : colors.surface,
+                          borderColor:
+                            selectedType === item.id
+                              ? colors.primary
+                              : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          {
+                            color:
+                              selectedType === item.id ? "#fff" : colors.textMain,
+                          },
+                        ]}
+                      >
+                        {item.name}
+                      </Text>
+                    </Pressable>
+                  )}
+                  ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
+                  contentContainerStyle={{ paddingRight: 16 }}
+                />
+              </View>
+
               <Text style={[styles.resultCount, { color: colors.textMuted }]}>
                 {filteredReciters.length} reciter
                 {filteredReciters.length === 1 ? "" : "s"} found
@@ -363,6 +541,24 @@ const styles = StyleSheet.create({
   },
   reciterType: {
     fontFamily: "Satoshi",
+    fontSize: 13,
+  },
+  filterSection: {
+    gap: 10,
+  },
+  filterLabel: {
+    fontFamily: "SatoshiBold",
+    fontSize: 15,
+    marginLeft: 2,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  filterChipText: {
+    fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
 });
