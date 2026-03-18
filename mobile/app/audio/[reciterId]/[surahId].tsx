@@ -85,7 +85,7 @@ export default function AudioPlayerScreen() {
     ? downloads.find((d) => d.id === downloadId)?.localUri || defaultAudioUrl
     : defaultAudioUrl;
 
-  const { player, status, currentTrack, playTrack, queue, removeFromQueue } = useAudio();
+  const { player, status, currentTrack, playTrack, queue, removeFromQueue, playNextInQueue } = useAudio();
   const [isSeeking, setIsSeeking] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
@@ -124,6 +124,15 @@ export default function AudioPlayerScreen() {
   const seekBackward = () => {
     void Haptics.selectionAsync();
     player.seekTo(Math.max(0, status.currentTime - 10));
+  };
+
+  const handleNextTrack = () => {
+    void Haptics.selectionAsync();
+    if (queue.length > 0) {
+      playNextInQueue();
+    } else {
+      player.seekTo(status.currentTime + 10);
+    }
   };
 
   const onSliderValueChange = (val: number) => {
@@ -363,7 +372,7 @@ export default function AudioPlayerScreen() {
           onPressOut={() => {
             skipForwardPressed.value = 0;
           }}
-          onPress={seekForward}
+          onPress={handleNextTrack}
           style={[{ padding: 12 }, skipForwardAnimatedStyle]}
         >
           <SkipForward
@@ -380,16 +389,16 @@ export default function AudioPlayerScreen() {
         animationType="slide"
         onRequestClose={() => setIsQueueVisible(false)}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setIsQueueVisible(false)}
-        >
+        <View style={styles.modalOverlay}>
           <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={() => setIsQueueVisible(false)}
+          />
+          <View
             style={[
               styles.modalContent,
               { backgroundColor: colors.background, height: Dimensions.get('window').height * 0.55 },
             ]}
-            onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textMain }]}>
@@ -436,8 +445,8 @@ export default function AudioPlayerScreen() {
                 )}
               />
             )}
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );

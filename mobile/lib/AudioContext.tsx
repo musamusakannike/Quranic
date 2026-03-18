@@ -31,6 +31,7 @@ interface AudioContextType {
   isMiniPlayerVisible: boolean;
   queue: Track[];
   playNext: (track: Track) => void;
+  playNextInQueue: () => void;
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
 }
@@ -70,7 +71,11 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
       if (status.isLoaded) {
         player.play();
         previousUrlRef.current = currentTrack.audioUrl;
-        hasFinishedRef.current = false;
+        
+        // Prevents premature queue popping right after loading due to stale status matching
+        setTimeout(() => {
+          hasFinishedRef.current = false;
+        }, 1000);
       }
     }
 
@@ -95,6 +100,16 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   const playNext = (track: Track) => {
     setQueue((prev) => [track, ...prev]);
+  };
+
+  const playNextInQueue = () => {
+    if (queue.length > 0) {
+      const nextTrack = queue[0];
+      setQueue((q) => q.slice(1));
+      hasFinishedRef.current = true;
+      setCurrentTrack(nextTrack);
+      previousUrlRef.current = null;
+    }
   };
 
   const addToQueue = (track: Track) => {
@@ -135,6 +150,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
         isMiniPlayerVisible: !!currentTrack,
         queue,
         playNext,
+        playNextInQueue,
         addToQueue,
         removeFromQueue,
       }}
