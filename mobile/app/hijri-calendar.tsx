@@ -120,15 +120,7 @@ export default function HijriCalendarScreen() {
           <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>Islamic date planner</Text>
         </View>
 
-        <View
-          style={[
-            styles.iconButton,
-            {
-              backgroundColor: withOpacity(colors.primary, isDark ? 0.24 : 0.14),
-            },
-          ]}
-        >
-          <CalendarDays size={20} color={colors.primary} />
+        <View style={styles.iconButton}>
         </View>
       </View>
 
@@ -205,9 +197,11 @@ export default function HijriCalendarScreen() {
 
           <View style={styles.weekHeaderRow}>
             {WEEK_DAYS.map((day) => (
-              <Text key={day} style={[styles.weekDayLabel, { color: colors.textMuted }]}>
-                {day}
-              </Text>
+              <View key={day} style={styles.weekDayWrapper}>
+                <Text style={[styles.weekDayLabel, { color: colors.textMuted }]}>
+                  {day}
+                </Text>
+              </View>
             ))}
           </View>
 
@@ -218,24 +212,25 @@ export default function HijriCalendarScreen() {
                 : withOpacity(colors.textMuted, 0.45);
 
               return (
-                <View
-                  key={cell.id}
-                  style={[
-                    styles.dayCell,
-                    {
-                      backgroundColor: cell.isToday
-                        ? withOpacity(colors.primary, isDark ? 0.32 : 0.14)
-                        : "transparent",
-                      borderColor: cell.isToday
-                        ? withOpacity(colors.primary, 0.55)
-                        : "transparent",
-                    },
-                  ]}
-                >
-                  <Text style={[styles.hijriDayNumber, { color: textColor }]}>{cell.hijriDay}</Text>
-                  <Text style={[styles.gregorianDayNumber, { color: withOpacity(textColor, 0.8) }]}>
-                    {cell.gregorianDay}
-                  </Text>
+                <View key={cell.id} style={styles.dayCellWrapper}>
+                  <View
+                    style={[
+                      styles.dayCell,
+                      {
+                        backgroundColor: cell.isToday
+                          ? withOpacity(colors.primary, isDark ? 0.32 : 0.14)
+                          : "transparent",
+                        borderColor: cell.isToday
+                          ? withOpacity(colors.primary, 0.55)
+                          : "transparent",
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.hijriDayNumber, { color: textColor }]}>{cell.hijriDay}</Text>
+                    <Text style={[styles.gregorianDayNumber, { color: withOpacity(textColor, 0.55) }]}>
+                      {cell.gregorianDay}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -337,38 +332,44 @@ const styles = StyleSheet.create({
   },
   weekHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingTop: 10,
+    paddingBottom: 6,
+  },
+  weekDayWrapper: {
+    width: "14.28%",
+    alignItems: "center",
   },
   weekDayLabel: {
-    width: "14.2%",
-    textAlign: "center",
     fontFamily: "SatoshiMedium",
-    fontSize: 12,
+    fontSize: 13,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    rowGap: 4,
+  },
+  dayCellWrapper: {
+    width: "14.28%",
+    alignItems: "center",
+    padding: 2,
   },
   dayCell: {
-    width: "13.8%",
+    width: "100%",
     minHeight: 52,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 1,
+    gap: 2,
   },
   hijriDayNumber: {
     fontFamily: "SatoshiBold",
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 20,
   },
   gregorianDayNumber: {
     fontFamily: "Satoshi",
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
   },
 });
