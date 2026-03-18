@@ -123,6 +123,65 @@ const EVENING_ADHKAAR = [
   }
 ];
 
+const AFTER_SOLAH_ADHKAAR = [
+  {
+    "title": "Istighfar (Seeking Forgiveness)",
+    "arabic": "أَسْتَغْفِرُ اللَّهَ (ثَلَاثَاً)",
+    "transliteration": "Astaghfirullah (3 times)",
+    "translation": "I seek the forgiveness of Allah.",
+    "count": 3,
+    "evidence": "When the Messenger of Allah (ﷺ) finished his prayer, he would beg forgiveness three times. (Sahih Muslim 591)"
+  },
+  {
+    "title": "Allahumma Antas-Salam",
+    "arabic": "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+    "transliteration": "Allahumma Antas-Salamu wa minkas-salamu, tabarakta ya Dhal-Jalali wal-Ikram.",
+    "translation": "O Allah, You are As-Salam (the One Who is free from every defect and deficiency) and from You is all peace, blessed are You, O Possessor of majesty and honor.",
+    "count": 1,
+    "evidence": "Reported as part of the Prophet's (ﷺ) immediate routine after Taslim. (Sahih Muslim 591)"
+  },
+  {
+    "title": "The Declaration of Tawheed",
+    "arabic": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ",
+    "transliteration": "La ilaha illallahu wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa Huwa 'ala kulli shay'in Qadir. Allahumma la mani'a lima a'tayta, wa la mu'tiya lima mana'ta, wa la yanfa'u dhal-jaddi minkal-jadd.",
+    "translation": "None has the right to be worshiped but Allah alone, He has no partner, His is the dominion and His is the praise, and He is Able to do all things. O Allah, there is none who can withhold what You give, and none may give what You have withheld; and the might of the mighty person cannot benefit him against You.",
+    "count": 1,
+    "evidence": "The Prophet (ﷺ) used to say this after every prescribed prayer. (Sahih al-Bukhari 844, Sahih Muslim 593)"
+  },
+  {
+    "title": "Tasbih, Tahmid, and Takbir",
+    "arabic": "سُبْحَانَ اللَّهِ (33x)، الْحَمْدُ لِلَّهِ (33x)، اللَّهُ أَكْبَرُ (33x)",
+    "transliteration": "Subhanallah (33x), Alhamdulillah (33x), Allahu Akbar (33x).",
+    "translation": "Glory be to Allah, Praise be to Allah, Allah is the Greatest.",
+    "count": 99,
+    "evidence": "Whoever says this after every prayer... and completes the hundred with 'La ilaha illallahu...', his sins will be forgiven even if they are like the foam of the sea. (Sahih Muslim 597)"
+  },
+  {
+    "title": "Completion of the Hundred",
+    "arabic": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+    "transliteration": "La ilaha illallahu wahdahu la sharika lahu, lahul-mulku wa lahul-hamdu wa Huwa 'ala kulli shay'in Qadir.",
+    "translation": "None has the right to be worshiped but Allah alone, He has no partner, His is the dominion and His is the praise, and He is Able to do all things.",
+    "count": 1,
+    "evidence": "Used to complete the count of 100 after the Tasbih/Tahmid/Takbir. (Sahih Muslim 597)"
+  },
+  {
+    "title": "Ayat al-Kursi",
+    "arabic": "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ... (Quran 2:255)",
+    "transliteration": "Allahu la ilaha illa Huwa, Al-Hayyul-Qayyum...",
+    "translation": "Allah! There is no god but He, the Living, the Self-Subsisting, Eternal...",
+    "count": 1,
+    "evidence": "Whoever recites Ayat al-Kursi after every prescribed prayer, nothing will prevent him from entering Paradise except death. (An-Nasa'i, Sahih al-Jami' 6464)"
+  },
+  {
+    "title": "The Three Protectors (Al-Mu'awwidhat)",
+    "arabic": "قُلْ هُوَ اللَّهُ أَحَدٌ... قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ... قُلْ أَعُوذُ بِرَبِّ النَّاسِ...",
+    "transliteration": "Surah Al-Ikhlas, Surah Al-Falaq, Surah An-Nas.",
+    "translation": "The 112th, 113th, and 114th chapters of the Quran.",
+    "count": 1,
+    "evidence": "The Messenger of Allah (ﷺ) commanded me to recite Al-Mu'awwidhat after every prayer. (Abu Dawud 1523, At-Tirmidhi 2903)"
+  }
+];
+
 const AdhkaarCard = ({ item, count, onIncrement, onReset, colors }: any) => {
   const isCompleted = count >= item.count;
 
@@ -214,6 +273,9 @@ export default function AdhkaarDetailScreen() {
   } else if (id === "evening") {
     adhkaarData = EVENING_ADHKAAR;
     pageTitle = "Evening Adhkaar";
+  } else if (id === "after-solah") {
+    adhkaarData = AFTER_SOLAH_ADHKAAR;
+    pageTitle = "After Solaah Adhkaar";
   } else {
     adhkaarData = MORNING_ADHKAAR; // Fallback or display other adhkaar types
   }
