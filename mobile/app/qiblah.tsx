@@ -9,7 +9,6 @@ import {
   Image,
 } from "react-native";
 import * as Location from "expo-location";
-import { Magnetometer } from "expo-sensors";
 import { useTheme } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -70,6 +69,9 @@ export default function QiblahScreen() {
   };
 
   useEffect(() => {
+    let locationSub: Location.LocationSubscription | null = null;
+    let headingSub: Location.LocationSubscription | null = null;
+
     (async () => {
       // Request Location Permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -79,36 +81,45 @@ export default function QiblahScreen() {
       }
 
       try {
-        // Get User's Location
-        let location = await Location.getCurrentPositionAsync({});
+        // High accuracy location for initial fetch
+        let location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+        });
         calculateQiblahBearing(
           location.coords.latitude,
           location.coords.longitude,
         );
+
+        // Watch Location
+        locationSub = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10,
+          },
+          (loc) => {
+            calculateQiblahBearing(loc.coords.latitude, loc.coords.longitude);
+          }
+        );
+
+        // Watch Heading (optimized & accurate compass direction)
+        headingSub = await Location.watchHeadingAsync((headingObj) => {
+          let heading =
+            headingObj.trueHeading >= 0
+              ? headingObj.trueHeading
+              : headingObj.magHeading;
+
+          if (heading >= 0) {
+            setMagnetometerHeading(heading);
+          }
+        });
       } catch (err) {
-        setErrorMsg("Could not fetch location.");
+        setErrorMsg("Could not fetch location or heading.");
       }
     })();
-  }, []);
-
-  useEffect(() => {
-    // Listen to the device compass
-    Magnetometer.setUpdateInterval(100); // Update every 100ms
-    const subscription = Magnetometer.addListener((data) => {
-      // Calculate heading from x and y magnetometer data
-      let angle = Math.atan2(data.y, data.x);
-      // Adjust for the standard screen orientation
-      angle = angle - Math.PI / 2;
-
-      let heading = toDegrees(angle);
-      // Normalize to 0 - 360
-      heading = (heading + 360) % 360;
-
-      setMagnetometerHeading(heading);
-    });
 
     return () => {
-      subscription.remove();
+      if (locationSub) locationSub.remove();
+      if (headingSub) headingSub.remove();
     };
   }, []);
 
@@ -205,19 +216,26 @@ export default function QiblahScreen() {
                 </Text>
               </View>
 
-              {/* Kaaba Direction Marker (Needle) */}
-              <Animated.Image
-                source={{
-                  uri: "https://cdn-icons-png.flaticon.com/512/3143/3143689.png",
-                }}
+              {/* Kaaba Direction Marker (Protrusion Indicator) */}
+              <View
                 style={[
-                  styles.compassNeedle,
-                  { transform: [{ rotate: `${needleRotation}deg` }] },
+                  StyleSheet.absoluteFillObject,
                   {
-                    tintColor: isFacingQiblah ? colors.success : colors.primary,
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    transform: [{ rotate: `${needleRotation}deg` }],
+                    zIndex: 10,
                   },
                 ]}
-              />
+              >
+                <Image
+                  source={require("../assets/images/kaaba.png")}
+                  style={[
+                    styles.kaabaIndicator,
+                    isFacingQiblah && { tintColor: undefined },
+                  ]}
+                />
+              </View>
             </View>
 
             <View style={styles.infoContainer}>
@@ -368,10 +386,15 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiBold",
     fontSize: 16,
   },
-  compassNeedle: {
-    width: 140,
-    height: 140,
+  kaabaIndicator: {
+    width: 60,
+    height: 60,
     resizeMode: "contain",
+    marginTop: -30, // Protrude exactly half outside the edge
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   infoContainer: {
     flexDirection: "row",
