@@ -62,7 +62,7 @@ const ADHKAAR_CATEGORIES = [
   },
 ];
 
-const CategoryCard = ({ category, colors }: any) => {
+const CategoryCard = ({ category, colors, onPress }: any) => {
   return (
     <Pressable
       style={({ pressed }) => [
@@ -73,9 +73,7 @@ const CategoryCard = ({ category, colors }: any) => {
           transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
-      onPress={() => {
-        // Future implementation: navigate to the specific category page
-      }}
+      onPress={onPress}
     >
       <ImageBackground
         source={category.image}
@@ -161,12 +159,22 @@ export default function AdhkaarScreen() {
         <View style={styles.masonryContainer}>
           <View style={styles.masonryColumn}>
             {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 === 0).map((category) => (
-              <CategoryCard key={category.id} category={category} colors={colors} />
+              <CategoryCard 
+                key={category.id} 
+                category={category} 
+                colors={colors}
+                onPress={() => router.push(`/adhkaar/${category.id}` as any)}
+              />
             ))}
           </View>
           <View style={styles.masonryColumn}>
             {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 !== 0).map((category) => (
-              <CategoryCard key={category.id} category={category} colors={colors} />
+              <CategoryCard 
+                key={category.id} 
+                category={category} 
+                colors={colors} 
+                onPress={() => router.push(`/adhkaar/${category.id}` as any)}
+              />
             ))}
           </View>
         </View>
