@@ -5,6 +5,7 @@ import {
   View,
   Pressable,
   ScrollView,
+  ImageBackground,
 } from "react-native";
 import { useTheme } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,8 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications for the morning",
     icon: Sun,
     color: "#F59E0B", // Amber
+    image: require("../assets/images/adhkaar/sunrise.jpg"),
+    height: 220,
   },
   {
     id: "evening",
@@ -27,6 +30,8 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications for the evening",
     icon: Moon,
     color: "#6366F1", // Indigo
+    image: require("../assets/images/adhkaar/sunset.jpg"),
+    height: 180,
   },
   {
     id: "after-solah",
@@ -34,6 +39,8 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications after every prayer",
     icon: Clock,
     color: "#10B981", // Emerald
+    image: require("../assets/images/adhkaar/after-solah.jpg"),
+    height: 190,
   },
   {
     id: "40-robbanahs",
@@ -41,6 +48,8 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications from the Holy Quran",
     icon: BookOpen,
     color: "#EC4899", // Pink
+    image: require("../assets/images/adhkaar/40-robanna.jpg"),
+    height: 230,
   },
   {
     id: "daily-adhkaar",
@@ -48,8 +57,52 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Essential daily supplications",
     icon: Sparkles,
     color: "#8B5CF6", // Violet
+    image: require("../assets/images/adhkaar/sunrise.jpg"), // Fallback to sunrise
+    height: 170,
   },
 ];
+
+const CategoryCard = ({ category, colors }: any) => {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.masonryCard,
+        { height: category.height },
+        {
+          opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+      ]}
+      onPress={() => {
+        // Future implementation: navigate to the specific category page
+      }}
+    >
+      <ImageBackground
+        source={category.image}
+        style={styles.cardImageBackground}
+        imageStyle={styles.cardImage}
+      >
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.85)"]}
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0, y: 0.3 }}
+          end={{ x: 0, y: 1 }}
+        />
+        <View style={styles.cardContent}>
+          <View style={[styles.iconWrapSmall, { backgroundColor: category.color }]}>
+            <category.icon color="#FFF" size={20} />
+          </View>
+          <View style={styles.cardTextWrap}>
+            <Text style={styles.cardTitle}>{category.title}</Text>
+            <Text style={styles.cardSubtitle} numberOfLines={2}>
+              {category.subtitle}
+            </Text>
+          </View>
+        </View>
+      </ImageBackground>
+    </Pressable>
+  );
+};
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -105,43 +158,17 @@ export default function AdhkaarScreen() {
           </Text>
         </View>
 
-        <View style={styles.categoriesGrid}>
-          {ADHKAAR_CATEGORIES.map((category) => (
-            <Pressable
-              key={category.id}
-              style={({ pressed }) => [
-                styles.categoryCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: withOpacity(colors.border, 0.5),
-                  opacity: pressed ? 0.9 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                },
-              ]}
-              onPress={() => {
-                // Future implementation: navigate to the specific category page
-                // router.push(`/adhkaar/${category.id}`);
-              }}
-            >
-              <View
-                style={[
-                  styles.iconWrap,
-                  { backgroundColor: withOpacity(category.color, 0.15) },
-                ]}
-              >
-                <category.icon color={category.color} size={24} />
-              </View>
-              <View style={styles.categoryInfo}>
-                <Text style={[styles.categoryTitle, { color: colors.textMain }]}>
-                  {category.title}
-                </Text>
-                <Text style={[styles.categorySubtitle, { color: colors.textMuted }]}>
-                  {category.subtitle}
-                </Text>
-              </View>
-              <ChevronRight color={colors.textMuted} size={20} />
-            </Pressable>
-          ))}
+        <View style={styles.masonryContainer}>
+          <View style={styles.masonryColumn}>
+            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 === 0).map((category) => (
+              <CategoryCard key={category.id} category={category} colors={colors} />
+            ))}
+          </View>
+          <View style={styles.masonryColumn}>
+            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 !== 0).map((category) => (
+              <CategoryCard key={category.id} category={category} colors={colors} />
+            ))}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -192,34 +219,49 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  categoriesGrid: {
+  masonryContainer: {
+    flexDirection: "row",
     gap: 12,
   },
-  categoryCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 16,
+  masonryColumn: {
+    flex: 1,
+    gap: 12,
   },
-  iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+  masonryCard: {
+    width: "100%",
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  cardImageBackground: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  cardImage: {
+    borderRadius: 20,
+  },
+  cardContent: {
+    padding: 16,
+    zIndex: 2,
+  },
+  iconWrapSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 12,
   },
-  categoryInfo: {
-    flex: 1,
-    gap: 2,
+  cardTextWrap: {
+    gap: 4,
   },
-  categoryTitle: {
+  cardTitle: {
     fontFamily: "SatoshiBold",
     fontSize: 17,
+    color: "#FFFFFF",
   },
-  categorySubtitle: {
+  cardSubtitle: {
     fontFamily: "SatoshiMedium",
     fontSize: 13,
+    color: "rgba(255, 255, 255, 0.8)",
   },
 });
