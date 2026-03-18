@@ -427,242 +427,118 @@ export default function Index() {
           </View>
         </ImageBackground>
 
-        {/* ─── Quick Actions Row ─── */}
-        <View style={styles.quickActionsRow}>
-          {/* Audio card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/audio");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <Headphones color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Audio
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                Listen to reciters
-              </Text>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Chapters card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/(tabs)/chapters");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <BookOpen color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Chapters
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                All surahs
-              </Text>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Qiblah Card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/qiblah");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <Compass color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Qiblah
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                Direction
-              </Text>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Solah Card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/solah");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <Clock color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Solah
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                Prayer times
-              </Text>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Hijri Calendar Card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/hijri-calendar");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <CalendarDays color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Hijri
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                Islamic calendar
-              </Text>
-            </LinearGradient>
-          </Pressable>
-
-          {/* Adhkaar Card */}
-          <Pressable
-            style={{ flex: 1, minWidth: "45%" }}
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.push("/adhkaar");
-            }}
-          >
-            <LinearGradient
-              colors={[
-                colors.surface,
-                withOpacity(colors.primary, isDark ? 0.12 : 0.05),
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.quickCard,
-                { borderColor: withOpacity(colors.border, 0.85) },
-              ]}
-            >
-              <View
-                style={[
-                  styles.quickIconWrap,
-                  { backgroundColor: withOpacity(colors.primary, 0.15) },
-                ]}
-              >
-                <Sparkles color={colors.primary} size={20} />
-              </View>
-              <Text style={[styles.quickCardTitle, { color: colors.textMain }]}>
-                Adhkaar
-              </Text>
-              <Text
-                style={[styles.quickCardSubtitle, { color: colors.textMuted }]}
-              >
-                Daily supplications
-              </Text>
-            </LinearGradient>
-          </Pressable>
+        {/* ─── Quick Actions Carousel ─── */}
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+              Quick Actions
+            </Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+              Access essential features quickly
+            </Text>
+          </View>
         </View>
+
+        <FlatList
+          data={[
+            {
+              id: "audio",
+              title: "Audio",
+              subtitle: "Listen to reciters",
+              icon: Headphones,
+              path: "/audio" as const,
+              image: require("../../assets/images/quick-actions/audio.webp"),
+            },
+            {
+              id: "chapters",
+              title: "Chapters",
+              subtitle: "All surahs",
+              icon: BookOpen,
+              path: "/(tabs)/chapters" as const,
+              image: require("../../assets/images/quick-actions/chapters.webp"),
+            },
+            {
+              id: "qiblah",
+              title: "Qiblah",
+              subtitle: "Direction",
+              icon: Compass,
+              path: "/qiblah" as const,
+              image: require("../../assets/images/quick-actions/qiblah.webp"),
+            },
+            {
+              id: "solah",
+              title: "Solah",
+              subtitle: "Prayer times",
+              icon: Clock,
+              path: "/solah" as const,
+              image: require("../../assets/images/quick-actions/solah.webp"),
+            },
+            {
+              id: "hijri",
+              title: "Hijri",
+              subtitle: "Islamic calendar",
+              icon: CalendarDays,
+              path: "/hijri-calendar" as const,
+              image: require("../../assets/images/quick-actions/hijri.webp"),
+            },
+            {
+              id: "adhkaar",
+              title: "Adhkaar",
+              subtitle: "Daily supplications",
+              icon: Sparkles,
+              path: "/adhkaar" as const,
+              image: require("../../assets/images/quick-actions/adhkaar.webp"),
+            },
+          ]}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={260 + 12} // Card width + gap
+          decelerationRate="fast"
+          contentContainerStyle={styles.quickActionsCarousel}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                router.push(item.path);
+              }}
+            >
+              <ImageBackground
+                source={item.image}
+                style={styles.quickActionCard}
+                imageStyle={styles.quickActionCardImage}
+              >
+                <LinearGradient
+                  colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.85)"]}
+                  style={styles.quickActionOverlay}
+                >
+                  <View
+                    style={[
+                      styles.quickIconWrap,
+                      { backgroundColor: withOpacity(colors.primary, 0.25) },
+                    ]}
+                  >
+                    <item.icon color="#FFFFFF" size={20} />
+                  </View>
+                  <View>
+                    <Text style={[styles.quickCardTitle, { color: "#FFFFFF" }]}>
+                      {item.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.quickCardSubtitle,
+                        { color: "rgba(255,255,255,0.8)" },
+                      ]}
+                    >
+                      {item.subtitle}
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </ImageBackground>
+            </Pressable>
+          )}
+        />
+
 
         {/* ─── Juz Navigator ─── */}
         <View style={styles.sectionHeader}>
@@ -1089,33 +965,47 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Quick Actions
-  quickActionsRow: {
-    flexDirection: "row",
+  // Quick Actions Carousel
+  quickActionsCarousel: {
     gap: 12,
-    flexWrap: "wrap",
+    paddingRight: 16,
+    paddingBottom: 4,
   },
-  quickCard: {
-    borderWidth: 1,
-    borderRadius: 18,
+  quickActionCard: {
+    width: 260,
+    height: 160,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  quickActionCardImage: {
+    borderRadius: 24,
+  },
+  quickActionOverlay: {
+    ...StyleSheet.absoluteFillObject,
     padding: 16,
-    gap: 8,
+    justifyContent: "flex-end",
+    gap: 10,
   },
   quickIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   quickCardTitle: {
     fontFamily: "SatoshiBold",
-    fontSize: 15,
+    fontSize: 18,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   quickCardSubtitle: {
-    fontFamily: "Satoshi",
-    fontSize: 12,
-    lineHeight: 18,
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
 
   // Section Header
