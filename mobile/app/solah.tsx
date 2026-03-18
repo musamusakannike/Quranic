@@ -8,6 +8,7 @@ import {
   Alert,
   Switch,
   ScrollView,
+  ImageBackground,
 } from "react-native";
 import * as Location from "expo-location";
 import { Coordinates, CalculationMethod, PrayerTimes } from "adhan";
@@ -330,6 +331,22 @@ export default function SolahTimesScreen() {
           </View>
         ) : (
           <View style={styles.timesContainer}>
+            {nextPrayer ? (
+              <ImageBackground
+                source={require("../assets/images/solah-sajda.png")}
+                style={styles.nextPrayerBackground}
+                imageStyle={{ borderRadius: 18 }}
+              >
+                <View style={styles.nextPrayerOverlay}>
+                  <Text style={styles.nextPrayerLabel}>NEXT PRAYER</Text>
+                  <View style={styles.nextPrayerRow}>
+                    <Text style={styles.nextPrayerName}>{nextPrayer.label}</Text>
+                    <Text style={styles.nextPrayerTime}>{formatTime(nextPrayer.time)}</Text>
+                  </View>
+                </View>
+              </ImageBackground>
+            ) : null}
+
             <View
               style={[
                 styles.summaryCard,
@@ -348,11 +365,6 @@ export default function SolahTimesScreen() {
               <Text style={[styles.summaryText, { color: colors.textMuted }]}> 
                 {reminderSummaryText}
               </Text>
-              {nextPrayer ? (
-                <Text style={[styles.nextPrayerText, { color: colors.textMain }]}> 
-                  Next: {nextPrayer.label} · {formatTime(nextPrayer.time)}
-                </Text>
-              ) : null}
             </View>
 
             <View
@@ -503,9 +515,41 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiMedium",
     fontSize: 14,
   },
-  nextPrayerText: {
+  nextPrayerBackground: {
+    borderRadius: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  nextPrayerOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    padding: 24,
+    borderRadius: 18,
+    justifyContent: "space-between",
+  },
+  nextPrayerLabel: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+    color: "rgba(255,255,255,0.8)",
+    letterSpacing: 1.2,
+    marginBottom: 8,
+  },
+  nextPrayerRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+  },
+  nextPrayerName: {
     fontFamily: "SatoshiBold",
-    fontSize: 15,
+    fontSize: 28,
+    color: "#FFFFFF",
+  },
+  nextPrayerTime: {
+    fontFamily: "SatoshiBold",
+    fontSize: 22,
+    color: "#FFFFFF",
   },
   timesCard: {
     padding: 16,
