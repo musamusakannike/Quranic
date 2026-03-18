@@ -18,24 +18,19 @@ export default function MushafPager({
   chapterPages,
 }: MushafPagerProps) {
   const pagerRef = useRef<PagerView>(null);
-  const [currentPage, setCurrentPage] = useState(initialPage);
 
-  // Prefetch all pages in the current chapter group for seamless swiping
-  useEffect(() => {
-    const assets = chapterPages.map((p) => MushafImages[p]);
-    Image.prefetch(assets);
-  }, [chapterPages]);
+  // Quran is RTL. We reverse the pages so the first page (lowest number) is on the "right"
+  const rtlPages = useMemo(() => [...chapterPages].reverse(), [chapterPages]);
 
-  // Find the index of the initial page in chapterPages
+  // Find the index of the initial page in reversed rtlPages
   const initialIndex = useMemo(() => {
-    const idx = chapterPages.indexOf(initialPage);
+    const idx = rtlPages.indexOf(initialPage);
     return idx >= 0 ? idx : 0;
-  }, [initialPage, chapterPages]);
+  }, [initialPage, rtlPages]);
 
   const onPageSelected = (e: any) => {
     const index = e.nativeEvent.position;
-    const mushafPage = chapterPages[index];
-    setCurrentPage(mushafPage);
+    const mushafPage = rtlPages[index];
     if (onPageChange) {
       onPageChange(mushafPage);
     }
@@ -49,7 +44,7 @@ export default function MushafPager({
         initialPage={initialIndex}
         onPageSelected={onPageSelected}
       >
-        {chapterPages.map((pageNumber) => (
+        {rtlPages.map((pageNumber) => (
           <View key={pageNumber} style={styles.page}>
              <Image
               source={MushafImages[pageNumber]}
@@ -58,6 +53,7 @@ export default function MushafPager({
               transition={200}
               placeholderContentFit="contain"
               priority="high"
+              cachePolicy="memory-disk"
             />
           </View>
         ))}
