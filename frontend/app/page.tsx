@@ -49,7 +49,7 @@ export default function Home() {
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/80 dark:bg-[#07130f]/80 backdrop-blur-xl shadow-sm border-b border-gray-200/50 dark:border-white/5 py-4"
+            ? "bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl shadow-sm border-b border-gray-200/50 dark:border-white/5 py-4"
             : "bg-transparent py-6"
         }`}
       >
@@ -113,7 +113,7 @@ export default function Home() {
               className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1] text-gray-900 dark:text-white"
             >
               Connect with the <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 dark:from-primary-400 dark:to-primary-200">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary-600 to-primary-400 dark:from-primary-400 dark:to-primary-200">
                 Divine Words.
               </span>
             </motion.h1>
@@ -157,16 +157,16 @@ export default function Home() {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="mt-20 md:mt-24 relative w-full max-w-[320px] sm:max-w-md mx-auto aspect-[1/2] sm:h-[650px] sm:aspect-auto z-10"
+            className="mt-20 md:mt-24 relative w-full max-w-[320px] sm:max-w-md mx-auto aspect-1/2 sm:h-[650px] sm:aspect-auto z-10"
           >
             <motion.div
               animate={{ y: [0, -12, 0] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
               className="w-full h-full relative"
             >
-              <div className="absolute inset-x-0 top-0 bottom-0 bg-white dark:bg-[#0b1612] rounded-[3rem] shadow-2xl border-[10px] border-gray-100 dark:border-[#13251e] overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/5">
+              <div className="absolute inset-x-0 top-0 bottom-0 bg-white dark:bg-[#0b1612] rounded-[3rem] shadow-2xl border-10 border-gray-100 dark:border-[#13251e] overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/5">
                 {/* Mock Header */}
-                <div className="h-24 px-6 flex items-end justify-between pb-4 bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/10">
+                <div className="h-24 px-6 flex items-end justify-between pb-4 bg-linear-to-b from-primary-50/50 to-transparent dark:from-primary-900/10">
                   <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                     <div className="w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-sm"></div>
                   </div>
@@ -214,9 +214,9 @@ export default function Home() {
         {/* Features Section */}
         <section
           id="features"
-          className="py-32 px-6 bg-white dark:bg-[#07130f] relative"
+          className="py-32 px-6 bg-white dark:bg-background-dark relative"
         >
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[24px_24px] mask-image-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
           <div className="max-w-7xl mx-auto relative z-10">
             <motion.div
               initial="hidden"
@@ -265,7 +265,7 @@ export default function Home() {
                   key={idx}
                   variants={fadeInUp}
                   whileHover={{ y: -8 }}
-                  className="bg-white dark:bg-[#0b1612] p-8 rounded-[2rem] shadow-sm hover:shadow-xl hover:shadow-primary-900/5 dark:hover:shadow-primary-900/20 border border-gray-100 dark:border-gray-800/50 transition-all duration-300 group"
+                  className="bg-white dark:bg-[#0b1612] p-8 rounded-4xl shadow-sm hover:shadow-xl hover:shadow-primary-900/5 dark:hover:shadow-primary-900/20 border border-gray-100 dark:border-gray-800/50 transition-all duration-300 group"
                 >
                   <div
                     className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 border transition-transform duration-300 group-hover:scale-110 ${feature.color}`}
