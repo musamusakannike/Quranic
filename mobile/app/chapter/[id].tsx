@@ -22,6 +22,7 @@ import {
   Search,
   Share2,
   Bookmark,
+  BookOpen,
 } from "lucide-react-native";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
@@ -33,9 +34,11 @@ import {
   getVerseMetadata,
   getVerseTransliteration,
   getVersesCount,
+  getChapterPages,
 } from "../../lib/QuranHelper";
 import { saveLastReadProgress } from "../../lib/ReadingProgress";
 import ShareVerseModal from "../../components/ShareVerseModal";
+import MushafPager from "../../components/MushafPager";
 
 type VerseItem = {
   key: string;
@@ -430,7 +433,7 @@ export default function ChapterDetailScreen() {
   );
 
   const pages = useMemo(() => {
-    if (readingView !== "page_by_page") return [];
+    if (readingView !== "page_by_page" && readingView !== "mushaf") return [];
 
     const groups: Record<number, VerseItem[]> = {};
     for (const v of filteredVerses) {
@@ -446,6 +449,25 @@ export default function ChapterDetailScreen() {
       }))
       .sort((a, b) => a.page - b.page);
   }, [filteredVerses, readingView]);
+
+  const chapterPages = useMemo(() => {
+    if (!chapterNumber) return [];
+    return getChapterPages(chapterNumber);
+  }, [chapterNumber]);
+
+  const initialMushafPage = useMemo(() => {
+    if (targetVerse && chapterNumber) {
+      const v = getVerseMetadata(chapterNumber, targetVerse);
+      if (v?.page) return v.page;
+    }
+    return chapterPages[0] || 1;
+  }, [chapterPages, targetVerse, chapterNumber]);
+
+  const [activeMushafPage, setActiveMushafPage] = useState(initialMushafPage);
+
+  useEffect(() => {
+    setActiveMushafPage(initialMushafPage);
+  }, [initialMushafPage]);
 
   const renderPage = useCallback(
     ({ item }: { item: { page: number; verses: VerseItem[] } }) => {
@@ -733,6 +755,48 @@ export default function ChapterDetailScreen() {
       );
     }
 
+    if (readingView === "mushaf") {
+      return (
+        <View style={StyleSheet.absoluteFill}>
+          <MushafPager
+            initialPage={initialMushafPage}
+            chapterPages={chapterPages}
+            onPageChange={(page) => {
+              setActiveMushafPage(page);
+              void saveLastReadProgress({
+                chapter: chapterNumber,
+                verse: 1, // Simplified for Mushaf mode
+                page,
+              });
+            }}
+          />
+
+          <View style={styles.mushafOverlayHeader}>
+            <Pressable
+              onPress={() => router.back()}
+              style={[
+                styles.mushafBackButtonClean,
+                { backgroundColor: "rgba(255,255,255,0.1)" },
+              ]}
+            >
+              <ChevronLeft size={22} color="#FFF" />
+            </Pressable>
+
+            <View
+              style={[
+                styles.mushafPageBadge,
+                { backgroundColor: "rgba(255,255,255,0.12)" },
+              ]}
+            >
+              <Text style={styles.mushafPageBadgeText}>
+                Page {activeMushafPage}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <FlashList
         ref={flashListRef}
@@ -924,5 +988,32 @@ const styles = StyleSheet.create({
   invalidStateTitle: {
     fontFamily: "SatoshiBold",
     fontSize: 22,
+  },
+  mushafOverlayHeader: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  mushafBackButtonClean: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mushafPageBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  mushafPageBadgeText: {
+    color: "#FFF",
+    fontFamily: "SatoshiBold",
+    fontSize: 14,
   },
 });

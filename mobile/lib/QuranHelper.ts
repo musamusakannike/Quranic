@@ -242,3 +242,22 @@ export const searchQuran = (
 
   return results;
 };
+/**
+ * Get the list of Mushaf pages a chapter covers.
+ *
+ * @param chapter - The chapter number (1-114)
+ * @returns Array of page numbers
+ */
+export const getChapterPages = (chapter: number): number[] => {
+  const chapterMeta = quranMetadata.chapters[chapter];
+  if (!chapterMeta) return [];
+
+  const pages = new Set<number>();
+  for (let i = 1; i < chapterMeta.verses.length; i++) {
+    const v = chapterMeta.verses[i];
+    if (v?.page) {
+      pages.add(v.page);
+    }
+  }
+  return Array.from(pages).sort((a, b) => a - b);
+};

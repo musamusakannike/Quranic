@@ -214,6 +214,7 @@ export default function SettingsScreen() {
               { key: "list", label: "List" },
               { key: "verse_by_verse", label: "Verse by Verse" },
               { key: "page_by_page", label: "Page by Page" },
+              { key: "mushaf", label: "Mushaf" },
             ].map((option) => {
               const selected = readingView === option.key;
               return (
