@@ -1,64 +1,87 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #f0fbf8;
-  --color-primary-100: #d9f5ef;
-  --color-primary-200: #b4eadf;
-  --color-primary-300: #83dacb;
-  --color-primary-400: #4ec3b0;
-  --color-primary-500: #26a795;
-  --color-primary-600: #178676;
-  --color-primary-700: #056c5c;
-  --color-primary-800: #0a564b;
-  --color-primary-900: #0d473f;
-  --color-primary-950: #034036;
-
-  --color-primary: var(--color-primary-700);
-  --color-primary-light: var(--color-primary-500);
-  --color-primary-dark: var(--color-primary-950);
-  --color-accent: #d4af37;
-
-  --color-background-light: #f9fafb;
-  --color-background-dark: #07130f;
-
-  --font-sans: var(--font-inter);
+  --font-headline: var(--font-newsreader);
+  --font-body: var(--font-manrope);
+  --font-label: var(--font-manrope);
   --font-arabic: var(--font-amiri-quran);
+
+  --color-on-error: #ffffff;
+  --color-on-primary-fixed: #002113;
+  --color-on-secondary-container: #496b5e;
+  --color-surface-bright: #f5fbf5;
+  --color-tertiary-fixed-dim: #e9c349;
+  --color-surface-dim: #d6dbd5;
+  --color-outline-variant: #bdcac0;
+  --color-inverse-surface: #2c322e;
+  --color-tertiary: #735c00;
+  --color-tertiary-container: #cca830;
+  --color-surface-container: #eaefe9;
+  --color-on-surface-variant: #3e4942;
+  --color-inverse-primary: #6fdba8;
+  --color-on-background: #171d19;
+  --color-secondary-fixed-dim: #a9cfbf;
+  --color-on-surface: #171d19;
+  --color-primary-container: #00855b;
+  --color-surface-container-highest: #dee4de;
+  --color-on-tertiary-fixed-variant: #574500;
+  --color-primary: #006947;
+  --color-error-container: #ffdad6;
+  --color-surface: #f5fbf5;
+  --color-background: #f5fbf5;
+  --color-on-secondary: #ffffff;
+  --color-surface-tint: #006c49;
+  --color-primary-fixed: #8bf8c3;
+  --color-secondary-container: #c5ebda;
+  --color-on-error-container: #93000a;
+  --color-on-primary: #ffffff;
+  --color-surface-variant: #dee4de;
+  --color-on-secondary-fixed-variant: #2b4d41;
+  --color-surface-container-low: #f0f5ef;
+  --color-error: #ba1a1a;
+  --color-secondary-fixed: #c5ebda;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary-fixed-variant: #005236;
+  --color-on-primary-container: #f5fff6;
+  --color-secondary: #436558;
+  --color-on-tertiary: #ffffff;
+  --color-on-secondary-fixed: #002117;
+  --color-outline: #6e7a72;
+  --color-tertiary-fixed: #ffe088;
+  --color-primary-fixed-dim: #6fdba8;
+  --color-surface-container-high: #e4eae3;
+  --color-inverse-on-surface: #edf2ec;
+  --color-on-tertiary-container: #4f3e00;
+  --color-on-tertiary-fixed: #241a00;
 }
 
 :root {
-  --background: var(--color-background-light);
-  --foreground: #111827; /* gray-900 */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--color-background-dark);
-    --foreground: #f9fafb; /* gray-50 */
-  }
+  --background: var(--color-background);
+  --foreground: var(--color-on-background);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+  font-family: var(--font-body), sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.hero-pattern {
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    rgba(0, 105, 71, 0.03) 1px,
+    transparent 0
+  );
+  background-size: 32px 32px;
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center font-medium transition-all duration-300 rounded-full select-none;
-  }
-  .btn:focus-visible {
-    @apply outline-2 outline-offset-2 outline-primary-500;
-  }
-  .btn:disabled {
-    @apply opacity-60 cursor-not-allowed pointer-events-none;
-  }
-  .btn-primary {
-    @apply bg-primary text-white shadow-lg shadow-primary-700/20 hover:bg-primary-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-700/30;
-  }
-  .btn-secondary {
-    @apply bg-white text-gray-900 border border-gray-200 shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 dark:text-white dark:border-gray-800 dark:hover:bg-gray-800;
+    @apply inline-flex items-center justify-center font-medium transition-all duration-300 rounded-md select-none;
   }
 }

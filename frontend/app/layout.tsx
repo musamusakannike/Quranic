@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, Amiri_Quran } from "next/font/google";
+import { Newsreader, Manrope, Amiri_Quran } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -14,9 +20,9 @@ const amiriQuran = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: "Quranic - Connect with the Divine Words",
+  title: "Quranic - Your Spiritual Journey, Reimagined",
   description:
-    "Read, reflect, and immerse yourself in the Holy Quran with a seamless, customizable experience.",
+    "Recite, Listen, and grow your Iman with the ultimate Islamic companion app. Built for the modern seeker.",
 };
 
 export default function RootLayout({
@@ -26,7 +32,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.variable} ${amiriQuran.variable} antialiased`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        className={`${newsreader.variable} ${manrope.variable} ${amiriQuran.variable} font-body antialiased`}
+      >
         {children}
       </body>
     </html>

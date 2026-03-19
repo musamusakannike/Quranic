@@ -2,18 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
-import {
-  BookOpen,
-  Clock,
-  Settings,
-  Moon,
-  Sun,
-  Play,
-  Apple,
-  Twitter,
-  Github,
-  Instagram,
-} from "lucide-react";
 import Link from "next/link";
 
 const fadeInUp: Variants = {
@@ -26,13 +14,12 @@ const staggerContainer: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
+      staggerChildren: 0.15,
     },
   },
 };
 
 export default function Home() {
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -44,463 +31,611 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary-500/30">
-      {/* Navigation */}
-      <nav
+    <div className="bg-surface font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+      {/* TopAppBar */}
+      <header
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl shadow-sm border-b border-gray-200/50 dark:border-white/5 py-4"
+            ? "bg-surface/80 backdrop-blur-2xl shadow-sm border-b border-outline-variant/10 py-4"
             : "bg-transparent py-6"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="bg-primary-50 dark:bg-primary-900/30 p-2.5 rounded-xl group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
-              <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-primary-600 dark:text-primary-400" />
-            </div>
-            <span className="font-bold text-xl sm:text-2xl tracking-tight text-gray-900 dark:text-white">
-              Quranic
-            </span>
+        <nav className="flex justify-between items-center px-8 max-w-7xl mx-auto">
+          <div className="text-2xl font-headline italic text-primary">
+            Quranic
           </div>
-          <div className="hidden md:flex items-center gap-8 font-medium">
+          <div className="hidden md:flex items-center gap-10">
             <a
-              href="#features"
-              className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm"
+              className="text-primary font-bold border-b-2 border-primary pb-1 font-headline tracking-tight"
+              href="#"
             >
               Features
             </a>
             <a
-              href="#themes"
-              className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm"
-            >
-              Themes
-            </a>
-            <a
-              href="#about"
-              className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm"
+              className="text-on-surface opacity-80 hover:opacity-100 hover:text-primary transition-all duration-300 font-headline tracking-tight"
+              href="#"
             >
               About
             </a>
+            <a
+              className="text-on-surface opacity-80 hover:opacity-100 hover:text-primary transition-all duration-300 font-headline tracking-tight"
+              href="#"
+            >
+              Download
+            </a>
+            <a
+              className="text-on-surface opacity-80 hover:opacity-100 hover:text-primary transition-all duration-300 font-headline tracking-tight"
+              href="#"
+            >
+              Help
+            </a>
           </div>
-          <button className="btn btn-primary px-6 py-2.5 text-sm sm:text-base">
-            Download Now
-          </button>
-        </div>
-      </nav>
-
-      <main>
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 flex flex-col items-center text-center">
-          {/* Subtle Background Elements */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] bg-primary-300/10 dark:bg-primary-900/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
-
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="max-w-4xl mx-auto z-10"
-          >
-            <motion.div
-              variants={fadeInUp}
-              className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full border border-primary-200 dark:border-primary-900/50 bg-primary-50/50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium text-sm backdrop-blur-md shadow-sm"
-            >
-              <span className="flex h-2 w-2 rounded-full bg-primary-500 animate-pulse"></span>
-              Discover a new way to interact with the Quran
-            </motion.div>
-
-            <motion.h1
-              variants={fadeInUp}
-              className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1] text-gray-900 dark:text-white"
-            >
-              Connect with the <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary-600 to-primary-400 dark:from-primary-400 dark:to-primary-200">
-                Divine Words.
+          <div className="flex items-center gap-4">
+            <button className="hidden md:block bg-primary text-on-primary px-6 py-2.5 rounded-md font-medium scale-95 duration-200 active:opacity-70 hover:bg-primary-container transition-all">
+              Get Started
+            </button>
+            <button className="md:hidden text-primary">
+              <span className="material-symbols-outlined" data-icon="menu">
+                menu
               </span>
-            </motion.h1>
+            </button>
+          </div>
+        </nav>
+      </header>
 
-            <motion.p
-              variants={fadeInUp}
-              className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed"
-            >
-              Read, reflect, and immerse yourself in the Holy Quran with a
-              seamless, customizable, and deeply spiritual experience designed for modern life.
-            </motion.p>
-
+      <main className="pt-24">
+        {/* Hero Section */}
+        <section className="relative min-h-[85vh] flex items-center overflow-hidden hero-pattern">
+          <div className="max-w-7xl mx-auto px-8 w-full grid md:grid-cols-12 gap-12 items-center">
             <motion.div
-              variants={fadeInUp}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+              className="md:col-span-7 z-10"
             >
-              <button className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[#111827] hover:bg-[#1f2937] text-white px-8 py-3.5 rounded-2xl font-semibold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5">
-                <Apple size={28} />
-                <div className="text-left leading-tight">
-                  <div className="text-[11px] font-medium text-gray-300">
-                    Download on the
-                  </div>
-                  <div className="text-lg">App Store</div>
-                </div>
-              </button>
-
-              <button className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary-600 hover:bg-primary-500 text-white px-8 py-3.5 rounded-2xl font-semibold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 shadow-primary-700/20">
-                <Play size={24} />
-                <div className="text-left leading-tight">
-                  <div className="text-[11px] font-medium text-primary-100">
-                    GET IT ON
-                  </div>
-                  <div className="text-lg">Google Play</div>
-                </div>
-              </button>
+              <motion.span
+                variants={fadeInUp}
+                className="inline-block px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold tracking-widest uppercase mb-6"
+              >
+                Experience Divine Guidance
+              </motion.span>
+              <motion.h1
+                variants={fadeInUp}
+                className="font-headline text-6xl md:text-8xl text-primary font-semibold leading-[1.1] mb-6 tracking-tight"
+              >
+                Your Spiritual Journey, Reimagined.
+              </motion.h1>
+              <motion.p
+                variants={fadeInUp}
+                className="text-on-surface-variant text-xl md:text-2xl max-w-xl mb-10 leading-relaxed"
+              >
+                Recite, Listen, and grow your Iman with the ultimate Islamic
+                companion app. Built for the modern seeker.
+              </motion.p>
+              <motion.div
+                variants={fadeInUp}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <button className="bg-primary text-on-primary px-8 py-4 rounded-md font-bold text-lg shadow-xl shadow-primary/10 hover:bg-primary-container transition-all">
+                  Download for Free
+                </button>
+                <button className="border border-outline-variant text-on-surface px-8 py-4 rounded-md font-bold text-lg hover:bg-surface-container-low transition-all">
+                  Explore Features
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-
-          {/* Floating Mockup / Art */}
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="mt-20 md:mt-24 relative w-full max-w-[320px] sm:max-w-md mx-auto aspect-1/2 sm:h-[650px] sm:aspect-auto z-10"
-          >
             <motion.div
-              animate={{ y: [0, -12, 0] }}
-              transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-              className="w-full h-full relative"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="md:col-span-5 relative flex justify-center"
             >
-              <div className="absolute inset-x-0 top-0 bottom-0 bg-white dark:bg-[#0b1612] rounded-[3rem] shadow-2xl border-10 border-gray-100 dark:border-[#13251e] overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/5">
-                {/* Mock Header */}
-                <div className="h-24 px-6 flex items-end justify-between pb-4 bg-linear-to-b from-primary-50/50 to-transparent dark:from-primary-900/10">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <div className="w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-sm"></div>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">Al-Fatihah</div>
-                    <div className="w-16 h-1.5 bg-primary-200 dark:bg-primary-800 rounded-full"></div>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
-                    <Settings size={16} />
-                  </div>
-                </div>
-                {/* Mock Content */}
-                <div className="flex-1 px-8 py-6 flex flex-col items-center justify-center relative bg-white dark:bg-[#0b1612]">
-                  <div className="w-full text-center space-y-12">
-                    <h2
-                      className="text-[2.75rem] md:text-[3.5rem] font-arabic text-gray-900 dark:text-gray-50 leading-relaxed drop-shadow-sm"
-                      dir="rtl"
+              <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary-fixed/20 rounded-full blur-[100px]"></div>
+              <div className="relative z-10 w-full max-w-[320px]">
+                <img
+                  alt="iPhone App Interface"
+                  className="rounded-[2.5rem] shadow-2xl border-[8px] border-white ring-1 ring-outline-variant"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKfV4GVK3Z0gRSsfcUGmE9uPcdKR5NDUAYX4Ukpb09_Hnr-zPUqS22sm-xThCFwKtyXXOlXs6RadTAJUC9NooDBOrCN817ihKu0kPOynS4DhdxepMOpdc-kCE_lNVr39wtfu8hN79xxnBn_jtDzSoZKTsUBuNloZV6FAipCUP5UGTaDVL2ssw4-joSUdgiH6YpLYVkZ4VvabR89baYs738FWPhKHTKLB5zY5Ai-adA51hBnLOK8Q7hyZCo1M16p9KAZ5f4TLXgNc2V"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                  className="absolute -bottom-6 -left-12 bg-surface-container-lowest p-6 rounded-xl shadow-xl border border-outline-variant/20 max-w-[200px]"
+                >
+                  <div className="flex gap-1 text-tertiary mb-2">
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
                     >
-                      بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                    </h2>
-                    <div className="space-y-4 w-full opacity-60">
-                      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full w-full"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full w-5/6 mx-auto"></div>
-                    </div>
+                      star
+                    </span>
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
                   </div>
-                </div>
-                {/* Mock Nav */}
-                <div className="h-20 border-t border-gray-100 dark:border-gray-800/50 flex items-center justify-around px-6 bg-white/80 dark:bg-[#0b1612]/80 backdrop-blur-md">
-                  <div className="flex flex-col items-center gap-1 text-primary-600 dark:text-primary-400">
-                    <BookOpen size={20} />
-                    <div className="w-1 h-1 rounded-full bg-primary-500 mt-1"></div>
-                  </div>
-                  <div className="text-gray-400 dark:text-gray-600">
-                    <Clock size={20} />
-                  </div>
-                  <div className="text-gray-400 dark:text-gray-600">
-                    <Sun size={20} />
-                  </div>
-                </div>
+                  <p className="text-xs font-medium text-on-surface">
+                    "The most beautiful Quran app I have ever used."
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </section>
 
-        {/* Features Section */}
-        <section
-          id="features"
-          className="py-32 px-6 bg-white dark:bg-background-dark relative"
-        >
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[24px_24px] mask-image-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
-          <div className="max-w-7xl mx-auto relative z-10">
+        {/* Features Bento Grid */}
+        <section className="py-24 bg-surface-container-low">
+          <div className="max-w-7xl mx-auto px-8">
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              className="mb-16 text-center"
+            >
+              <h2 className="font-headline text-4xl md:text-5xl text-on-surface mb-4">
+                A Sanctuary in Your Pocket
+              </h2>
+              <p className="text-on-surface-variant max-w-2xl mx-auto">
+                Everything you need to maintain your daily spiritual habits,
+                designed with intentionality and grace.
+              </p>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-4 h-full md:h-[600px]">
+              {/* Main Quran Feature */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="md:col-span-2 md:row-span-2 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 flex flex-col justify-between group hover:border-primary/20 transition-all cursor-default"
+              >
+                <div>
+                  <span
+                    className="material-symbols-outlined text-primary text-4xl mb-6"
+                    data-icon="menu_book"
+                  >
+                    menu_book
+                  </span>
+                  <h3 className="font-headline text-3xl mb-4">
+                    Divine Recitation
+                  </h3>
+                  <p className="text-on-surface-variant text-lg">
+                    Experience the Quran with word-by-word translations,
+                    transliteration, and crystal clear tajweed rules.
+                  </p>
+                </div>
+                <img
+                  alt="Quran Close-up"
+                  className="w-full h-48 object-cover rounded-lg mt-8 opacity-80 group-hover:opacity-100 transition-opacity"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU8rTUbZz_MjDBeW5Epuw5styU6F-LtNrLosSdjrN_QBzmBHdFScl1ZLiY2nxcJ649kbUj2Ril-2CZZ1Lxq-FmbdzaXPessyQ292TgFnClfJ39so47a2J5XZjob_PBskJ9g5h-Dn78xhcHzZoP3VjwlSV5ZFSexesNptLAEdWpj4UH926wNCNnU8sd0SaCZALUrLx4Rnmc02H6BaZRgSucwzZG3E1HTod75caKgfhkxMU7uQphT43V1C2X7Nv2tonH575M9yyotvP2"
+                />
+              </motion.div>
+              {/* Audio */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="bg-primary text-on-primary p-8 rounded-xl flex flex-col justify-between"
+              >
+                <span className="material-symbols-outlined text-3xl">
+                  headphones
+                </span>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Immersive Audio</h3>
+                  <p className="text-on-primary/80 text-sm">
+                    Listen to world-renowned reciters in high fidelity.
+                  </p>
+                </div>
+              </motion.div>
+              {/* Prayer Times */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-surface-container-highest p-8 rounded-xl flex flex-col justify-between border border-outline-variant/20"
+              >
+                <span className="material-symbols-outlined text-primary text-3xl">
+                  schedule
+                </span>
+                <div>
+                  <h3 className="font-bold text-xl text-on-surface mb-2">
+                    Prayer Times
+                  </h3>
+                  <p className="text-on-surface-variant text-sm">
+                    Accurate local timings with beautiful Adhan notifications.
+                  </p>
+                </div>
+              </motion.div>
+              {/* Qiblah */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 flex flex-col justify-between"
+              >
+                <span className="material-symbols-outlined text-tertiary text-3xl">
+                  explore
+                </span>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Qiblah Finder</h3>
+                  <p className="text-on-surface-variant text-sm">
+                    Precision compass to guide your devotion anywhere.
+                  </p>
+                </div>
+              </motion.div>
+              {/* Adhkar */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="bg-secondary-container text-on-secondary-container p-8 rounded-xl flex flex-col justify-between"
+              >
+                <span className="material-symbols-outlined text-3xl">
+                  auto_awesome
+                </span>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Hisnul Muslim</h3>
+                  <p className="text-on-secondary-container/80 text-sm">
+                    A complete library of daily Adhkar and Duas.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Deep Dive */}
+        <section className="py-24 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-8">
+            <div className="grid md:grid-cols-2 gap-20 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <div className="aspect-[4/5] bg-surface-container rounded-2xl overflow-hidden shadow-inner">
+                  <img
+                    alt="Lifestyle Devotion"
+                    className="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGY9fxb9T4VyvLmeod7cGB3emDI4QeS4XxRcz6o8__IhnwgQdCMWmNnNn0HhXWhqkVP1zKbmvkzDZtka7CgDSm2LOf9kJDOhp1169U8HAUUJip5P3j6tF5YvSExSJCGdcll_oSHcrMca8lJ0cOk0Ey_zmaAA7A__y0JVhk7eE-pIp5-BYg_wlLXWgRsNK_iZ5MyOgnIFbmq57gaiw7Iz2Za2N-TGJMbyPSmFgIDCNQw4r3T2dXdn56msr4jEmaDYMO9LcNlWAVgzYS"
+                  />
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                  className="absolute -bottom-10 -right-10 bg-surface-container-lowest p-4 rounded-2xl shadow-2xl w-48 hidden md:block border border-outline-variant/10"
+                >
+                  <div className="bg-primary/5 p-4 rounded-xl">
+                    <span className="text-xs font-bold uppercase tracking-tighter text-primary">
+                      Daily Progress
+                    </span>
+                    <div className="h-2 w-full bg-outline-variant/20 rounded-full mt-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "75%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: 0.6 }}
+                        className="h-full bg-primary"
+                      ></motion.div>
+                    </div>
+                    <p className="text-sm mt-2 font-bold">12 Ayahs Today</p>
+                  </div>
+                </motion.div>
+              </motion.div>
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={staggerContainer}
+              >
+                <motion.h2
+                  variants={fadeInUp}
+                  className="font-headline text-5xl text-primary leading-tight mb-8"
+                >
+                  Nurture Your Soul with Gentle Persistence.
+                </motion.h2>
+                <div className="space-y-8">
+                  {[
+                    {
+                      icon: "history_edu",
+                      title: "Journal Your Reflections",
+                      desc: "Personalize your journey by adding notes and reflections to any Ayah. Your spiritual growth, documented.",
+                    },
+                    {
+                      icon: "podcasts",
+                      title: "Guided Podcasts",
+                      desc: "Listen to exclusive tafsir and spiritual discussions from leading scholars while you commute or rest.",
+                    },
+                    {
+                      icon: "calendar_month",
+                      title: "Hijri Calendar",
+                      desc: "Never miss an important Islamic date. Integrated Hijri dates with events and fasting reminders.",
+                    },
+                  ].map((item, idx) => (
+                    <motion.div
+                      key={idx}
+                      variants={fadeInUp}
+                      className="flex gap-6"
+                    >
+                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                        <span className="material-symbols-outlined">
+                          {item.icon}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold mb-2 text-on-surface">
+                          {item.title}
+                        </h3>
+                        <p className="text-on-surface-variant leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* App Showcase */}
+        <section className="py-24 bg-primary overflow-hidden">
+          <div className="max-w-7xl mx-auto px-8">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
               variants={fadeInUp}
               className="text-center mb-20"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">
-                Elevate Your Spiritual Journey
+              <h2 className="font-headline text-4xl md:text-6xl text-on-primary mb-6">
+                Designed for Focus.
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-lg">
-                Thoughtfully designed features to integrate the Quran into your
-                daily life perfectly, with elegance and simplicity.
+              <p className="text-primary-fixed/80 max-w-2xl mx-auto text-lg">
+                We removed the noise so you can focus on what matters most. A
+                clean, distraction-free environment for your daily devotions.
               </p>
             </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={staggerContainer}
-              className="grid md:grid-cols-3 gap-8"
-            >
-              {[
-                {
-                  icon: <BookOpen size={24} />,
-                  title: "Seamless Progress",
-                  desc: "Never lose your place. Save your recitation exactly where you left off across all your devices seamlessly.",
-                  color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
-                },
-                {
-                  icon: <Clock size={24} />,
-                  title: "Daily Reminders",
-                  desc: "Build consistent habits with tailored schedules and gentle notifications that align with your pace.",
-                  color: "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 border-primary-100 dark:border-primary-900/30",
-                },
-                {
-                  icon: <Settings size={24} />,
-                  title: "Full Customization",
-                  desc: "Personalize your experience with various stunning visual themes, multiple translations, and transliterations.",
-                  color: "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900/30",
-                },
-              ].map((feature, idx) => (
-                <motion.div
-                  key={idx}
-                  variants={fadeInUp}
-                  whileHover={{ y: -8 }}
-                  className="bg-white dark:bg-[#0b1612] p-8 rounded-4xl shadow-sm hover:shadow-xl hover:shadow-primary-900/5 dark:hover:shadow-primary-900/20 border border-gray-100 dark:border-gray-800/50 transition-all duration-300 group"
-                >
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 border transition-transform duration-300 group-hover:scale-110 ${feature.color}`}
-                  >
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white tracking-tight">{feature.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm md:text-base">
-                    {feature.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
+            <div className="relative flex justify-center items-center gap-8">
+              {/* Phone Left */}
+              <motion.div
+                initial={{ opacity: 0, rotate: 0, x: -50 }}
+                whileInView={{ opacity: 0.5, rotate: -12, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="hidden md:block w-[280px] translate-y-12"
+              >
+                <img
+                  alt="App Screen"
+                  className="rounded-[2rem] shadow-2xl"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBT0HdYiVhWxJfi7pSz5V0b288Qj4xemcyg8jJP1U8SdbTj_Gmb1bv1PKr2BrzcZhjtAYOYEab4WNIkt63XqqXPItCqmCgpMmyzR0YYH18JFnGdCAsBkB3hJrk3lsFCSzYiBD8daSI-_xN01pXe4Ci9OLbSlb5mzvDpPmU7q__Kw30FO9bVsgM8yjQKajW0x1ZowAiSZWo0URlmSff_GfFWG6z9-uWXvO2MlzNrICqPPOmP6MN7GeIbEkk1_h9z_OwnS7gSzp46SjQR"
+                />
+              </motion.div>
+              {/* Phone Center */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="w-[320px] z-20"
+              >
+                <img
+                  alt="Main App Screen"
+                  className="rounded-[2.5rem] shadow-2xl ring-8 ring-primary-container"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBctZi04_yQ8Y8WRoQOrt_ipW-qMgyQRuCwgvsCpolXay6yAzw7eb4Db3Xcph8ZqedEWsdX_nrPkaBAf2bhV9kh_Qt_qqAPY4zDMKrIAGSCuEYX_rtPvlbC_ndMoC8Ciasm_X0ez366uBKUVqFS_GfGuwBml1bCjAr_J7HVoa7RyIR77Qsy1Z6FNP7kv53hXMDKWaFt0mWFnVoFOESFtCDX6Cbiz9LFkq8fNk7ukGdVVfdY92oX3SAL6TwlA7yOrl3WEuNbWZaEOerS"
+                />
+              </motion.div>
+              {/* Phone Right */}
+              <motion.div
+                initial={{ opacity: 0, rotate: 0, x: 50 }}
+                whileInView={{ opacity: 0.5, rotate: 12, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="hidden md:block w-[280px] translate-y-12"
+              >
+                <img
+                  alt="App Screen"
+                  className="rounded-[2rem] shadow-2xl"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAiuTuICbZgYufK3KNsGNpjodzC_A5YaN41jUROtZxgDtrUyZwJEi8m4-MhwE_G6A_XLsBgqr96sYwM9UpRJ5I3I580Uks07VJMZIdvYmfbRki9VoWtuJIs9WWBu6oIqlhPuzCjbPRC0zBzZst4h612_S9Ha0L8mnA61UOctcfY_hH3R9hckws73eNjbNl1tHlFbQetEIuFwQE1Tu2Lh9YPCgU6DOsdlWTVeffoZWruDniX6hKBCAW89UniwIq7fFMURHjLV1797-9"
+                />
+              </motion.div>
+            </div>
           </div>
         </section>
 
-        {/* Interactive Themes Section */}
-        <section id="themes" className="py-32 px-6 md:px-12 relative overflow-hidden bg-gray-50/50 dark:bg-[#040a08]">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
-            className="max-w-7xl mx-auto text-center mb-20 relative z-10"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white tracking-tight">
-              Experience the Divine, <br className="sm:hidden" /> Day or Night
+        {/* Testimonials */}
+        <section className="py-24 bg-surface">
+          <div className="max-w-7xl mx-auto px-8">
+            <h2 className="font-headline text-4xl text-center mb-16">
+              Loved by the Ummah.
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Our beautifully crafted reading environments adapt to your
-              preferences to ensure a comfortable and serene experience at any
-              hour.
-            </p>
-          </motion.div>
-
-          <div
-            className="max-w-5xl mx-auto rounded-[2.5rem] p-8 sm:p-12 md:p-16 overflow-hidden shadow-2xl transition-all duration-700 ease-in-out border relative z-10"
-            style={{
-              backgroundColor: themeMode === "light" ? "#ffffff" : "#07130f",
-              borderColor: themeMode === "light" ? "#f3f4f6" : "#13251e",
-            }}
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-16">
-              <div className="flex-1 text-center md:text-left space-y-10">
-                <div
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full mx-auto md:mx-0 transition-colors duration-500 border"
-                  style={{
-                    backgroundColor: themeMode === "light" ? "#f8fafc" : "#0b1d17",
-                    borderColor: themeMode === "light" ? "#e2e8f0" : "#132a21"
-                  }}
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: "Yusuf Ahmed",
+                  location: "London, UK",
+                  initials: "YA",
+                  quote:
+                    "The dark mode and the selection of reciters are unmatched. It feels like a premium experience that actually respects my time and focus.",
+                  bgColor: "bg-surface-container-lowest",
+                },
+                {
+                  name: "Sara Malik",
+                  location: "Dubai, UAE",
+                  initials: "SM",
+                  quote:
+                    "Quranic has completely transformed my daily routine. The Adhkar notifications are subtle yet timely. Highly recommended for every Muslim.",
+                  bgColor: "bg-surface-container-low",
+                  offset: true,
+                },
+                {
+                  name: "Ibrahim Khan",
+                  location: "Toronto, CA",
+                  initials: "IK",
+                  quote:
+                    "Finally an Islamic app that isn't cluttered with ads or poor design. This is editorial quality for spiritual growth.",
+                  bgColor: "bg-surface-container-lowest",
+                },
+              ].map((t, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`p-8 rounded-xl ${t.bgColor} border border-outline-variant/10 shadow-sm ${t.offset ? "md:-translate-y-4" : ""}`}
                 >
-                  {themeMode === "light" ? (
-                    <Sun size={16} className="text-amber-500" />
-                  ) : (
-                    <Moon size={16} className="text-blue-400" />
-                  )}
-                  <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: themeMode === "light" ? "#64748b" : "#94a3b8" }}>
-                    {themeMode === "light"
-                      ? "Light Mode"
-                      : "Dark Mode"}
-                  </span>
-                </div>
-
-                <div className="space-y-6">
-                  <h3
-                    className="text-4xl md:text-5xl lg:text-6xl font-arabic leading-[1.8] drop-shadow-sm transition-colors duration-500"
-                    style={{
-                      color: themeMode === "light" ? "#0f172a" : "#f8fafc",
-                    }}
-                    dir="rtl"
-                  >
-                    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                  </h3>
-                  <p className="text-lg md:text-xl font-medium transition-colors duration-500"
-                    style={{
-                      color: themeMode === "light" ? "#64748b" : "#94a3b8",
-                    }}
-                  >
-                    In the name of Allah, the Entirely Merciful, the Especially
-                    Merciful.
+                  <div className="flex gap-1 text-tertiary mb-6">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <span
+                        key={s}
+                        className="material-symbols-outlined text-sm"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        star
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-on-surface-variant italic mb-8 leading-relaxed">
+                    "{t.quote}"
                   </p>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${idx === 1 ? "bg-primary-container text-on-primary-container" : idx === 2 ? "bg-tertiary-container text-on-tertiary-container" : "bg-secondary-container text-on-secondary-container"}`}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <h4 className="font-bold">{t.name}</h4>
+                      <p className="text-xs text-on-surface-variant uppercase tracking-widest">
+                        {t.location}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Download Section */}
+        <section className="py-24">
+          <div className="max-w-5xl mx-auto px-8">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              className="bg-surface-container-highest rounded-[2rem] p-12 md:p-20 text-center relative overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')]"></div>
+              </div>
+              <div className="relative z-10">
+                <h2 className="font-headline text-5xl md:text-6xl text-primary mb-8 leading-tight">
+                  Begin Your Path <br />
+                  Towards Presence.
+                </h2>
+                <p className="text-xl text-on-surface-variant mb-12 max-w-xl mx-auto">
+                  Join over 1 million users worldwide who have elevated their
+                  spiritual practice with Quranic.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-6">
+                  <a
+                    className="bg-[#171d19] text-white flex items-center gap-3 px-8 py-4 rounded-xl hover:bg-black transition-all"
+                    href="#"
+                  >
+                    <span className="material-symbols-outlined text-3xl">
+                      phone_iphone
+                    </span>
+                    <div className="text-left">
+                      <p className="text-[10px] uppercase font-bold opacity-70">
+                        Download on the
+                      </p>
+                      <p className="text-xl font-bold leading-none">
+                        App Store
+                      </p>
+                    </div>
+                  </a>
+                  <a
+                    className="bg-[#171d19] text-white flex items-center gap-3 px-8 py-4 rounded-xl hover:bg-black transition-all"
+                    href="#"
+                  >
+                    <span className="material-symbols-outlined text-3xl">
+                      play_store_installed
+                    </span>
+                    <div className="text-left">
+                      <p className="text-[10px] uppercase font-bold opacity-70">
+                        Get it on
+                      </p>
+                      <p className="text-xl font-bold leading-none">
+                        Google Play
+                      </p>
+                    </div>
+                  </a>
                 </div>
               </div>
-
-              <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col gap-4">
-                <button
-                  onClick={() => setThemeMode("light")}
-                  className={`group flex-1 md:w-64 px-6 py-4 rounded-2xl flex justify-between items-center transition-all duration-300 border ${
-                    themeMode === "light"
-                      ? "border-primary-200 bg-primary-50/50 shadow-lg shadow-primary-500/10 scale-105"
-                      : "border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10"
-                  }`}
-                >
-                  <span className={`font-semibold transition-colors ${themeMode === "light" ? "text-primary-700" : "text-gray-600 dark:text-gray-400"}`}>Light Theme</span>
-                  <Sun
-                    size={20}
-                    className={`transition-colors ${themeMode === "light" ? "text-amber-500" : "text-gray-400 group-hover:text-amber-500"}`}
-                  />
-                </button>
-                <button
-                  onClick={() => setThemeMode("dark")}
-                  className={`group flex-1 md:w-64 px-6 py-4 rounded-2xl flex justify-between items-center transition-all duration-300 border ${
-                    themeMode === "dark"
-                      ? "border-primary-800 bg-[#0b1d17] shadow-lg shadow-black/50 scale-105"
-                      : "border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10"
-                  }`}
-                >
-                  <span className={`font-semibold transition-colors ${themeMode === "dark" ? "text-primary-300" : "text-gray-600 dark:text-gray-400"}`}>Dark Theme</span>
-                  <Moon
-                    size={20}
-                    className={`transition-colors ${themeMode === "dark" ? "text-blue-400" : "text-gray-400 group-hover:text-blue-400"}`}
-                  />
-                </button>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="pt-24 pb-12 bg-gray-900 text-gray-300 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
-            <div className="md:col-span-5 lg:col-span-4 space-y-6">
-              <div className="flex items-center gap-3 text-white">
-                <div className="bg-primary-500/20 p-2 rounded-xl">
-                  <BookOpen className="w-7 h-7 text-primary-400" />
-                </div>
-                <span className="font-bold text-2xl tracking-tight">
-                  Quranic
-                </span>
-              </div>
-              <p className="text-gray-400 leading-relaxed text-sm pr-4">
-                Empowering Muslims around the world to read, reflect, and deeply
-                connect with the words of Allah subhanahu wa ta&apos;ala anywhere,
-                anytime.
-              </p>
-              <div className="flex gap-4 pt-2">
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-300"
-                  aria-label="Twitter"
-                >
-                  <Twitter size={18} />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-300"
-                  aria-label="Instagram"
-                >
-                  <Instagram size={18} />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-300"
-                  aria-label="GitHub"
-                >
-                  <Github size={18} />
-                </a>
-              </div>
-            </div>
-
-            <div className="md:col-span-3 lg:col-span-2 lg:col-start-7">
-              <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Product</h4>
-              <ul className="space-y-4 text-sm text-gray-400">
-                <li>
-                  <a
-                    href="#features"
-                    className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#themes"
-                    className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300"
-                  >
-                    Themes
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
-                    Android App
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
-                    iOS App
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="md:col-span-4 lg:col-span-2">
-              <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider">Company</h4>
-              <ul className="space-y-4 text-sm text-gray-400">
-                <li>
-                  <a
-                    href="#about"
-                    className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300"
-                  >
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <Link 
-                    href="/privacy-policy" 
-                    className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white hover:translate-x-1 inline-block transition-all duration-300">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
+      <footer className="w-full py-16 border-t border-primary/10 bg-surface">
+        <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-8">
+          <div className="text-lg font-headline text-primary">Quranic</div>
+          <div className="flex flex-wrap justify-center gap-8">
+            <a
+              className="text-sm uppercase tracking-widest text-[#171d19]/60 hover:text-tertiary transition-colors"
+              href="#"
+            >
+              Privacy Policy
+            </a>
+            <a
+              className="text-sm uppercase tracking-widest text-[#171d19]/60 hover:text-tertiary transition-colors"
+              href="#"
+            >
+              Terms of Service
+            </a>
+            <a
+              className="text-sm uppercase tracking-widest text-[#171d19]/60 hover:text-tertiary transition-colors"
+              href="#"
+            >
+              Support
+            </a>
+            <a
+              className="text-sm uppercase tracking-widest text-[#171d19]/60 hover:text-tertiary transition-colors"
+              href="#"
+            >
+              Contact Us
+            </a>
           </div>
-
-          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-            <p>
-              © {new Date().getFullYear()} Quranic App. All rights reserved.
-            </p>
-            <p className="flex items-center gap-1.5 font-medium">
-              Made with <span className="text-red-500 animate-pulse">❤️</span>{" "}
-              for the Ummah
-            </p>
+          <div className="text-sm uppercase tracking-widest text-[#171d19]/60">
+            © 2024 Quranic. The Sacred Breath.
           </div>
         </div>
       </footer>
