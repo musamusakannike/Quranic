@@ -166,7 +166,7 @@ export default function ChapterDetailScreen() {
     if (targetIndex < 0) return;
 
     const timeout = setTimeout(() => {
-      if (readingView === "list" || readingView === "page_by_page") {
+      if (readingView === "list") {
         flashListRef.current?.scrollToIndex({
           index: targetIndex,
           animated: false,
@@ -432,23 +432,6 @@ export default function ChapterDetailScreen() {
     ],
   );
 
-  const pages = useMemo(() => {
-    if (readingView !== "page_by_page" && readingView !== "mushaf") return [];
-
-    const groups: Record<number, VerseItem[]> = {};
-    for (const v of filteredVerses) {
-      const groupPage = v.page || 0;
-      if (!groups[groupPage]) groups[groupPage] = [];
-      groups[groupPage].push(v);
-    }
-    return Object.entries(groups)
-      .map(([pageStr, verses]) => ({
-        page: Number(pageStr),
-        verses,
-        key: `page-${pageStr}`,
-      }))
-      .sort((a, b) => a.page - b.page);
-  }, [filteredVerses, readingView]);
 
   const chapterPages = useMemo(() => {
     if (!chapterNumber) return [];
@@ -469,93 +452,7 @@ export default function ChapterDetailScreen() {
     setActiveMushafPage(initialMushafPage);
   }, [initialMushafPage]);
 
-  const renderPage = useCallback(
-    ({ item }: { item: { page: number; verses: VerseItem[] } }) => {
-      return (
-        <View
-          style={[
-            styles.verseCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.88),
-            },
-          ]}
-        >
-          <View style={[styles.verseHeaderRow, { marginBottom: 16 }]}>
-            <View style={styles.verseMetaRow}>
-              {item.page > 0 ? (
-                <Text style={[styles.verseMeta, { color: colors.textMuted }]}>
-                  Page {item.page}
-                </Text>
-              ) : null}
-            </View>
-          </View>
 
-          <Text
-            style={[
-              styles.arabicVerseText,
-              {
-                color: colors.textMain,
-                fontSize: arabicFontSize,
-                lineHeight: arabicFontSize * 1.8,
-                textAlign: "justify",
-              },
-            ]}
-          >
-            {item.verses
-              .map((v) => `${v.text} ﴿${toArabicNumber(v.verseNumber)}﴾`)
-              .join(" ")}
-          </Text>
-
-          {showTransliterations ? (
-            <Text
-              style={[
-                styles.transliterationText,
-                { color: colors.textMuted, marginTop: 16 },
-              ]}
-            >
-              {item.verses
-                .map((v) =>
-                  v.transliteration
-                    ? `${v.transliteration} (${v.verseNumber})`
-                    : "",
-                )
-                .filter(Boolean)
-                .join(" ")}
-            </Text>
-          ) : null}
-
-          {showTranslations ? (
-            <Text
-              style={[
-                styles.translationText,
-                {
-                  color: colors.textMain,
-                  fontSize: translationFontSize,
-                  lineHeight: translationFontSize * 1.5,
-                  marginTop: 16,
-                },
-              ]}
-            >
-              {item.verses
-                .map((v) =>
-                  v.translation ? `${v.verseNumber}. ${v.translation}` : "",
-                )
-                .filter(Boolean)
-                .join(" ")}
-            </Text>
-          ) : null}
-        </View>
-      );
-    },
-    [
-      colors,
-      arabicFontSize,
-      showTransliterations,
-      showTranslations,
-      translationFontSize,
-    ],
-  );
 
   if (!chapterNumber || !chapterMeta) {
     return (
@@ -737,23 +634,7 @@ export default function ChapterDetailScreen() {
       );
     }
 
-    if (readingView === "page_by_page") {
-      return (
-        <FlashList
-          ref={flashListRef}
-          data={pages}
-          keyExtractor={(item: { key: string }) => item.key}
-          renderItem={renderPage as any}
-          viewabilityConfig={{
-            itemVisiblePercentThreshold: 55,
-            minimumViewTime: 200,
-          }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderHeader()}
-        />
-      );
-    }
+
 
     if (readingView === "mushaf") {
       return (

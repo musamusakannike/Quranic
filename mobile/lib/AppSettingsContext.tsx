@@ -16,7 +16,7 @@ export type ReminderTime = {
   minute: number;
 };
 
-export type ReadingView = "list" | "verse_by_verse" | "page_by_page" | "mushaf";
+export type ReadingView = "list" | "verse_by_verse" | "mushaf";
 
 type AppSettingsContextValue = {
   showTranslations: boolean;
