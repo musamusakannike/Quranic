@@ -1,50 +1,54 @@
-# Welcome to your Expo app 👋
+# 📱 Quranic Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![Mobile App Icon](../assets/banner_readme.png)
 
-## Get started
+Quranic's mobile application built with **Expo & React Native**. It features a modern digital Mushaf, prayer times, Qiblah direction, Hijri calendar, and daily Adhkaar—all designed to be fast and accessible on both iOS and Android.
 
-1. Install dependencies
+---
 
+## 🛠️ Tech Highlights
+
+- **[Expo Router](https://docs.expo.dev/router/introduction/)**: Centralized file-based navigation.
+- **[Adhan JS](https://github.com/batoulapps/adhan-js)**: High-precision prayer time calculation.
+- **[Moment Hijri](https://github.com/mabdullahadeel/moment-hijri)**: Reliable Gregorian to Hijri date conversion.
+- **[Lucide Icons](https://lucide.dev/)**: Hand-crafted, minimalist vector icons.
+- **[Flash List](https://shopify.github.io/flash-list/)**: Optimized lists for high-performance scrolling.
+- **[Reanimated 3](https://docs.swmansion.com/react-native-reanimated/)**: Smooth, low-latency UI animations.
+
+---
+
+## 🚀 Get Started
+
+1. **Install Dependencies**
    ```bash
    npm install
    ```
-
-2. Start the app
-
+2. **Launch the Expo Dev Server**
    ```bash
    npx expo start
    ```
+3. **Run on Device or Simulator**
+   - Click `i` for iOS Simulator.
+   - Click `a` for Android Emulator.
+   - Scan the QR code with the Expo Go app on your physical device.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📁 Directory Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `app/`: View screens and file-based routing.
+- `components/`: Shared UI components.
+- `constants/`: Configuration and styling tokens.
+- `assets/`: Images, icons, and multimedia assets.
+- `lib/`: Domain-specific logic and utility functions.
+- `types/`: Global TypeScript definitions.
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 💡 Learn More
 
-```bash
-npm run reset-project
-```
+To learn more about developing with Expo, refer to the [official documentation](https://docs.expo.dev/).
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+<p align="center">Back to [Main Project](../README.md)</p>
