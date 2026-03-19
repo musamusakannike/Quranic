@@ -236,7 +236,7 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
       >
         <ImageBackground
-          source={require("../../assets/images/masjid-nabawi.jpg")}
+          source={require("../../assets/images/masjid-nabawi.webp")}
           resizeMode="cover"
           style={[styles.heroSection, { paddingTop: insets.top }]}
           imageStyle={styles.heroSectionImage}
@@ -623,7 +623,7 @@ export default function Index() {
 
           {/* ─── Ayah of the Day ─── */}
           <ImageBackground
-            source={require("../../assets/images/ayah-of-the-day.jpg")}
+            source={require("../../assets/images/ayah-of-the-day.webp")}
             style={[
               styles.ayahCard,
               { borderColor: withOpacity(colors.border, 0.85) },

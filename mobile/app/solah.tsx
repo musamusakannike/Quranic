@@ -333,7 +333,7 @@ export default function SolahTimesScreen() {
           <View style={styles.timesContainer}>
             {nextPrayer ? (
               <ImageBackground
-                source={require("../assets/images/solah-sajda.png")}
+                source={require("../assets/images/solah-sajda.webp")}
                 style={styles.nextPrayerBackground}
                 imageStyle={{ borderRadius: 18 }}
               >

@@ -21,7 +21,7 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications for the morning",
     icon: Sun,
     color: "#F59E0B", // Amber
-    image: require("../assets/images/adhkaar/sunrise.jpg"),
+    image: require("../assets/images/adhkaar/sunrise.webp"),
     height: 220,
   },
   {
@@ -30,7 +30,7 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications for the evening",
     icon: Moon,
     color: "#6366F1", // Indigo
-    image: require("../assets/images/adhkaar/sunset.jpg"),
+    image: require("../assets/images/adhkaar/sunset.webp"),
     height: 180,
   },
   {
@@ -39,7 +39,7 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications after every prayer",
     icon: Clock,
     color: "#10B981", // Emerald
-    image: require("../assets/images/adhkaar/after-solah.jpg"),
+    image: require("../assets/images/adhkaar/after-solah.webp"),
     height: 190,
   },
   {
@@ -48,7 +48,7 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Supplications from the Holy Quran",
     icon: BookOpen,
     color: "#EC4899", // Pink
-    image: require("../assets/images/adhkaar/40-robanna.jpg"),
+    image: require("../assets/images/adhkaar/40-robanna.webp"),
     height: 230,
   },
   {
@@ -57,7 +57,7 @@ const ADHKAAR_CATEGORIES = [
     subtitle: "Fortress of the Muslim",
     icon: Shield,
     color: "#3B82F6", // Blue
-    image: require("../assets/images/adhkaar/sunrise.jpg"),
+    image: require("../assets/images/adhkaar/sunrise.webp"),
     height: 200,
   },
 ];

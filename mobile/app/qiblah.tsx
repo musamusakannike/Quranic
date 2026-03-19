@@ -229,7 +229,7 @@ export default function QiblahScreen() {
                 ]}
               >
                 <Image
-                  source={require("../assets/images/kaaba.png")}
+                  source={require("../assets/images/kaaba.webp")}
                   style={[
                     styles.kaabaIndicator,
                     isFacingQiblah && { tintColor: undefined },
