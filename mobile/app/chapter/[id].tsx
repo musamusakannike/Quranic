@@ -644,10 +644,12 @@ export default function ChapterDetailScreen() {
             chapterPages={chapterPages}
             onPageChange={(page) => {
               setActiveMushafPage(page);
+              const juz = chapterVerses.find((v) => v.page === page)?.juz ?? null;
               void saveLastReadProgress({
                 chapter: chapterNumber,
                 verse: 1, // Simplified for Mushaf mode
                 page,
+                juz,
               });
             }}
           />
