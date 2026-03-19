@@ -134,8 +134,8 @@ export default function Home() {
               <div className="relative z-10 w-full max-w-[320px]">
                 <img
                   alt="iPhone App Interface"
-                  className="rounded-[2.5rem] shadow-2xl border-[8px] border-white ring-1 ring-outline-variant"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKfV4GVK3Z0gRSsfcUGmE9uPcdKR5NDUAYX4Ukpb09_Hnr-zPUqS22sm-xThCFwKtyXXOlXs6RadTAJUC9NooDBOrCN817ihKu0kPOynS4DhdxepMOpdc-kCE_lNVr39wtfu8hN79xxnBn_jtDzSoZKTsUBuNloZV6FAipCUP5UGTaDVL2ssw4-joSUdgiH6YpLYVkZ4VvabR89baYs738FWPhKHTKLB5zY5Ai-adA51hBnLOK8Q7hyZCo1M16p9KAZ5f4TLXgNc2V"
+                  className="rounded-[2.5rem] shadow-2xl border-8 border-white ring-1 ring-outline-variant"
+                  src="/images/mobile-homepage.PNG"
                 />
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -226,9 +226,9 @@ export default function Home() {
                   </p>
                 </div>
                 <img
-                  alt="Quran Close-up"
-                  className="w-full h-48 object-cover rounded-lg mt-8 opacity-80 group-hover:opacity-100 transition-opacity"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU8rTUbZz_MjDBeW5Epuw5styU6F-LtNrLosSdjrN_QBzmBHdFScl1ZLiY2nxcJ649kbUj2Ril-2CZZ1Lxq-FmbdzaXPessyQ292TgFnClfJ39so47a2J5XZjob_PBskJ9g5h-Dn78xhcHzZoP3VjwlSV5ZFSexesNptLAEdWpj4UH926wNCNnU8sd0SaCZALUrLx4Rnmc02H6BaZRgSucwzZG3E1HTod75caKgfhkxMU7uQphT43V1C2X7Nv2tonH575M9yyotvP2"
+                  alt="Quran App Interface"
+                  className="w-full h-48 object-cover object-top rounded-lg mt-8 opacity-90 group-hover:opacity-100 transition-opacity shadow-sm border border-outline-variant/10"
+                  src="/images/mobile-chapter-details.PNG"
                 />
               </motion.div>
               {/* Audio */}
@@ -236,17 +236,20 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-primary text-on-primary p-8 rounded-xl flex flex-col justify-between"
+                className="bg-primary text-on-primary p-8 rounded-xl flex flex-col justify-between relative overflow-hidden"
               >
-                <span className="material-symbols-outlined text-3xl">
-                  headphones
-                </span>
-                <div>
-                  <h3 className="font-bold text-xl mb-2">Immersive Audio</h3>
-                  <p className="text-on-primary/80 text-sm">
-                    Listen to world-renowned reciters in high fidelity.
-                  </p>
+                <div className="z-10">
+                  <span className="material-symbols-outlined text-3xl">
+                    headphones
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-xl mb-2">Immersive Audio</h3>
+                    <p className="text-on-primary/80 text-sm">
+                      Listen to world-renowned reciters in high fidelity.
+                    </p>
+                  </div>
                 </div>
+                <div className="absolute inset-0 opacity-10 bg-[url('/images/ayah-of-the-day.webp')] bg-cover bg-center"></div>
               </motion.div>
               {/* Prayer Times */}
               <motion.div
@@ -254,19 +257,22 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="bg-surface-container-highest p-8 rounded-xl flex flex-col justify-between border border-outline-variant/20"
+                className="bg-surface-container-highest p-8 rounded-xl flex flex-col justify-between border border-outline-variant/20 relative overflow-hidden group"
               >
-                <span className="material-symbols-outlined text-primary text-3xl">
-                  schedule
-                </span>
-                <div>
-                  <h3 className="font-bold text-xl text-on-surface mb-2">
-                    Prayer Times
-                  </h3>
-                  <p className="text-on-surface-variant text-sm">
-                    Accurate local timings with beautiful Adhan notifications.
-                  </p>
+                <div className="z-10">
+                  <span className="material-symbols-outlined text-primary text-3xl">
+                    schedule
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-xl text-on-surface mb-2">
+                      Prayer Times
+                    </h3>
+                    <p className="text-on-surface-variant text-sm">
+                      Accurate local timings with beautiful Adhan notifications.
+                    </p>
+                  </div>
                 </div>
+                <div className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity bg-[url('/images/masjid-nabawi.webp')] bg-cover bg-center"></div>
               </motion.div>
               {/* Qiblah */}
               <motion.div
@@ -274,17 +280,20 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
-                className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 flex flex-col justify-between"
+                className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 flex flex-col justify-between relative overflow-hidden"
               >
-                <span className="material-symbols-outlined text-tertiary text-3xl">
-                  explore
-                </span>
-                <div>
-                  <h3 className="font-bold text-xl mb-2">Qiblah Finder</h3>
-                  <p className="text-on-surface-variant text-sm">
-                    Precision compass to guide your devotion anywhere.
-                  </p>
+                <div className="z-10">
+                  <span className="material-symbols-outlined text-tertiary text-3xl">
+                    explore
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-xl mb-2">Qiblah Finder</h3>
+                    <p className="text-on-surface-variant text-sm">
+                      Precision compass to guide your devotion anywhere.
+                    </p>
+                  </div>
                 </div>
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('/images/kaaba.webp')] bg-cover bg-center"></div>
               </motion.div>
               {/* Adhkar */}
               <motion.div
@@ -292,17 +301,20 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
-                className="bg-secondary-container text-on-secondary-container p-8 rounded-xl flex flex-col justify-between"
+                className="bg-secondary-container text-on-secondary-container p-8 rounded-xl flex flex-col justify-between relative overflow-hidden group"
               >
-                <span className="material-symbols-outlined text-3xl">
-                  auto_awesome
-                </span>
-                <div>
-                  <h3 className="font-bold text-xl mb-2">Hisnul Muslim</h3>
-                  <p className="text-on-secondary-container/80 text-sm">
-                    A complete library of daily Adhkar and Duas.
-                  </p>
+                <div className="z-10">
+                  <span className="material-symbols-outlined text-3xl">
+                    auto_awesome
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-xl mb-2">Hisnul Muslim</h3>
+                    <p className="text-on-secondary-container/80 text-sm">
+                      A complete library of daily Adhkar and Duas.
+                    </p>
+                  </div>
                 </div>
+                <div className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity bg-[url('/images/solah-sajda.webp')] bg-cover bg-center"></div>
               </motion.div>
             </div>
           </div>
@@ -318,11 +330,11 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="relative"
               >
-                <div className="aspect-[4/5] bg-surface-container rounded-2xl overflow-hidden shadow-inner">
+                <div className="aspect-4/5 bg-surface-container rounded-2xl overflow-hidden shadow-inner">
                   <img
-                    alt="Lifestyle Devotion"
+                    alt="Solah Sajda"
                     className="w-full h-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGY9fxb9T4VyvLmeod7cGB3emDI4QeS4XxRcz6o8__IhnwgQdCMWmNnNn0HhXWhqkVP1zKbmvkzDZtka7CgDSm2LOf9kJDOhp1169U8HAUUJip5P3j6tF5YvSExSJCGdcll_oSHcrMca8lJ0cOk0Ey_zmaAA7A__y0JVhk7eE-pIp5-BYg_wlLXWgRsNK_iZ5MyOgnIFbmq57gaiw7Iz2Za2N-TGJMbyPSmFgIDCNQw4r3T2dXdn56msr4jEmaDYMO9LcNlWAVgzYS"
+                    src="/images/masjid-nabawi.webp"
                   />
                 </div>
                 <motion.div
@@ -384,7 +396,7 @@ export default function Home() {
                       variants={fadeInUp}
                       className="flex gap-6"
                     >
-                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                      <div className="shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                         <span className="material-symbols-outlined">
                           {item.icon}
                         </span>
@@ -433,9 +445,9 @@ export default function Home() {
                 className="hidden md:block w-[280px] translate-y-12"
               >
                 <img
-                  alt="App Screen"
-                  className="rounded-[2rem] shadow-2xl"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBT0HdYiVhWxJfi7pSz5V0b288Qj4xemcyg8jJP1U8SdbTj_Gmb1bv1PKr2BrzcZhjtAYOYEab4WNIkt63XqqXPItCqmCgpMmyzR0YYH18JFnGdCAsBkB3hJrk3lsFCSzYiBD8daSI-_xN01pXe4Ci9OLbSlb5mzvDpPmU7q__Kw30FO9bVsgM8yjQKajW0x1ZowAiSZWo0URlmSff_GfFWG6z9-uWXvO2MlzNrICqPPOmP6MN7GeIbEkk1_h9z_OwnS7gSzp46SjQR"
+                  alt="App Screen Homepage"
+                  className="rounded-4xl shadow-2xl border-4 border-white/10"
+                  src="/images/mobile-homepage.PNG"
                 />
               </motion.div>
               {/* Phone Center */}
@@ -447,9 +459,9 @@ export default function Home() {
                 className="w-[320px] z-20"
               >
                 <img
-                  alt="Main App Screen"
+                  alt="App Screen Details"
                   className="rounded-[2.5rem] shadow-2xl ring-8 ring-primary-container"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBctZi04_yQ8Y8WRoQOrt_ipW-qMgyQRuCwgvsCpolXay6yAzw7eb4Db3Xcph8ZqedEWsdX_nrPkaBAf2bhV9kh_Qt_qqAPY4zDMKrIAGSCuEYX_rtPvlbC_ndMoC8Ciasm_X0ez366uBKUVqFS_GfGuwBml1bCjAr_J7HVoa7RyIR77Qsy1Z6FNP7kv53hXMDKWaFt0mWFnVoFOESFtCDX6Cbiz9LFkq8fNk7ukGdVVfdY92oX3SAL6TwlA7yOrl3WEuNbWZaEOerS"
+                  src="/images/mobile-chapter-details.PNG"
                 />
               </motion.div>
               {/* Phone Right */}
@@ -461,9 +473,9 @@ export default function Home() {
                 className="hidden md:block w-[280px] translate-y-12"
               >
                 <img
-                  alt="App Screen"
-                  className="rounded-[2rem] shadow-2xl"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAiuTuICbZgYufK3KNsGNpjodzC_A5YaN41jUROtZxgDtrUyZwJEi8m4-MhwE_G6A_XLsBgqr96sYwM9UpRJ5I3I580Uks07VJMZIdvYmfbRki9VoWtuJIs9WWBu6oIqlhPuzCjbPRC0zBzZst4h612_S9Ha0L8mnA61UOctcfY_hH3R9hckws73eNjbNl1tHlFbQetEIuFwQE1Tu2Lh9YPCgU6DOsdlWTVeffoZWruDniX6hKBCAW89UniwIq7fFMURHjLV1797-9"
+                  alt="App Screen Homepage"
+                  className="rounded-4xl shadow-2xl border-4 border-white/10"
+                  src="/images/mobile-homepage.PNG"
                 />
               </motion.div>
             </div>
@@ -550,7 +562,7 @@ export default function Home() {
               initial={{ scale: 0.95, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
-              className="bg-surface-container-highest rounded-[2rem] p-12 md:p-20 text-center relative overflow-hidden"
+              className="bg-surface-container-highest rounded-4xl p-12 md:p-20 text-center relative overflow-hidden"
             >
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                 <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')]"></div>
