@@ -72,16 +72,30 @@ body {
 }
 
 .hero-pattern {
-  background-image: radial-gradient(
-    circle at 2px 2px,
-    rgba(0, 105, 71, 0.03) 1px,
-    transparent 0
-  );
-  background-size: 32px 32px;
+  background-image:
+    radial-gradient(circle at 2px 2px, rgba(0, 105, 71, 0.045) 1px, transparent 0),
+    radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0, 105, 71, 0.04) 0%, transparent 70%);
+  background-size: 28px 28px, 100% 100%;
 }
 
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center font-medium transition-all duration-300 rounded-md select-none;
   }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better font rendering globally */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Floating animation used via framer-motion inline, but can be used in CSS too */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
 }
