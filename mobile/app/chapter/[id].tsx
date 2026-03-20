@@ -237,14 +237,14 @@ export default function ChapterDetailScreen() {
       // Finish surah haptic feedback
       const isLastVerseVisible = viewableItems.some(
         (entry) =>
-          entry.isViewable && entry.item.verseNumber === filteredVerses.length,
+          entry.isViewable && entry.item.verseNumber === verseCount,
       );
       if (isLastVerseVisible && !surahFinishedRef.current) {
         surahFinishedRef.current = true;
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     },
-    [persistReadingProgress, filteredVerses.length],
+    [persistReadingProgress, verseCount],
   );
 
   const handleCopyVerse = useCallback(
@@ -623,6 +623,7 @@ export default function ChapterDetailScreen() {
                       const newIndex = Math.min(filteredVerses.length - 1, p + 1);
                       if (
                         newIndex === filteredVerses.length - 1 &&
+                        filteredVerses[newIndex].verseNumber === verseCount &&
                         !surahFinishedRef.current
                       ) {
                         surahFinishedRef.current = true;
@@ -679,7 +680,29 @@ export default function ChapterDetailScreen() {
             chapterPages={chapterPages}
             onPageChange={(page) => {
               setActiveMushafPage(page);
-              const juz = chapterVerses.find((v) => v.page === page)?.juz ?? null;
+              const juz =
+                chapterVerses.find((v) => v.page === page)?.juz ?? null;
+
+              // Check for Sajda ayahs on this page
+              const pageVerses = chapterVerses.filter((v) => v.page === page);
+              pageVerses.forEach((v) => {
+                if (v.hasSajda && !seenSajdaRef.current.has(v.key)) {
+                  seenSajdaRef.current.add(v.key);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+              });
+
+              // Check if it's the last page
+              if (
+                page === chapterPages[chapterPages.length - 1] &&
+                !surahFinishedRef.current
+              ) {
+                surahFinishedRef.current = true;
+                void Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success,
+                );
+              }
+
               void saveLastReadProgress({
                 chapter: chapterNumber,
                 verse: 1, // Simplified for Mushaf mode

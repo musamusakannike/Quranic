@@ -148,7 +148,7 @@ export default function BookmarksScreen() {
 
                 <Pressable
                   onPress={async () => {
-                    void Haptics.selectionAsync();
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     await removeBookmark(bookmark.id);
                   }}
                   style={styles.removeBtn}
