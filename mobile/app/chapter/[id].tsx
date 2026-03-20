@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
   ScrollView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -81,6 +82,8 @@ export default function ChapterDetailScreen() {
     null,
   );
   const lastSaveAtRef = useRef(0);
+  const seenSajdaRef = useRef<Set<string>>(new Set());
+  const surahFinishedRef = useRef(false);
   const [shareVerseData, setShareVerseData] = useState<{
     text: string;
     translation: string | null;
@@ -216,13 +219,32 @@ export default function ChapterDetailScreen() {
     }: {
       viewableItems: { isViewable: boolean; item: VerseItem }[];
     }) => {
-      const firstVisible = viewableItems.find(
-        (entry) => entry.isViewable,
-      )?.item;
+      const firstVisible = viewableItems.find((entry) => entry.isViewable)?.item;
       if (!firstVisible) return;
+
       persistReadingProgress(firstVisible);
+
+      // Sajda ayah haptic feedback
+      viewableItems.forEach((entry) => {
+        if (entry.isViewable && entry.item.hasSajda) {
+          if (!seenSajdaRef.current.has(entry.item.key)) {
+            seenSajdaRef.current.add(entry.item.key);
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+        }
+      });
+
+      // Finish surah haptic feedback
+      const isLastVerseVisible = viewableItems.some(
+        (entry) =>
+          entry.isViewable && entry.item.verseNumber === filteredVerses.length,
+      );
+      if (isLastVerseVisible && !surahFinishedRef.current) {
+        surahFinishedRef.current = true;
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     },
-    [persistReadingProgress],
+    [persistReadingProgress, filteredVerses.length],
   );
 
   const handleCopyVerse = useCallback(
@@ -262,7 +284,7 @@ export default function ChapterDetailScreen() {
       const bookmarked = isBookmarked(verseId);
 
       const handleToggleBookmark = async () => {
-        void Haptics.selectionAsync();
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         if (bookmarked) {
           await removeBookmark(verseId);
         } else {
@@ -484,24 +506,28 @@ export default function ChapterDetailScreen() {
   const renderHeader = () => {
     return (
       <View style={styles.headerSection}>
-        <Pressable
-          onPress={() => {
-            void Haptics.selectionAsync();
-            router.back();
-          }}
-          style={[
-            styles.backButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: withOpacity(colors.surface, 0.92),
-            },
-          ]}
-        >
-          <ChevronLeft size={18} color={colors.textMain} />
-          <Text style={[styles.backButtonText, { color: colors.textMain }]}>
-            Chapters
-          </Text>
-        </Pressable>
+        {readingView === "list" ? (
+          <View style={{ height: 48 }} />
+        ) : (
+          <Pressable
+            onPress={() => {
+              void Haptics.selectionAsync();
+              router.back();
+            }}
+            style={[
+              styles.backButton,
+              {
+                borderColor: colors.border,
+                backgroundColor: withOpacity(colors.surface, 0.92),
+              },
+            ]}
+          >
+            <ChevronLeft size={18} color={colors.textMain} />
+            <Text style={[styles.backButtonText, { color: colors.textMain }]}>
+              Chapters
+            </Text>
+          </Pressable>
+        )}
 
         <View
           style={[
@@ -593,10 +619,19 @@ export default function ChapterDetailScreen() {
                 <Pressable
                   disabled={currentVerseIndex === filteredVerses.length - 1}
                   onPress={() => {
-                    void Haptics.selectionAsync();
-                    setCurrentVerseIndex((p) =>
-                      Math.min(filteredVerses.length - 1, p + 1),
-                    );
+                    setCurrentVerseIndex((p) => {
+                      const newIndex = Math.min(filteredVerses.length - 1, p + 1);
+                      if (
+                        newIndex === filteredVerses.length - 1 &&
+                        !surahFinishedRef.current
+                      ) {
+                        surahFinishedRef.current = true;
+                        void Haptics.notificationAsync(
+                          Haptics.NotificationFeedbackType.Success,
+                        );
+                      }
+                      return newIndex;
+                    });
                   }}
                   style={[
                     styles.backButton,
@@ -713,6 +748,37 @@ export default function ChapterDetailScreen() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
+
+      {readingView === "list" && (
+        <View
+          style={[
+            styles.stickyHeader,
+            {
+              backgroundColor: withOpacity(colors.background, 0.85),
+              borderBottomColor: withOpacity(colors.border, 0.5),
+            },
+          ]}
+        >
+          <Pressable
+            onPress={() => {
+              void Haptics.selectionAsync();
+              router.back();
+            }}
+            style={[
+              styles.backButton,
+              {
+                borderColor: colors.border,
+                backgroundColor: withOpacity(colors.surface, 0.92),
+              },
+            ]}
+          >
+            <ChevronLeft size={18} color={colors.textMain} />
+            <Text style={[styles.backButtonText, { color: colors.textMain }]}>
+              Chapters
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       {renderContent()}
 
@@ -898,5 +964,16 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontFamily: "SatoshiBold",
     fontSize: 14,
+  },
+  stickyHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "ios" ? 4 : 12,
+    paddingBottom: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
