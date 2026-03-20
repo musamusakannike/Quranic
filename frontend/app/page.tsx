@@ -318,15 +318,6 @@ export default function Home() {
               variants={staggerContainer}
               className="md:col-span-6 lg:col-span-7 z-10"
             >
-              <motion.div
-                variants={fadeInUp}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8"
-              >
-                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                <span className="text-primary text-xs font-bold tracking-widest uppercase">
-                  Experience Divine Guidance
-                </span>
-              </motion.div>
 
               <motion.h1
                 variants={fadeInUp}

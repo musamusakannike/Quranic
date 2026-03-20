@@ -51,7 +51,7 @@ To get the project running locally, follow these steps:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/quranic.git
+git clone https://github.com/musamusakannike/quranic.git
 cd Quranic
 ```
 
