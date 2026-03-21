@@ -4,7 +4,7 @@ import { PrayerWidget } from "../widgets/PrayerWidget";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getNextPrayer, getPrayerTimes, formatPrayerTime, WidgetData } from "./SolahHelper";
 import * as Location from "expo-location";
-import { PrayerWidgetAndroid } from "../widgets/AndroidPrayerWidget";
+import PrayerWidgetAndroid from "../widgets/AndroidPrayerWidget";
 
 export const updateWidget = async () => {
   try {
@@ -52,23 +52,26 @@ export const updateWidget = async () => {
   }
 };
 import * as TaskManager from "expo-task-manager";
-import * as BackgroundFetch from "expo-background-fetch";
+import * as BackgroundTask from "expo-background-task";
 
 const WIDGET_UPDATE_TASK = "WIDGET_UPDATE_TASK";
 
 TaskManager.defineTask(WIDGET_UPDATE_TASK, async () => {
-  await updateWidget();
-  return BackgroundFetch.BackgroundFetchResult.NewData;
+  try {
+    await updateWidget();
+    return BackgroundTask.BackgroundTaskResult.Success;
+  } catch (error) {
+    console.error("Background task failed:", error);
+    return BackgroundTask.BackgroundTaskResult.Failed;
+  }
 });
 
 export const registerWidgetUpdateTask = async () => {
   try {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(WIDGET_UPDATE_TASK);
     if (!isRegistered) {
-      await BackgroundFetch.registerTaskAsync(WIDGET_UPDATE_TASK, {
-        minimumInterval: 15 * 60, // 15 minutes
-        stopOnTerminate: false,
-        startOnBoot: true,
+      await BackgroundTask.registerTaskAsync(WIDGET_UPDATE_TASK, {
+        minimumInterval: 15, // 15 minutes
       });
     }
     await updateWidget(); // Initial update
