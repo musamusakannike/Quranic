@@ -323,13 +323,9 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     ],
   );
 
-  if (!isLoaded) {
-    return null;
-  }
-
   return (
     <AppSettingsContext.Provider value={contextValue}>
-      {children}
+      {isLoaded ? children : null}
     </AppSettingsContext.Provider>
   );
 };

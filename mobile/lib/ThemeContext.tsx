@@ -66,15 +66,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     ...(isDark ? COLORS.dark : COLORS.light),
   } as typeof COLORS.dark & typeof COLORS;
 
-  if (!isReady) {
-    return null; // Don't render children until we know the theme to avoid flicker
-  }
-
   return (
     <ThemeContext.Provider
       value={{ theme, resolvedTheme, colors, setTheme, isDark }}
     >
-      {children}
+      {isReady ? children : null}
     </ThemeContext.Provider>
   );
 };

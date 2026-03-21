@@ -35,10 +35,6 @@ export default function RootLayout() {
     }
   }, [error]);
 
-  if (!loaded && !error) {
-    return null;
-  }
-
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -47,8 +43,12 @@ export default function RootLayout() {
             <BookmarksProvider>
               <AppSettingsProvider>
                 <View style={{ flex: 1 }}>
-                  <Stack screenOptions={{ headerShown: false }} />
-                  <MiniPlayer />
+                  {!loaded && !error ? null : (
+                    <>
+                      <Stack screenOptions={{ headerShown: false }} />
+                      <MiniPlayer />
+                    </>
+                  )}
                 </View>
               </AppSettingsProvider>
             </BookmarksProvider>
