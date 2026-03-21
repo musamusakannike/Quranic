@@ -1,4 +1,5 @@
 import React from "react";
+import { Platform } from "react-native";
 import { PrayerWidget } from "../widgets/PrayerWidget";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getNextPrayer, getPrayerTimes, formatPrayerTime, WidgetData } from "./SolahHelper";
@@ -27,20 +28,24 @@ export const updateWidget = async () => {
       isha: formatPrayerTime(times.isha),
     };
 
-    // Update iOS Widget Snapshot
-    PrayerWidget.updateSnapshot(data);
+    if (Platform.OS === "ios") {
+      // Update iOS Widget Snapshot
+      PrayerWidget.updateSnapshot(data);
+    }
 
-    // Update Android Widget
-    requestWidgetUpdate({
-      widgetName: "PrayerWidget",
-      renderWidget: (props) => (
-        <PrayerWidgetAndroid 
-          data={data} 
-          widgetWidth={props.width} 
-          widgetHeight={props.height} 
-        />
-      ),
-    });
+    if (Platform.OS === "android") {
+      // Update Android Widget
+      requestWidgetUpdate({
+        widgetName: "PrayerWidget",
+        renderWidget: (props) => (
+          <PrayerWidgetAndroid 
+            data={data} 
+            widgetWidth={props.width} 
+            widgetHeight={props.height} 
+          />
+        ),
+      });
+    }
     
   } catch (err) {
     console.error("Failed to update widget:", err);

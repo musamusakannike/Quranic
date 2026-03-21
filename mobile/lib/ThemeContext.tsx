@@ -57,8 +57,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const resolvedTheme =
-    theme === "system" ? systemColorScheme || "light" : theme;
+  const resolvedTheme = (theme === "system"
+    ? systemColorScheme || "light"
+    : theme) as "light" | "dark";
   const isDark = resolvedTheme === "dark";
   // Include common colors from COLORS as well, by spreading them
   const colors = {
@@ -70,7 +71,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     <ThemeContext.Provider
       value={{ theme, resolvedTheme, colors, setTheme, isDark }}
     >
-      {isReady ? children : null}
+      {children}
     </ThemeContext.Provider>
   );
 };
