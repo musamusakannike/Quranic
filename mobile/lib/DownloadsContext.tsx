@@ -9,6 +9,8 @@ import * as FileSystem from "expo-file-system/legacy";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useToast } from "./ToastContext";
 import * as Network from "expo-network";
+import { Platform } from "react-native";
+
 
 export interface DownloadedAudio {
   id: string;
@@ -53,7 +55,9 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const init = async () => {
+    if (Platform.OS === "web") return;
     try {
+
       // Create directory if it doesn't exist
       const dirInfo = await FileSystem.getInfoAsync(DOWNLOAD_DIR);
       if (!dirInfo.exists) {
@@ -107,7 +111,12 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
   const downloadAudio = async (
     item: Omit<DownloadedAudio, "id" | "localUri" | "downloadDate">,
   ) => {
+    if (Platform.OS === "web") {
+      showToast("Downloads are not supported on web", "info");
+      return;
+    }
     const isOnline = await checkOnlineBeforeFetch();
+
     if (!isOnline) return;
 
     const id = `${item.reciterId}-${item.surahId}`;
@@ -169,7 +178,9 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const deleteAudio = async (id: string) => {
+    if (Platform.OS === "web") return;
     const item = downloads.find((d) => d.id === id);
+
     if (!item) return;
 
     try {
