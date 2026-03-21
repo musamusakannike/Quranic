@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, FlatList } from "react-native";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, FlatList, ImageBackground, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Search, Mic, ArrowLeft, Download } from "lucide-react-native";
+import { Search, Mic, ArrowLeft, Download, Filter, X, Headphones } from "lucide-react-native";
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -111,6 +113,7 @@ export default function AudioRecitersScreen() {
   const { colors, isDark } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [reciters, setReciters] = useState<Reciter[]>([]);
   const [riwayat, setRiwayat] = useState<Riwayah[]>([]);
@@ -119,6 +122,29 @@ export default function AudioRecitersScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRiwayahId, setSelectedRiwayahId] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["60%"], []);
+
+  const handleOpenFilters = useCallback(() => {
+    void Haptics.selectionAsync();
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  const handleCloseFilters = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    [],
+  );
 
   const moshafTypes = useMemo(() => {
     return [
@@ -268,15 +294,18 @@ export default function AudioRecitersScreen() {
           style={({ pressed }) => [
             styles.headerButton,
             {
-              opacity: pressed ? 0.6 : 1,
               backgroundColor: isDark
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.05)",
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(0,0,0,0.06)",
+              opacity: pressed ? 0.7 : 1,
             },
           ]}
         >
-          <ArrowLeft color={colors.textMain} size={24} />
+          <ArrowLeft color={colors.textMain} size={22} />
         </Pressable>
+
+        <Text style={[styles.headerTitleText, { color: colors.textMain }]}>Browse Reciters</Text>
+
         <Pressable
           onPress={() => {
             void Haptics.selectionAsync();
@@ -285,14 +314,14 @@ export default function AudioRecitersScreen() {
           style={({ pressed }) => [
             styles.headerButton,
             {
-              opacity: pressed ? 0.6 : 1,
               backgroundColor: isDark
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.05)",
+                ? "rgba(255,255,255,0.08)"
+                : "rgba(0,0,0,0.06)",
+              opacity: pressed ? 0.7 : 1,
             },
           ]}
         >
-          <Download color={colors.textMain} size={20} />
+          <Download color={colors.textMain} size={18} />
         </Pressable>
       </View>
 
@@ -309,142 +338,78 @@ export default function AudioRecitersScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View style={styles.headerWrapper}>
-              <LinearGradient
-                colors={[
-                  colors.surface,
-                  withOpacity(colors.primary, isDark ? 0.16 : 0.08),
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[
-                  styles.heroCard,
-                  {
-                    borderColor: withOpacity(colors.primary, 0.2),
-                  },
-                ]}
+              <ImageBackground
+                source={require("../../assets/images/quick-actions/audio.webp")}
+                style={styles.heroCardContainer}
+                imageStyle={styles.heroCardImage}
               >
-                <Text style={[styles.heroTitle, { color: colors.textMain }]}>
-                  Reciters
-                </Text>
-                <Text
-                  style={[styles.heroSubtitle, { color: colors.textMuted }]}
+                <LinearGradient
+                  colors={[
+                    withOpacity("#000000", isDark ? 0.45 : 0.5),
+                    withOpacity("#000000", isDark ? 0.65 : 0.7),
+                  ]}
+                  style={styles.heroOverlay}
                 >
-                  Listen to the Holy Quran recited by your favorite
-                  world-renowned Qaris.
-                </Text>
-              </LinearGradient>
+                  <View style={styles.heroHeaderRow}>
+                    <View style={styles.heroIconBadge}>
+                      <Headphones size={22} color="#fff" />
+                    </View>
+                    <Text style={[styles.heroTitle, { color: "#FFFFFF" }]}>
+                      Reciters
+                    </Text>
+                  </View>
+                  <Text
+                    style={[styles.heroSubtitle, { color: "rgba(255,255,255,0.85)" }]}
+                  >
+                    Listen to the Holy Quran recited by world-renowned Qaris.
+                  </Text>
+                </LinearGradient>
+              </ImageBackground>
 
-              <View
-                style={[
-                  styles.searchContainer,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Search size={18} color={colors.textMuted} strokeWidth={2.5} />
-                <TextInput
-                  style={[styles.searchInput, { color: colors.textMain }]}
-                  placeholder="Search Reciters..."
-                  placeholderTextColor={colors.textMuted}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterLabel, { color: colors.textMain }]}>
-                  Riwayat (Narration)
-                </Text>
-                <FlatList
-                  data={[{ id: null as unknown as number, name: "All" }, ...riwayat]}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  renderItem={({ item }) => (
-                    <Pressable
-                      onPress={() => {
-                        void Haptics.selectionAsync();
-                        setSelectedRiwayahId(item.id);
-                      }}
-                      style={[
-                        styles.filterChip,
-                        {
-                          backgroundColor:
-                            selectedRiwayahId === item.id
-                              ? colors.primary
-                              : colors.surface,
-                          borderColor:
-                            selectedRiwayahId === item.id
-                              ? colors.primary
-                              : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          {
-                            color:
-                              selectedRiwayahId === item.id
-                                ? "#fff"
-                                : colors.textMain,
-                          },
-                        ]}
-                      >
-                        {item.name}
-                      </Text>
+              <View style={styles.searchRow}>
+                <View
+                  style={[
+                    styles.searchContainer,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Search size={18} color={colors.textMuted} strokeWidth={2.5} />
+                  <TextInput
+                    style={[styles.searchInput, { color: colors.textMain }]}
+                    placeholder="Search Reciters..."
+                    placeholderTextColor={colors.textMuted}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                  {searchQuery.length > 0 && (
+                    <Pressable onPress={() => setSearchQuery("")}>
+                      <X size={16} color={colors.textMuted} />
                     </Pressable>
                   )}
-                  ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-                  contentContainerStyle={{ paddingRight: 16 }}
-                />
-              </View>
+                </View>
 
-              <View style={styles.filterSection}>
-                <Text style={[styles.filterLabel, { color: colors.textMain }]}>
-                  Moshaf (Style)
-                </Text>
-                <FlatList
-                  data={[{ id: null as unknown as string, name: "All" }, ...moshafTypes]}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  renderItem={({ item }) => (
-                    <Pressable
-                      onPress={() => {
-                        void Haptics.selectionAsync();
-                        setSelectedType(item.id);
-                      }}
-                      style={[
-                        styles.filterChip,
-                        {
-                          backgroundColor:
-                            selectedType === item.id
-                              ? colors.primary
-                              : colors.surface,
-                          borderColor:
-                            selectedType === item.id
-                              ? colors.primary
-                              : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          {
-                            color:
-                              selectedType === item.id ? "#fff" : colors.textMain,
-                          },
-                        ]}
-                      >
-                        {item.name}
-                      </Text>
-                    </Pressable>
+                <Pressable
+                  onPress={handleOpenFilters}
+                  style={[
+                    styles.filterToggleButton,
+                    {
+                      backgroundColor: (selectedRiwayahId || selectedType) ? colors.primary : colors.surface,
+                      borderColor: (selectedRiwayahId || selectedType) ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Filter
+                    size={20}
+                    color={(selectedRiwayahId || selectedType) ? "#fff" : colors.textMain}
+                    strokeWidth={2}
+                  />
+                  {(selectedRiwayahId || selectedType) && (
+                    <View style={styles.filterBadge} />
                   )}
-                  ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-                  contentContainerStyle={{ paddingRight: 16 }}
-                />
+                </Pressable>
               </View>
 
               <Text style={[styles.resultCount, { color: colors.textMuted }]}>
@@ -455,6 +420,130 @@ export default function AudioRecitersScreen() {
           }
         />
       )}
+
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: colors.surface }}
+        handleIndicatorStyle={{ backgroundColor: colors.border }}
+      >
+        <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={[styles.sheetTitle, { color: colors.textMain }]}>Filters</Text>
+            {(selectedRiwayahId || selectedType) && (
+              <Pressable
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setSelectedRiwayahId(null);
+                  setSelectedType(null);
+                }}
+              >
+                <Text style={{ color: colors.primary, fontFamily: "SatoshiBold" }}>Reset</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={[styles.filterLabel, { color: colors.textMain }]}>
+              Riwayat (Narration)
+            </Text>
+            <View style={styles.chipGrid}>
+              <Pressable
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setSelectedRiwayahId(null);
+                }}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: selectedRiwayahId === null ? colors.primary : colors.background,
+                    borderColor: selectedRiwayahId === null ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.filterChipText, { color: selectedRiwayahId === null ? "#fff" : colors.textMain }]}>All</Text>
+              </Pressable>
+              {riwayat.map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setSelectedRiwayahId(item.id);
+                  }}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selectedRiwayahId === item.id ? colors.primary : colors.background,
+                      borderColor: selectedRiwayahId === item.id ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      { color: selectedRiwayahId === item.id ? "#fff" : colors.textMain },
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={[styles.filterLabel, { color: colors.textMain }]}>
+              Moshaf (Style)
+            </Text>
+            <View style={styles.chipGrid}>
+              <Pressable
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setSelectedType(null);
+                }}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: selectedType === null ? colors.primary : colors.background,
+                    borderColor: selectedType === null ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.filterChipText, { color: selectedType === null ? "#fff" : colors.textMain }]}>All</Text>
+              </Pressable>
+              {moshafTypes.map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setSelectedType(item.id);
+                  }}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selectedType === item.id ? colors.primary : colors.background,
+                      borderColor: selectedType === item.id ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      { color: selectedType === item.id ? "#fff" : colors.textMain },
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={{ height: 40 }} />
+        </BottomSheetScrollView>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 }
@@ -467,7 +556,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 12,
   },
   headerButton: {
     width: 44,
@@ -476,21 +565,51 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  headerTitleText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 18,
+    letterSpacing: -0.2,
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerWrapper: {
     marginBottom: 6,
+    gap: 18,
+  },
+  heroCardContainer: {
+    height: 180,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  heroCardImage: {
+    borderRadius: 24,
+  },
+  heroOverlay: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "flex-end",
+    gap: 12,
+  },
+  heroHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
-  heroCard: {
-    borderRadius: 22,
+  heroIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    padding: 18,
-    gap: 8,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   heroTitle: {
     fontFamily: "SatoshiBold",
-    fontSize: 30,
-    letterSpacing: -0.3,
+    fontSize: 28,
+    letterSpacing: -0.5,
   },
   heroSubtitle: {
     fontFamily: "Satoshi",
@@ -498,13 +617,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   searchContainer: {
+    flex: 1,
     borderWidth: 1,
-    borderRadius: 14,
-    minHeight: 52,
-    paddingHorizontal: 14,
+    borderRadius: 16,
+    height: 54,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
@@ -515,19 +635,20 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiMedium",
     fontSize: 13,
     marginBottom: 2,
+    marginLeft: 4,
   },
   reciterCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 16,
+    padding: 18,
+    borderRadius: 20,
     borderWidth: 1,
     gap: 16,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -544,21 +665,68 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   filterSection: {
-    gap: 10,
+    gap: 12,
+    marginBottom: 16,
   },
   filterLabel: {
     fontFamily: "SatoshiBold",
-    fontSize: 15,
-    marginLeft: 2,
+    fontSize: 16,
+    marginBottom: 4,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
+    minWidth: 60,
+    alignItems: "center",
   },
   filterChipText: {
     fontFamily: "SatoshiMedium",
     fontSize: 13,
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  filterToggleButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    position: "relative",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,0,0,0.1)",
+  },
+  bottomSheetContent: {
+    padding: 24,
+    paddingTop: 8,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  sheetTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 22,
+  },
+  chipGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
   },
 });

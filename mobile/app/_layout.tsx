@@ -13,6 +13,9 @@ import MiniPlayer from "../components/MiniPlayer";
 import { View } from "react-native";
 import { registerWidgetUpdateTask } from "../lib/WidgetManager";
 
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
 
@@ -36,25 +39,29 @@ export default function RootLayout() {
   }, [error]);
 
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <DownloadsProvider>
-          <AudioProvider>
-            <BookmarksProvider>
-              <AppSettingsProvider>
-                <View style={{ flex: 1 }}>
-                  {!loaded && !error ? null : (
-                    <>
-                      <Stack screenOptions={{ headerShown: false }} />
-                      <MiniPlayer />
-                    </>
-                  )}
-                </View>
-              </AppSettingsProvider>
-            </BookmarksProvider>
-          </AudioProvider>
-        </DownloadsProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <DownloadsProvider>
+              <AudioProvider>
+                <BookmarksProvider>
+                  <AppSettingsProvider>
+                    <View style={{ flex: 1 }}>
+                      {!loaded && !error ? null : (
+                        <>
+                          <Stack screenOptions={{ headerShown: false }} />
+                          <MiniPlayer />
+                        </>
+                      )}
+                    </View>
+                  </AppSettingsProvider>
+                </BookmarksProvider>
+              </AudioProvider>
+            </DownloadsProvider>
+          </ToastProvider>
+        </ThemeProvider>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
