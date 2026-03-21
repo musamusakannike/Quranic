@@ -96,8 +96,8 @@
               "description": "Prayer times and countdown",
               "src": "./widgets/AndroidPrayerWidget.tsx",
               "updatePeriodMillis": 900000,
-              "minWidth": 60,
-              "minHeight": 60,
+              "minWidth": "60dp",
+              "minHeight": "60dp",
               "targetCellWidth": 2,
               "targetCellHeight": 2
             }
