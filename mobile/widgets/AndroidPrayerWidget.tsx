@@ -5,7 +5,7 @@ import {
 } from "react-native-android-widget";
 import { WidgetData } from "../lib/SolahHelper";
 
-export function PrayerWidgetAndroid({
+export default function PrayerWidgetAndroid({
   data,
   widgetWidth,
   widgetHeight,
