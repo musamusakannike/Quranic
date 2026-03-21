@@ -11,18 +11,21 @@ import {
   ImageBackground,
 } from "react-native";
 import * as Location from "expo-location";
-import { Coordinates, CalculationMethod, PrayerTimes } from "adhan";
-import { useTheme } from "../lib/ThemeContext";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
 import { ChevronLeft, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-type PrayerKey = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
-type PrayerListKey = PrayerKey | "sunrise";
+import { useTheme } from "../lib/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  getPrayerTimes,
+  getNextPrayer,
+  formatPrayerTime,
+  PrayerKey,
+  PrayerListKey,
+} from "../lib/SolahHelper";
 
 type ReminderItem = {
   enabled: boolean;
@@ -31,6 +34,7 @@ type ReminderItem = {
 
 type PrayerReminderMap = Record<PrayerKey, ReminderItem>;
 type PrayerTimesMap = Record<PrayerListKey, Date>;
+
 
 const REMINDER_STORAGE_KEY = "@solah_daily_reminders_v1";
 
@@ -169,40 +173,12 @@ export default function SolahTimesScreen() {
 
       try {
         let location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
 
-        const coordinates = new Coordinates(
-          location.coords.latitude,
-          location.coords.longitude,
-        );
-        const date = new Date();
-        const params = CalculationMethod.MuslimWorldLeague();
+        const times = getPrayerTimes(latitude, longitude);
+        setPrayerTimes(times);
 
-        const times = new PrayerTimes(coordinates, date, params);
-
-        setPrayerTimes({
-          fajr: times.fajr,
-          sunrise: times.sunrise,
-          dhuhr: times.dhuhr,
-          asr: times.asr,
-          maghrib: times.maghrib,
-          isha: times.isha,
-        });
-
-        const now = new Date();
-        let nextP = [
-          { key: "fajr" as const, label: "Fajr", time: times.fajr },
-          { key: "dhuhr" as const, label: "Dhuhr", time: times.dhuhr },
-          { key: "asr" as const, label: "Asr", time: times.asr },
-          { key: "maghrib" as const, label: "Maghrib", time: times.maghrib },
-          { key: "isha" as const, label: "Isha", time: times.isha },
-        ].find((p) => p.time > now);
-
-        if (!nextP) {
-          const tomorrow = new Date(now);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const tomorrowTimes = new PrayerTimes(coordinates, tomorrow, params);
-          nextP = { key: "fajr", label: "Fajr", time: tomorrowTimes.fajr };
-        }
+        const nextP = getNextPrayer(latitude, longitude);
         setNextPrayer(nextP);
       } catch (err) {
         setErrorMsg("Could not fetch location.");
@@ -406,7 +382,7 @@ export default function SolahTimesScreen() {
                         {row.label}
                       </Text>
                       <Text style={[styles.prayerTime, { color: colors.textMuted }]}> 
-                        {formatTime(prayerTimes[row.key])}
+                        {formatPrayerTime(prayerTimes[row.key])}
                       </Text>
                     </View>
 

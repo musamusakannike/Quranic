@@ -11,6 +11,7 @@ import { ToastProvider } from "../lib/ToastContext";
 import { DownloadsProvider } from "../lib/DownloadsContext";
 import MiniPlayer from "../components/MiniPlayer";
 import { View } from "react-native";
+import { registerWidgetUpdateTask } from "../lib/WidgetManager";
 
 // Prevent auto hiding splash screen
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,10 @@ export default function RootLayout() {
     SatoshiMedium: require("../assets/fonts/Satoshi-Medium.ttf"),
     SatoshiBold: require("../assets/fonts/Satoshi-Bold.ttf"),
   });
+
+  useEffect(() => {
+    void registerWidgetUpdateTask();
+  }, []);
 
   useEffect(() => {
     // Only handle error here, we'll hide splash screen in a better place or app index

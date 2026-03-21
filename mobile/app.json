@@ -72,6 +72,33 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Quranic to use your location."
         }
+      ],
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "PrayerWidget",
+              "displayName": "Prayer Times",
+              "description": "View next prayer time and countdown.",
+              "supportedFamilies": ["systemSmall", "systemMedium"]
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "PrayerWidget",
+              "label": "Prayer Times",
+              "description": "Prayer times and countdown",
+              "src": "./widgets/AndroidPrayerWidget.tsx",
+              "updatePeriodMillis": 900000
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
