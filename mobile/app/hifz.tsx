@@ -86,7 +86,7 @@ const STATUS_BORDER = {
 
 // ─── Loop Mode Tab ───────────────────────────────────────────────────────────
 function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
-  const { loopConfig, setLoopConfig } = useHifz();
+  const { loopConfig, setLoopConfig, getVerseStatus, setVerseStatus } = useHifz();
   const { playTrack, setQueue, clearQueue } = useAudio();
   const { showToast } = useToast();
   const router = useRouter();
@@ -159,6 +159,13 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     
     setLoopConfig(config);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    // 1.5. Mark verses as 'learning' if not already memorized
+    for (let v = sv; v <= ev; v++) {
+      if (getVerseStatus(selectedChapter, v) === "not_started") {
+        void setVerseStatus(selectedChapter, v, "learning");
+      }
+    }
 
     // 2. Build the audio queue
     const loopTracks: Track[] = [];
@@ -448,10 +455,17 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
     });
   };
 
-  const markMemorized = async (verseNum: number) => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const updateStatus = async (verseNum: number) => {
+    void Haptics.selectionAsync();
     const current = getVerseStatus(selectedChapter, verseNum);
-    const next: MemorizationStatus = current === "memorized" ? "not_started" : "memorized";
+    let next: MemorizationStatus = "not_started";
+    if (current === "not_started") next = "learning";
+    else if (current === "learning") next = "memorized";
+    else next = "not_started";
+
+    if (next === "memorized") {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     await setVerseStatus(selectedChapter, verseNum, next);
   };
 
@@ -533,13 +547,15 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
                   <Text style={[revealStyles.verseBadgeText, { color: colors.primary }]}>{verseNum}</Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => void markMemorized(verseNum)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  onPress={() => void updateStatus(verseNum)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   {status === "memorized" ? (
-                    <CheckCircle2 size={20} color={colors.success} />
+                    <CheckCircle2 size={22} color={colors.success} fill={withOpacity(colors.success, 0.15)} />
+                  ) : status === "learning" ? (
+                    <Brain size={20} color={colors.warning} />
                   ) : (
-                    <Circle size={20} color={colors.textMuted} strokeWidth={1.5} />
+                    <Circle size={22} color={colors.textMuted} strokeWidth={1.5} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -623,6 +639,25 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
 function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { getChapterStats, resetChapter } = useHifz();
   const [viewMode, setViewMode] = useState<"surah" | "juz">("surah");
+  const [infoSheet, setInfoSheet] = useState<{ type: "memorized" | "learning" } | null>(null);
+
+  const sheetAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const openInfo = (type: "memorized" | "learning") => {
+    setInfoSheet({ type });
+    Animated.parallel([
+      Animated.spring(sheetAnim, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 200 }),
+      Animated.timing(backdropAnim, { toValue: 1, duration: 240, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const closeInfo = () => {
+    Animated.parallel([
+      Animated.timing(sheetAnim, { toValue: SCREEN_HEIGHT, duration: 260, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
+    ]).start(() => setInfoSheet(null));
+  };
 
   const surahStats = useMemo(
     () =>
@@ -669,6 +704,7 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
   );
 
   return (
+    <>
     <ScrollView
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 60 }]}
       showsVerticalScrollIndicator={false}
@@ -676,29 +712,33 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
       <View style={{ gap: 16 }}>
       {/* Overall stats cards */}
       <View style={{ flexDirection: "row", gap: 10 }}>
-        <LinearGradient
-          colors={[withOpacity(colors.success, isDark ? 0.28 : 0.12), withOpacity(colors.success, isDark ? 0.14 : 0.06)]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[progressStyles.statCard, { borderColor: withOpacity(colors.success, 0.3) }]}
-        >
-          <CheckCircle2 size={20} color={colors.success} />
-          <Text style={[progressStyles.statValue, { color: colors.success }]}>{totalMemorized}</Text>
-          <Text style={[progressStyles.statLabel, { color: withOpacity(colors.success, 0.8) }]}>Memorized</Text>
-          <Text style={[progressStyles.statPct, { color: withOpacity(colors.success, 0.65) }]}>{overallPct}% of Quran</Text>
-        </LinearGradient>
+        <Pressable style={{ flex: 1 }} onPress={() => openInfo("memorized")}>
+          <LinearGradient
+            colors={[withOpacity(colors.success, isDark ? 0.28 : 0.12), withOpacity(colors.success, isDark ? 0.14 : 0.06)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[progressStyles.statCard, { borderColor: withOpacity(colors.success, 0.3) }]}
+          >
+            <CheckCircle2 size={20} color={colors.success} />
+            <Text style={[progressStyles.statValue, { color: colors.success }]}>{totalMemorized}</Text>
+            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.success, 0.8) }]}>Memorized</Text>
+            <Text style={[progressStyles.statPct, { color: withOpacity(colors.success, 0.65) }]}>{overallPct}% of Quran</Text>
+          </LinearGradient>
+        </Pressable>
 
-        <LinearGradient
-          colors={[withOpacity(colors.warning, isDark ? 0.28 : 0.12), withOpacity(colors.warning, isDark ? 0.14 : 0.06)]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[progressStyles.statCard, { borderColor: withOpacity(colors.warning, 0.3) }]}
-        >
-          <Brain size={20} color={colors.warning} />
-          <Text style={[progressStyles.statValue, { color: colors.warning }]}>{totalLearning}</Text>
-          <Text style={[progressStyles.statLabel, { color: withOpacity(colors.warning, 0.8) }]}>Learning</Text>
-          <Text style={[progressStyles.statPct, { color: withOpacity(colors.warning, 0.65) }]}>{learningPct}% of Quran</Text>
-        </LinearGradient>
+        <Pressable style={{ flex: 1 }} onPress={() => openInfo("learning")}>
+          <LinearGradient
+            colors={[withOpacity(colors.warning, isDark ? 0.28 : 0.12), withOpacity(colors.warning, isDark ? 0.14 : 0.06)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[progressStyles.statCard, { borderColor: withOpacity(colors.warning, 0.3) }]}
+          >
+            <Brain size={20} color={colors.warning} />
+            <Text style={[progressStyles.statValue, { color: colors.warning }]}>{totalLearning}</Text>
+            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.warning, 0.8) }]}>Learning</Text>
+            <Text style={[progressStyles.statPct, { color: withOpacity(colors.warning, 0.65) }]}>{learningPct}% of Quran</Text>
+          </LinearGradient>
+        </Pressable>
       </View>
 
       {/* Overall Progress Bar */}
@@ -776,8 +816,108 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
           })}
         </View>
       )}
-    </View>
-    </ScrollView>
+      </View>
+      </ScrollView>
+
+      {/* Info Bottom Sheet */}
+      {infoSheet && (
+        <Modal transparent visible animationType="none" onRequestClose={closeInfo} statusBarTranslucent>
+          <TouchableWithoutFeedback onPress={closeInfo}>
+            <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]} />
+          </TouchableWithoutFeedback>
+          <Animated.View
+            style={[
+              loopStyles.pickerSheet,
+              { backgroundColor: colors.background, transform: [{ translateY: sheetAnim }], paddingBottom: insets.bottom + 20 },
+            ]}
+          >
+            <View style={loopStyles.sheetHandleWrap}>
+              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+            </View>
+            <View style={{ paddingHorizontal: 24, paddingBottom: 10 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <View style={{ 
+                  width: 48, 
+                  height: 48, 
+                  borderRadius: 24, 
+                  backgroundColor: withOpacity(infoSheet?.type === "memorized" ? colors.success : colors.warning, 0.15),
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  {infoSheet?.type === "memorized" ? (
+                    <CheckCircle2 size={24} color={colors.success} />
+                  ) : (
+                    <Brain size={24} color={colors.warning} />
+                  )}
+                </View>
+                <View>
+                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 20, color: colors.textMain }}>
+                    {infoSheet?.type === "memorized" ? "Memorized Verses" : "Learning Verses"}
+                  </Text>
+                  <Text style={{ fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
+                    How your progress is tracked
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ gap: 20, marginTop: 8 }}>
+                <View style={{ gap: 6 }}>
+                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>What this means</Text>
+                  <Text style={{ fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted, lineHeight: 20 }}>
+                    {infoSheet?.type === "memorized" 
+                      ? "These are the verses you have confidently mastered. You've marked them as memorized in the Hide & Reveal tab."
+                      : "These are verses you are currently working on. They are either added automatically when you start a Loop Session or manually marked in the Hide & Reveal tab."}
+                  </Text>
+                </View>
+
+                <View style={{ gap: 12 }}>
+                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>How to increase this</Text>
+                  
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: withOpacity(colors.primary, 0.1), alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ fontSize: 12, color: colors.primary, fontFamily: "SatoshiBold" }}>1</Text>
+                    </View>
+                    <Text style={{ flex: 1, fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
+                      {infoSheet?.type === "memorized" 
+                        ? "Go to the Hide & Reveal tab and tap the circle next to a verse until it turns into a green checkmark."
+                        : "Start a new Loop Session. Any verses in your selected range will be marked as 'Learning' automatically."}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: withOpacity(colors.primary, 0.1), alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ fontSize: 12, color: colors.primary, fontFamily: "SatoshiBold" }}>2</Text>
+                    </View>
+                    <Text style={{ flex: 1, fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
+                      {infoSheet?.type === "memorized" 
+                        ? "Once you can recite a 'Learning' verse perfectly without looking, promote it to 'Memorized'."
+                        : "You can also manually cycle a verse status to 'Learning' by tapping the circle indicator in the Hide & Reveal tab."}
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  onPress={closeInfo}
+                  style={{ 
+                    marginTop: 12,
+                    backgroundColor: colors.primary, 
+                    paddingVertical: 14, 
+                    borderRadius: 16, 
+                    alignItems: "center",
+                    shadowColor: colors.primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontFamily: "SatoshiBold", fontSize: 16 }}>Got it</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </Modal>
+      )}
+    </>
   );
 }
 
