@@ -49,7 +49,8 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   // To handle auto-play safely after track switch without spamming
   const previousUrlRef = useRef<string | null>(null);
-  const hasFinishedRef = useRef<boolean>(false);
+  const lastFinishedIdRef = useRef<string | null>(null);
+  const hasStartedPlayingRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Configure background audio mode
@@ -62,11 +63,9 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (currentTrack) {
-      // Logic to trigger replace and play when track changes
+      console.log(`[AudioContext] Track changed to: ${currentTrack.surahName} (ID: ${currentTrack.id})`);
+      hasStartedPlayingRef.current = false; // Reset lock for new track
       player.replace(currentTrack.audioUrl);
-      hasFinishedRef.current = false;
-      // Some players auto-play on replace if already playing, 
-      // but explicit play is safer
       player.play();
     } else {
       player.pause();
@@ -74,16 +73,27 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, [currentTrack?.id]);
 
   useEffect(() => {
+    // If the track is playing, mark it as started. This prevents premature transitions.
+    if (status.playing) {
+      hasStartedPlayingRef.current = true;
+    }
+
     // Auto-advance when finished
-    if (status.didJustFinish && !hasFinishedRef.current) {
-      hasFinishedRef.current = true;
+    if (status.didJustFinish && currentTrack && lastFinishedIdRef.current !== currentTrack.id && hasStartedPlayingRef.current) {
+      console.log(`[AudioContext] Track finished: ${currentTrack.surahName} (ID: ${currentTrack.id})`);
+      lastFinishedIdRef.current = currentTrack.id;
+      hasStartedPlayingRef.current = false; // Lock until next track starts
+
       if (queue.length > 0) {
         const nextTrack = queue[0];
+        console.log(`[AudioContext] Advancing to next in queue: ${nextTrack.surahName}`);
         setQueue((q) => q.slice(1));
         setCurrentTrack(nextTrack);
+      } else {
+        console.log(`[AudioContext] Queue empty, playback finished.`);
       }
     }
-  }, [status.didJustFinish, queue]);
+  }, [status.didJustFinish, status.playing, currentTrack, queue]);
 
   const playNext = (track: Track) => {
     setQueue((prev) => [track, ...prev]);
@@ -93,7 +103,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     if (queue.length > 0) {
       const nextTrack = queue[0];
       setQueue((q) => q.slice(1));
-      hasFinishedRef.current = true;
+      lastFinishedIdRef.current = null; // Prepare for new track
       setCurrentTrack(nextTrack);
       previousUrlRef.current = null;
     }
@@ -118,8 +128,8 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const playTrack = (track: Track) => {
-    // If playing the same track, we still want to re-trigger loading/play if it's a manual play call
-    // This allows replaying the same verse in loop mode
+    console.log(`[AudioContext] playTrack called for: ${track.surahName}`);
+    lastFinishedIdRef.current = null; // Reset to allow this track to finish
     if (currentTrack?.audioUrl === track.audioUrl) {
       player.seekTo(0);
       player.play();

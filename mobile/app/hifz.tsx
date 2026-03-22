@@ -162,13 +162,14 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 
     // 2. Build the audio queue
     const loopTracks: Track[] = [];
+    const timestamp = Date.now();
     for (let verseNum = sv; verseNum <= ev; verseNum++) {
       const globalNumber = getGlobalVerseNumber(selectedChapter, verseNum);
       
       // Repeat each verse in the queue
       for (let r = 0; r < repeatCount; r++) {
         loopTracks.push({
-          id: `${globalNumber}-${r}-${Date.now()}`,
+          id: `${globalNumber}-${r}-${timestamp}`,
           audioUrl: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${globalNumber}.mp3`,
           surahId: String(selectedChapter),
           surahName: `${chapterInfo.name} - Ayah ${verseNum}`,
@@ -180,13 +181,15 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     }
 
     if (loopTracks.length > 0) {
+      console.log(`[Hifz] Starting loop: ${loopTracks.length} tracks, reps: x${repeatCount}`);
       clearQueue();
       const first = loopTracks[0];
       const rest = loopTracks.slice(1);
+      
+      // Order of operations: queue first, then play
+      // This ensures playTrack's sync logic doesn't race with empty queue
+      setQueue(rest);
       playTrack(first);
-      if (rest.length > 0) {
-        setQueue(rest);
-      }
     }
 
     // 3. Optional: stay or navigate. Stay makes sense for "Suite", but text is nice.
