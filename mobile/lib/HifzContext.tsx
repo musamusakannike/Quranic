@@ -24,6 +24,12 @@ export interface HifzLoopConfig {
   repeatCount: number; // how many times to loop
 }
 
+export interface HifzReciter {
+  identifier: string;
+  name: string;
+  englishName: string;
+}
+
 export interface HifzProgress {
   [key: string]: VerseMemorizationEntry; // key: "chapter:verse"
 }
@@ -31,6 +37,8 @@ export interface HifzProgress {
 interface HifzContextProps {
   progress: HifzProgress;
   loopConfig: HifzLoopConfig | null;
+  reciter: HifzReciter;
+  setReciter: (config: HifzReciter) => Promise<void>;
   setLoopConfig: (config: HifzLoopConfig | null) => void;
   setVerseStatus: (chapter: number, verse: number, status: MemorizationStatus) => Promise<void>;
   getVerseStatus: (chapter: number, verse: number) => MemorizationStatus;
@@ -50,20 +58,34 @@ interface HifzContextProps {
 }
 
 const HIFZ_STORAGE_KEY = "@quran_hifz_progress";
+const HIFZ_RECITER_KEY = "@quran_hifz_reciter";
+
+const DEFAULT_RECITER: HifzReciter = {
+  identifier: "ar.muhammadayyoub",
+  name: "محمد أيوب",
+  englishName: "Muhammad Ayyoub",
+};
 
 const HifzContext = createContext<HifzContextProps | undefined>(undefined);
 
 export const HifzProvider = ({ children }: { children: ReactNode }) => {
   const [progress, setProgress] = useState<HifzProgress>({});
   const [loopConfig, setLoopConfig] = useState<HifzLoopConfig | null>(null);
+  const [reciter, setReciterState] = useState<HifzReciter>(DEFAULT_RECITER);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const raw = await AsyncStorage.getItem(HIFZ_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as HifzProgress;
+        const rawProgress = await AsyncStorage.getItem(HIFZ_STORAGE_KEY);
+        if (rawProgress) {
+          const parsed = JSON.parse(rawProgress) as HifzProgress;
           setProgress(parsed);
+        }
+
+        const rawReciter = await AsyncStorage.getItem(HIFZ_RECITER_KEY);
+        if (rawReciter) {
+          const parsed = JSON.parse(rawReciter) as HifzReciter;
+          setReciterState(parsed);
         }
       } catch {
         // ignore
@@ -149,11 +171,22 @@ export const HifzProvider = ({ children }: { children: ReactNode }) => {
     [progress, persist],
   );
 
+  const setReciter = useCallback(async (newReciter: HifzReciter) => {
+    setReciterState(newReciter);
+    try {
+      await AsyncStorage.setItem(HIFZ_RECITER_KEY, JSON.stringify(newReciter));
+    } catch {
+      // ignore
+    }
+  }, []);
+
   return (
     <HifzContext.Provider
       value={{
         progress,
         loopConfig,
+        reciter,
+        setReciter,
         setLoopConfig,
         setVerseStatus,
         getVerseStatus,

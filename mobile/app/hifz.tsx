@@ -33,10 +33,12 @@ import {
   Brain,
   Star,
   TrendingUp,
+  Mic,
+  ChevronRight,
 } from "lucide-react-native";
 
 import { useTheme } from "../lib/ThemeContext";
-import { useHifz, type MemorizationStatus } from "../lib/HifzContext";
+import { useHifz, type MemorizationStatus, type HifzReciter } from "../lib/HifzContext";
 import { useAudio, type Track } from "../lib/AudioContext";
 import { useToast } from "../lib/ToastContext";
 import {
@@ -86,7 +88,7 @@ const STATUS_BORDER = {
 
 // ─── Loop Mode Tab ───────────────────────────────────────────────────────────
 function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
-  const { loopConfig, setLoopConfig, getVerseStatus, setVerseStatus } = useHifz();
+  const { loopConfig, setLoopConfig, getVerseStatus, setVerseStatus, reciter, setReciter } = useHifz();
   const { playTrack, setQueue, clearQueue } = useAudio();
   const { showToast } = useToast();
   const router = useRouter();
@@ -98,12 +100,43 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
   const [endVerse, setEndVerse] = useState(loopConfig?.endVerse ?? 5);
   const [repeatCount, setRepeatCount] = useState(loopConfig?.repeatCount ?? 3);
   const [chapterPickerVisible, setChapterPickerVisible] = useState(false);
+  const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
+  const [reciters, setReciters] = useState<HifzReciter[]>([]);
+  const [isLoadingReciters, setIsLoadingReciters] = useState(false);
 
   const chapterInfo = ALL_CHAPTERS[selectedChapter - 1];
   const maxVerses = chapterInfo?.verses ?? 1;
 
   const sheetAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const reciterSheetAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  // Fetch reciters
+  React.useEffect(() => {
+    const fetchReciters = async () => {
+      setIsLoadingReciters(true);
+      try {
+        const response = await fetch("https://api.alquran.cloud/v1/edition/format/audio");
+        const json = await response.json();
+        if (json.code === 200) {
+          // Filter for versebyverse reciters usually to ensure we have audio for each verse
+          const allReciters = json.data
+            .filter((r: any) => r.type === "versebyverse")
+            .map((r: any) => ({
+              identifier: r.identifier,
+              name: r.name,
+              englishName: r.englishName,
+            }));
+          setReciters(allReciters);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reciters", error);
+      } finally {
+        setIsLoadingReciters(false);
+      }
+    };
+    void fetchReciters();
+  }, []);
 
   const openPicker = () => {
     setChapterPickerVisible(true);
@@ -135,6 +168,38 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
         useNativeDriver: true,
       }),
     ]).start(() => setChapterPickerVisible(false));
+  };
+
+  const openReciterPicker = () => {
+    setReciterPickerVisible(true);
+    Animated.parallel([
+      Animated.spring(reciterSheetAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 200,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 1,
+        duration: 240,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeReciterPicker = () => {
+    Animated.parallel([
+      Animated.timing(reciterSheetAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setReciterPickerVisible(false));
   };
 
   const clamp = (val: number, min: number, max: number) =>
@@ -177,11 +242,11 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
       for (let r = 0; r < repeatCount; r++) {
         loopTracks.push({
           id: `${globalNumber}-${r}-${timestamp}`,
-          audioUrl: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${globalNumber}.mp3`,
+          audioUrl: `https://cdn.islamic.network/quran/audio/128/${reciter.identifier}/${globalNumber}.mp3`,
           surahId: String(selectedChapter),
           surahName: `${chapterInfo.name} - Ayah ${verseNum}`,
-          reciterName: "Mishary Alafasy",
-          reciterId: "ar.alafasy",
+          reciterName: reciter.englishName,
+          reciterId: reciter.identifier,
           server: "Al-Quran Cloud CDN",
         });
       }
@@ -212,6 +277,36 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
       keyboardShouldPersistTaps="handled"
     >
       <View style={{ gap: 20 }}>
+      {/* Reciter selector */}
+      <View
+        style={[
+          loopStyles.card,
+          { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
+        ]}
+      >
+        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>Reciter</Text>
+        <Pressable
+          onPress={openReciterPicker}
+          style={[
+            loopStyles.selectorBtn,
+            { borderColor: withOpacity(colors.primary, 0.4), backgroundColor: withOpacity(colors.primary, 0.06) },
+          ]}
+        >
+          <View style={[loopStyles.reciterIcon, { backgroundColor: withOpacity(colors.primary, 0.15) }]}>
+            <Mic size={18} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1, gap: 1 }}>
+            <Text style={[loopStyles.reciterNameMain, { color: colors.textMain }]} numberOfLines={1}>
+              {reciter.englishName}
+            </Text>
+            <Text style={[loopStyles.reciterNameSub, { color: colors.textMuted }]}>
+              {reciter.name}
+            </Text>
+          </View>
+          <ChevronRight size={18} color={colors.primary} />
+        </Pressable>
+      </View>
+
       {/* Chapter selector */}
       <View
         style={[
@@ -343,6 +438,79 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     </View>
     </ScrollView>
 
+      {/* Reciter Picker Sheet */}
+      {reciterPickerVisible && (
+        <Modal transparent visible animationType="none" onRequestClose={closeReciterPicker} statusBarTranslucent>
+          <TouchableWithoutFeedback onPress={closeReciterPicker}>
+            <Animated.View
+              style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]}
+            />
+          </TouchableWithoutFeedback>
+          <Animated.View
+            style={[
+              loopStyles.pickerSheet,
+              { backgroundColor: colors.background, transform: [{ translateY: reciterSheetAnim }] },
+            ]}
+          >
+            <View style={loopStyles.sheetHandleWrap}>
+              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
+              <View>
+                <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>Select Reciter</Text>
+                <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>Choose your preferred audio</Text>
+              </View>
+              <TouchableOpacity
+                onPress={closeReciterPicker}
+                style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}
+              >
+                <X size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={reciters}
+              keyExtractor={(item) => item.identifier}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 8 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    void setReciter(item);
+                    closeReciterPicker();
+                  }}
+                  style={[
+                    loopStyles.reciterRow,
+                    {
+                      backgroundColor:
+                        reciter.identifier === item.identifier
+                          ? withOpacity(colors.primary, 0.1)
+                          : withOpacity(colors.surface, 0.5),
+                      borderColor: reciter.identifier === item.identifier ? colors.primary : withOpacity(colors.border, 0.5),
+                    },
+                  ]}
+                >
+                  <View style={[loopStyles.reciterInitial, { backgroundColor: withOpacity(colors.primary, reciter.identifier === item.identifier ? 0.25 : 0.08) }]}>
+                    <Text style={{ fontFamily: "SatoshiBold", fontSize: 14, color: colors.primary }}>
+                      {item.englishName.charAt(0)}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>{item.englishName}</Text>
+                    <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>{item.name}</Text>
+                  </View>
+                  {reciter.identifier === item.identifier && (
+                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
+                      <CheckCircle2 size={12} color="#fff" />
+                    </View>
+                  )}
+                </Pressable>
+              )}
+            />
+          </Animated.View>
+        </Modal>
+      )}
+
       {/* Chapter Picker Sheet */}
       {chapterPickerVisible && (
         <Modal transparent visible animationType="none" onRequestClose={closePicker} statusBarTranslucent>
@@ -373,7 +541,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
               data={ALL_CHAPTERS}
               keyExtractor={(item) => String(item.number)}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 6 }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 6 }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
@@ -1120,6 +1288,14 @@ const loopStyles = StyleSheet.create({
     padding: 12, borderRadius: 14, borderWidth: 1,
   },
   chapterNum: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  reciterIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  reciterNameMain: { fontFamily: "SatoshiBold", fontSize: 15 },
+  reciterNameSub: { fontFamily: "Satoshi", fontSize: 12 },
+  reciterRow: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    padding: 14, borderRadius: 16, borderWidth: 1,
+  },
+  reciterInitial: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
 });
 
 const revealStyles = StyleSheet.create({
