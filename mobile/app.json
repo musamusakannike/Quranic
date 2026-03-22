@@ -88,9 +88,7 @@
       [
         "expo-widgets",
         {
-          "ios": {
-            "appGroupIdentifier": "group.com.codiac.quranic"
-          },
+          "groupIdentifier": "group.com.codiac.quranic",
           "widgets": [
             {
               "name": "PrayerWidget",
