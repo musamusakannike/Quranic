@@ -26,7 +26,7 @@
     "@react-navigation/native": "^7.1.8",
     "@shopify/flash-list": "2.0.2",
     "adhan": "^4.4.3",
-    "expo": "^55.0.5",
+    "expo": "~55.0.5",
     "expo-asset": "~55.0.10",
     "expo-audio": "~55.0.9",
     "expo-background-fetch": "~55.0.10",
@@ -86,5 +86,8 @@
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "expo-modules-core": "~55.0.14"
+  }
 }
