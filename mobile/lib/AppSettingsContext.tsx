@@ -17,6 +17,7 @@ export type ReminderTime = {
 };
 
 export type ReadingView = "list" | "verse_by_verse" | "mushaf";
+export type QuickActionsView = "carousel" | "grid";
 
 type AppSettingsContextValue = {
   showTranslations: boolean;
@@ -37,6 +38,8 @@ type AppSettingsContextValue = {
   setTranslationFontSize: (size: number) => Promise<void>;
   readingView: ReadingView;
   setReadingView: (view: ReadingView) => Promise<void>;
+  quickActionsView: QuickActionsView;
+  setQuickActionsView: (view: QuickActionsView) => Promise<void>;
 };
 
 type StoredSettings = {
@@ -49,6 +52,7 @@ type StoredSettings = {
   arabicFontSize: number;
   translationFontSize: number;
   readingView: ReadingView;
+  quickActionsView: QuickActionsView;
 };
 
 const SETTINGS_STORAGE_KEY = "@app_reader_settings";
@@ -63,6 +67,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   arabicFontSize: 31,
   translationFontSize: 14,
   readingView: "list",
+  quickActionsView: "carousel",
 };
 
 Notifications.setNotificationHandler({
@@ -92,6 +97,7 @@ const parseStoredSettings = (raw: string | null): StoredSettings => {
           parsed.reminderTime?.minute ?? DEFAULT_SETTINGS.reminderTime.minute,
       },
       readingView: parsed.readingView ?? DEFAULT_SETTINGS.readingView,
+      quickActionsView: parsed.quickActionsView ?? DEFAULT_SETTINGS.quickActionsView,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -238,6 +244,16 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     [updateSettings],
   );
 
+  const setQuickActionsView = useCallback(
+    async (view: QuickActionsView) => {
+      await updateSettings((current) => ({
+        ...current,
+        quickActionsView: view,
+      }));
+    },
+    [updateSettings],
+  );
+
   const enableReminder = useCallback(
     async (time: ReminderTime) => {
       const permissionGranted = await requestNotificationPermission();
@@ -300,6 +316,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       setArabicFontSize,
       setTranslationFontSize,
       setReadingView,
+      quickActionsView: settings.quickActionsView,
+      setQuickActionsView,
     }),
     [
       settings.showTranslations,
@@ -320,6 +338,8 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
       setTranslationFontSize,
       settings.readingView,
       setReadingView,
+      settings.quickActionsView,
+      setQuickActionsView,
     ],
   );
 

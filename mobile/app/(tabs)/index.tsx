@@ -26,6 +26,8 @@ import {
   CalendarDays,
   Sparkles,
   Brain,
+  LayoutGrid,
+  LayoutList,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
@@ -100,7 +102,8 @@ const formatReminderTime = (hour: number, minute: number) => {
 export default function Index() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const { reminderEnabled, reminderTime } = useAppSettings();
+  const { reminderEnabled, reminderTime, quickActionsView, setQuickActionsView } =
+    useAppSettings();
   const [lastRead, setLastRead] = useState<LastReadProgress | null>(null);
   const [juzSheetVisible, setJuzSheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -433,8 +436,8 @@ export default function Index() {
           </View>
         </ImageBackground>
 
-        {/* ─── Quick Actions Carousel ─── */}
-        {/* <View style={styles.sectionHeader}>
+        {/* ─── Quick Actions ─── */}
+        <View style={[styles.sectionHeader, { paddingHorizontal: 16 }]}>
           <View>
             <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
               Quick Actions
@@ -443,7 +446,28 @@ export default function Index() {
               Access essential features quickly
             </Text>
           </View>
-        </View> */}
+          <Pressable
+            onPress={() => {
+              void Haptics.selectionAsync();
+              void setQuickActionsView(
+                quickActionsView === "carousel" ? "grid" : "carousel",
+              );
+            }}
+            style={[
+              styles.viewToggleBtn,
+              {
+                backgroundColor: withOpacity(colors.primary, 0.1),
+                borderColor: withOpacity(colors.primary, 0.2),
+              },
+            ]}
+          >
+            {quickActionsView === "carousel" ? (
+              <LayoutGrid size={18} color={colors.primary} />
+            ) : (
+              <LayoutList size={18} color={colors.primary} />
+            )}
+          </Pressable>
+        </View>
 
         <FlatList
           data={[
@@ -504,22 +528,39 @@ export default function Index() {
               image: require("../../assets/images/quick-actions/hifz.webp"),
             },
           ]}
+          key={quickActionsView}
           keyExtractor={(item) => item.id}
-          horizontal
+          horizontal={quickActionsView === "carousel"}
+          numColumns={quickActionsView === "grid" ? 2 : 1}
           showsHorizontalScrollIndicator={false}
-          snapToInterval={260 + 12} // Card width + gap
+          showsVerticalScrollIndicator={false}
+          snapToInterval={
+            quickActionsView === "carousel" ? 260 + 12 : undefined
+          }
           decelerationRate="fast"
-          contentContainerStyle={styles.quickActionsCarousel}
+          contentContainerStyle={
+            quickActionsView === "carousel"
+              ? styles.quickActionsCarousel
+              : styles.quickActionsGrid
+          }
+          columnWrapperStyle={
+            quickActionsView === "grid" ? styles.quickGridRow : undefined
+          }
+          scrollEnabled={quickActionsView === "carousel"}
           renderItem={({ item }) => (
             <Pressable
               onPress={() => {
                 void Haptics.selectionAsync();
                 router.push(item.path);
               }}
+              style={quickActionsView === "grid" ? { flex: 1 } : undefined}
             >
               <ImageBackground
                 source={item.image}
-                style={styles.quickActionCard}
+                style={[
+                  styles.quickActionCard,
+                  quickActionsView === "grid" && styles.quickActionCardGrid,
+                ]}
                 imageStyle={styles.quickActionCardImage}
               >
                 <LinearGradient
@@ -1029,6 +1070,25 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+  },
+  viewToggleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  quickActionsGrid: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  quickGridRow: {
+    gap: 12,
+  },
+  quickActionCardGrid: {
+    width: "100%",
+    height: 120,
   },
 
   // Section Header
