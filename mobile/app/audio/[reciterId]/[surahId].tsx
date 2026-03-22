@@ -97,6 +97,7 @@ export default function AudioPlayerScreen() {
   useEffect(() => {
     if (currentTrack?.audioUrl !== audioUrl) {
       playTrack({
+        id: `${reciterId}-${surahId}-${Date.now()}`,
         audioUrl,
         surahId,
         surahName,

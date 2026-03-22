@@ -14,6 +14,7 @@ import {
 } from "expo-audio";
 
 export interface Track {
+  id: string; // Unique ID for each queue entry (even with same URL)
   audioUrl: string;
   surahId: string;
   surahName: string;
@@ -34,6 +35,8 @@ interface AudioContextType {
   playNextInQueue: () => void;
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  setQueue: (tracks: Track[]) => void;
 }
 
 const AudioContext = createContext<AudioContextType | null>(null);
@@ -58,45 +61,29 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Removed player.setActiveForLockScreen, unsupported on this version
-  }, [currentTrack, player]);
+    if (currentTrack) {
+      // Logic to trigger replace and play when track changes
+      player.replace(currentTrack.audioUrl);
+      hasFinishedRef.current = false;
+      // Some players auto-play on replace if already playing, 
+      // but explicit play is safer
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [currentTrack?.id]);
 
   useEffect(() => {
-    if (
-      currentTrack?.audioUrl &&
-      currentTrack.audioUrl !== previousUrlRef.current
-    ) {
-      // We have a new track loaded in useAudioPlayer.
-      // Once it's loaded, play it.
-      if (status.isLoaded) {
-        player.play();
-        previousUrlRef.current = currentTrack.audioUrl;
-        
-        // Prevents premature queue popping right after loading due to stale status matching
-        setTimeout(() => {
-          hasFinishedRef.current = false;
-        }, 1000);
-      }
-    }
-
-    // Auto-advance to next track in queue when finished
-    if (
-      status.isLoaded &&
-      status.duration > 0 &&
-      status.currentTime >= status.duration - 0.5 &&
-      !status.playing &&
-      !hasFinishedRef.current
-    ) {
+    // Auto-advance when finished
+    if (status.didJustFinish && !hasFinishedRef.current) {
       hasFinishedRef.current = true;
       if (queue.length > 0) {
         const nextTrack = queue[0];
         setQueue((q) => q.slice(1));
-        
         setCurrentTrack(nextTrack);
-        previousUrlRef.current = null;
       }
     }
-  }, [currentTrack, status, player, queue]);
+  }, [status.didJustFinish, queue]);
 
   const playNext = (track: Track) => {
     setQueue((prev) => [track, ...prev]);
@@ -120,23 +107,26 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     setQueue((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const playTrack = (track: Track) => {
-    // If playing the same track, ensure it's playing
-    if (currentTrack?.audioUrl === track.audioUrl) {
-      if (!status.playing && status.isLoaded) {
-        player.play();
-      }
-    } else {
-      // It will load the new track automatically via useAudioPlayer hook prop refresh
-      setCurrentTrack(track);
-      previousUrlRef.current = null; // Reset ref so it catches auto-play
-    }
-  };
-
   const closePlayer = () => {
     player.pause();
     setCurrentTrack(null);
     previousUrlRef.current = null;
+  };
+
+  const clearQueue = () => {
+    setQueue([]);
+  };
+
+  const playTrack = (track: Track) => {
+    // If playing the same track, we still want to re-trigger loading/play if it's a manual play call
+    // This allows replaying the same verse in loop mode
+    if (currentTrack?.audioUrl === track.audioUrl) {
+      player.seekTo(0);
+      player.play();
+    } else {
+      setCurrentTrack(track);
+      previousUrlRef.current = null;
+    }
   };
 
   return (
@@ -153,6 +143,8 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
         playNextInQueue,
         addToQueue,
         removeFromQueue,
+        clearQueue,
+        setQueue: (tracks: Track[]) => setQueue(tracks),
       }}
     >
       {children}

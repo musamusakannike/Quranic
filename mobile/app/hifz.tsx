@@ -1,8 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -22,6 +18,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
+import * as Network from "expo-network";
 import {
   ArrowLeft,
   Repeat,
@@ -39,15 +36,15 @@ import {
 } from "lucide-react-native";
 
 import { useTheme } from "../lib/ThemeContext";
-import {
-  useHifz,
-  type MemorizationStatus,
-} from "../lib/HifzContext";
+import { useHifz, type MemorizationStatus } from "../lib/HifzContext";
+import { useAudio, type Track } from "../lib/AudioContext";
+import { useToast } from "../lib/ToastContext";
 import {
   getChapterMetadata,
   getChapterVerses,
   getVersesCount,
   getVerseTranslation,
+  getGlobalVerseNumber,
 } from "../lib/QuranHelper";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -90,6 +87,8 @@ const STATUS_BORDER = {
 // ─── Loop Mode Tab ───────────────────────────────────────────────────────────
 function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { loopConfig, setLoopConfig } = useHifz();
+  const { playTrack, setQueue, clearQueue } = useAudio();
+  const { showToast } = useToast();
   const router = useRouter();
 
   const [selectedChapter, setSelectedChapter] = useState(
@@ -141,7 +140,14 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
   const clamp = (val: number, min: number, max: number) =>
     Math.max(min, Math.min(max, val));
 
-  const handleStartLoop = () => {
+  const handleStartLoop = async () => {
+    // 1. Check for connection
+    const network = await Network.getNetworkStateAsync();
+    if (!network.isConnected) {
+      showToast("Internet connection required for loop playback.", "offline");
+      return;
+    }
+
     const sv = clamp(startVerse, 1, maxVerses);
     const ev = clamp(endVerse, sv, maxVerses);
     const config = {
@@ -150,18 +156,42 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
       endVerse: ev,
       repeatCount,
     };
+    
     setLoopConfig(config);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.push({
-      pathname: "/chapter/[id]",
-      params: {
-        id: String(selectedChapter),
-        verse: String(sv),
-        loopStart: String(sv),
-        loopEnd: String(ev),
-        loopCount: String(repeatCount),
-      },
-    });
+
+    // 2. Build the audio queue
+    const loopTracks: Track[] = [];
+    for (let verseNum = sv; verseNum <= ev; verseNum++) {
+      const globalNumber = getGlobalVerseNumber(selectedChapter, verseNum);
+      
+      // Repeat each verse in the queue
+      for (let r = 0; r < repeatCount; r++) {
+        loopTracks.push({
+          id: `${globalNumber}-${r}-${Date.now()}`,
+          audioUrl: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${globalNumber}.mp3`,
+          surahId: String(selectedChapter),
+          surahName: `${chapterInfo.name} - Ayah ${verseNum}`,
+          reciterName: "Mishary Alafasy",
+          reciterId: "ar.alafasy",
+          server: "Al-Quran Cloud CDN",
+        });
+      }
+    }
+
+    if (loopTracks.length > 0) {
+      clearQueue();
+      const first = loopTracks[0];
+      const rest = loopTracks.slice(1);
+      playTrack(first);
+      if (rest.length > 0) {
+        setQueue(rest);
+      }
+    }
+
+    // 3. Optional: stay or navigate. Stay makes sense for "Suite", but text is nice.
+    // I'll stay on the Hifz screen but maybe show a success HUD.
+    showToast(`Starting loop: Ayah ${sv} to ${ev}`, "success");
   };
 
   return (

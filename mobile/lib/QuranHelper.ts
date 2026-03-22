@@ -147,6 +147,17 @@ export const getVersesCount = (chapter: number): number => {
 };
 
 /**
+ * Get the global verse number (1-6236) for a given chapter and verse.
+ */
+export const getGlobalVerseNumber = (chapter: number, verse: number): number => {
+  let globalNumber = 0;
+  for (let c = 1; c < chapter; c++) {
+    globalNumber += getVersesCount(c);
+  }
+  return globalNumber + verse;
+};
+
+/**
  * Get overall metadata like total verses overall.
  */
 export const getTotalQuranVerses = (): number => {
