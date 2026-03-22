@@ -88,7 +88,7 @@ const STATUS_BORDER = {
 };
 
 // ─── Loop Mode Tab ───────────────────────────────────────────────────────────
-function LoopTab({ colors, isDark }: { colors: any; isDark: boolean }) {
+function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { loopConfig, setLoopConfig } = useHifz();
   const router = useRouter();
 
@@ -165,7 +165,13 @@ function LoopTab({ colors, isDark }: { colors: any; isDark: boolean }) {
   };
 
   return (
-    <View style={{ flex: 1, gap: 20 }}>
+    <>
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 60 }]}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={{ gap: 20 }}>
       {/* Chapter selector */}
       <View
         style={[
@@ -294,6 +300,8 @@ function LoopTab({ colors, isDark }: { colors: any; isDark: boolean }) {
           <Text style={loopStyles.startBtnText}>Start Loop Session</Text>
         </LinearGradient>
       </Pressable>
+    </View>
+    </ScrollView>
 
       {/* Chapter Picker Sheet */}
       {chapterPickerVisible && (
@@ -360,12 +368,12 @@ function LoopTab({ colors, isDark }: { colors: any; isDark: boolean }) {
           </Animated.View>
         </Modal>
       )}
-    </View>
+    </>
   );
 }
 
 // ─── Hide & Reveal Tab ───────────────────────────────────────────────────────
-function RevealTab({ colors, isDark }: { colors: any; isDark: boolean }) {
+function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { getVerseStatus, setVerseStatus } = useHifz();
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [hideAll, setHideAll] = useState(true);
@@ -417,53 +425,56 @@ function RevealTab({ colors, isDark }: { colors: any; isDark: boolean }) {
   const isRevealed = (verseNum: number) => !hideAll || revealedVerses.has(verseNum);
 
   return (
-    <View style={{ flex: 1, gap: 16 }}>
-      {/* Controls Row */}
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <Pressable
-          onPress={openPicker}
-          style={[
-            revealStyles.chapterBtn,
-            { flex: 1, backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
-          ]}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={[revealStyles.chapterBtnSub, { color: colors.textMuted }]}>Surah</Text>
-            <Text style={[revealStyles.chapterBtnMain, { color: colors.textMain }]} numberOfLines={1}>
-              {chapterInfo?.name}
-            </Text>
-          </View>
-          <ChevronDown size={16} color={colors.primary} />
-        </Pressable>
-
-        <Pressable
-          onPress={() => { void Haptics.selectionAsync(); setHideAll((h) => !h); setRevealedVerses(new Set()); }}
-          style={[
-            revealStyles.toggleBtn,
-            { backgroundColor: hideAll ? withOpacity(colors.primary, 0.12) : withOpacity(colors.success, 0.12), borderColor: hideAll ? withOpacity(colors.primary, 0.4) : withOpacity(colors.success, 0.4) },
-          ]}
-        >
-          {hideAll ? <EyeOff size={18} color={colors.primary} /> : <Eye size={18} color={colors.success} />}
-          <Text style={[revealStyles.toggleBtnText, { color: hideAll ? colors.primary : colors.success }]}>
-            {hideAll ? "Hidden" : "Shown"}
-          </Text>
-        </Pressable>
-      </View>
-
-      {hideAll && (
-        <View style={[revealStyles.hintBox, { backgroundColor: withOpacity(colors.primary, 0.07), borderColor: withOpacity(colors.primary, 0.2) }]}>
-          <Eye size={14} color={colors.primary} />
-          <Text style={[revealStyles.hintText, { color: colors.primary }]}>
-            Tap any ayah to reveal it and test your memory
-          </Text>
-        </View>
-      )}
-
+    <View style={{ flex: 1 }}>
       <FlatList
         data={verses}
         keyExtractor={(_, i) => String(i)}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: insets.bottom + 60 }}
+        ListHeaderComponent={
+          <View style={{ gap: 16, marginBottom: 16 }}>
+            {/* Controls Row */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={openPicker}
+                style={[
+                  revealStyles.chapterBtn,
+                  { flex: 1, backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[revealStyles.chapterBtnSub, { color: colors.textMuted }]}>Surah</Text>
+                  <Text style={[revealStyles.chapterBtnMain, { color: colors.textMain }]} numberOfLines={1}>
+                    {chapterInfo?.name}
+                  </Text>
+                </View>
+                <ChevronDown size={16} color={colors.primary} />
+              </Pressable>
+
+              <Pressable
+                onPress={() => { void Haptics.selectionAsync(); setHideAll((h) => !h); setRevealedVerses(new Set()); }}
+                style={[
+                  revealStyles.toggleBtn,
+                  { backgroundColor: hideAll ? withOpacity(colors.primary, 0.12) : withOpacity(colors.success, 0.12), borderColor: hideAll ? withOpacity(colors.primary, 0.4) : withOpacity(colors.success, 0.4) },
+                ]}
+              >
+                {hideAll ? <EyeOff size={18} color={colors.primary} /> : <Eye size={18} color={colors.success} />}
+                <Text style={[revealStyles.toggleBtnText, { color: hideAll ? colors.primary : colors.success }]}>
+                  {hideAll ? "Hidden" : "Shown"}
+                </Text>
+              </Pressable>
+            </View>
+
+            {hideAll && (
+              <View style={[revealStyles.hintBox, { backgroundColor: withOpacity(colors.primary, 0.07), borderColor: withOpacity(colors.primary, 0.2) }]}>
+                <Eye size={14} color={colors.primary} />
+                <Text style={[revealStyles.hintText, { color: colors.primary }]}>
+                  Tap any ayah to reveal it and test your memory
+                </Text>
+              </View>
+            )}
+          </View>
+        }
         renderItem={({ item, index }) => {
           const verseNum = index + 1;
           const revealed = isRevealed(verseNum);
@@ -576,7 +587,7 @@ function RevealTab({ colors, isDark }: { colors: any; isDark: boolean }) {
 }
 
 // ─── Progress Dashboard Tab ───────────────────────────────────────────────────
-function ProgressTab({ colors, isDark }: { colors: any; isDark: boolean }) {
+function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { getChapterStats, resetChapter } = useHifz();
   const [viewMode, setViewMode] = useState<"surah" | "juz">("surah");
 
@@ -625,7 +636,11 @@ function ProgressTab({ colors, isDark }: { colors: any; isDark: boolean }) {
   );
 
   return (
-    <View style={{ flex: 1, gap: 16 }}>
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 60 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={{ gap: 16 }}>
       {/* Overall stats cards */}
       <View style={{ flexDirection: "row", gap: 10 }}>
         <LinearGradient
@@ -729,6 +744,7 @@ function ProgressTab({ colors, isDark }: { colors: any; isDark: boolean }) {
         </View>
       )}
     </View>
+    </ScrollView>
   );
 }
 
@@ -805,15 +821,11 @@ export default function HifzScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {activeTab === "loop" && <LoopTab colors={colors} isDark={isDark} />}
-        {activeTab === "reveal" && <RevealTab colors={colors} isDark={isDark} />}
-        {activeTab === "progress" && <ProgressTab colors={colors} isDark={isDark} />}
-      </ScrollView>
+      <View style={{ flex: 1 }}>
+        {activeTab === "loop" && <LoopTab colors={colors} isDark={isDark} insets={insets} />}
+        {activeTab === "reveal" && <RevealTab colors={colors} isDark={isDark} insets={insets} />}
+        {activeTab === "progress" && <ProgressTab colors={colors} isDark={isDark} insets={insets} />}
+      </View>
     </View>
   );
 }
