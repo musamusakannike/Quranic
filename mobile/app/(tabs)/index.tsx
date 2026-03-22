@@ -979,12 +979,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   continueTitle: {
-    fontFamily: "SatoshiBold",
+    fontFamily: "AmiriQuran",
     fontSize: 32,
     letterSpacing: -0.2,
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    paddingVertical: 4,
   },
   continueMeta: {
     fontFamily: "SatoshiMedium",
@@ -1178,8 +1179,9 @@ const styles = StyleSheet.create({
   arabicDailyText: {
     fontFamily: "AmiriQuran",
     fontSize: 24,
-    lineHeight: 42,
+    lineHeight: 50,
     textAlign: "right",
+    paddingVertical: 4,
   },
   translationDailyText: {
     fontFamily: "SatoshiMedium",

@@ -541,7 +541,8 @@ const styles = StyleSheet.create({
   chapterArabicName: {
     fontFamily: "AmiriQuran",
     fontSize: 22,
-    lineHeight: 30,
+    lineHeight: 40,
+    paddingVertical: 2,
   },
   chapterMeta: {
     fontFamily: "SatoshiMedium",

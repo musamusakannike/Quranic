@@ -304,8 +304,9 @@ const styles = StyleSheet.create({
   arabicText: {
     fontFamily: "AmiriQuran",
     fontSize: 22,
-    lineHeight: 36,
+    lineHeight: 40,
     textAlign: "right",
+    paddingVertical: 4,
   },
   translationText: {
     fontFamily: "Satoshi",

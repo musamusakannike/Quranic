@@ -1242,7 +1242,7 @@ const loopStyles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
   },
-  selectorMain: { fontFamily: "AmiriQuran", fontSize: 20 },
+  selectorMain: { fontFamily: "AmiriQuran", fontSize: 20, paddingVertical: 4 },
   selectorSub: { fontFamily: "SatoshiMedium", fontSize: 13 },
   inputLabel: { fontFamily: "SatoshiMedium", fontSize: 12 },
   numberInputRow: {
@@ -1322,7 +1322,13 @@ const revealStyles = StyleSheet.create({
   },
   verseBadge: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   verseBadgeText: { fontFamily: "SatoshiBold", fontSize: 12 },
-  arabicText: { fontFamily: "AmiriQuran", fontSize: 22, lineHeight: 38, textAlign: "right" },
+  arabicText: {
+    fontFamily: "AmiriQuran",
+    fontSize: 22,
+    lineHeight: 42,
+    textAlign: "right",
+    paddingVertical: 4,
+  },
   blurPlaceholder: { borderRadius: 10, padding: 14, gap: 8, alignItems: "flex-end" },
   blurLine: { height: 14, borderRadius: 999 },
   tapRevealText: { fontFamily: "SatoshiMedium", fontSize: 11, alignSelf: "center", marginTop: 4 },

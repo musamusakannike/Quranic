@@ -166,7 +166,7 @@ export default function BookmarksScreen() {
                   {
                     color: colors.textMain,
                     fontSize: arabicFontSize,
-                    lineHeight: arabicFontSize * 1.6,
+                    lineHeight: arabicFontSize * 1.8,
                   },
                 ]}
                 numberOfLines={2}
@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
   arabicText: {
     fontFamily: "AmiriQuran",
     textAlign: "right",
+    paddingVertical: 5,
   },
   translationText: {
     fontFamily: "Satoshi",

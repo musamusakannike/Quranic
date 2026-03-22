@@ -360,7 +360,7 @@ export default function ChapterDetailScreen() {
               {
                 color: colors.textMain,
                 fontSize: arabicFontSize,
-                lineHeight: arabicFontSize * 1.6,
+                lineHeight: arabicFontSize * 2.0,
               },
             ]}
           >
@@ -914,6 +914,7 @@ const styles = StyleSheet.create({
   arabicVerseText: {
     fontFamily: "AmiriQuran",
     textAlign: "right",
+    paddingVertical: 8,
   },
   transliterationText: {
     fontFamily: "Satoshi",
