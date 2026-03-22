@@ -10,7 +10,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
@@ -68,6 +68,7 @@ export default function ChapterDetailScreen() {
   }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const {
     showTranslations,
     showTransliterations,
@@ -478,8 +479,8 @@ export default function ChapterDetailScreen() {
 
   if (!chapterNumber || !chapterMeta) {
     return (
-      <SafeAreaView
-        style={[styles.screen, { backgroundColor: colors.background }]}
+      <View
+        style={[styles.screen, { backgroundColor: colors.background, paddingTop: insets.top }]}
       >
         <StatusBar style={isDark ? "light" : "dark"} />
         <View style={styles.invalidStateContainer}>
@@ -499,13 +500,13 @@ export default function ChapterDetailScreen() {
             </Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   const renderHeader = () => {
     return (
-      <View style={styles.headerSection}>
+      <View style={[styles.headerSection, { paddingTop: readingView === "list" ? 0 : insets.top }]}>
         {readingView === "list" ? (
           <View style={{ height: 48 }} />
         ) : (
@@ -712,7 +713,7 @@ export default function ChapterDetailScreen() {
             }}
           />
 
-          <View style={styles.mushafOverlayHeader}>
+          <View style={[styles.mushafOverlayHeader, { top: insets.top + 8 }]}>
             <Pressable
               onPress={() => router.back()}
               style={[
@@ -757,7 +758,7 @@ export default function ChapterDetailScreen() {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={[styles.screen, { backgroundColor: colors.background }]}
     >
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -779,6 +780,7 @@ export default function ChapterDetailScreen() {
             {
               backgroundColor: withOpacity(colors.background, 0.85),
               borderBottomColor: withOpacity(colors.border, 0.5),
+              paddingTop: insets.top + 8,
             },
           ]}
         >
@@ -812,7 +814,7 @@ export default function ChapterDetailScreen() {
         arabicFontSize={arabicFontSize}
         translationFontSize={translationFontSize}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -996,7 +998,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 100,
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === "ios" ? 4 : 12,
+    paddingTop: 8,
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
