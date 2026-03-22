@@ -12,6 +12,9 @@
       "bundleIdentifier": "com.codiac.quranic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.codiac.quranic"]
       }
     },
     "android": {
@@ -85,6 +88,9 @@
       [
         "expo-widgets",
         {
+          "ios": {
+            "appGroupIdentifier": "group.com.codiac.quranic"
+          },
           "widgets": [
             {
               "name": "PrayerWidget",
