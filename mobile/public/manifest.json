@@ -1,0 +1,20 @@
+{
+  "short_name": "Quranic",
+  "name": "Quranic - Read, Reflect, and Connect",
+  "icons": [
+    {
+      "src": "/assets/images/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/images/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#056C5C",
+  "background_color": "#ffffff"
+}

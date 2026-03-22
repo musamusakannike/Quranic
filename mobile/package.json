@@ -8,10 +8,13 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "serve:web": "npx serve dist",
     "lint": "expo lint"
   },
   "dependencies": {
     "@expo-google-fonts/amiri-quran": "^0.4.1",
+    "@expo/metro-runtime": "~55.0.6",
     "@expo/ui": "~55.0.5",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
