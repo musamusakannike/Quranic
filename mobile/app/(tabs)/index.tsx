@@ -25,6 +25,7 @@ import {
   Clock,
   CalendarDays,
   Sparkles,
+  Brain,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "@react-navigation/native";
@@ -493,6 +494,14 @@ export default function Index() {
               icon: Sparkles,
               path: "/adhkaar" as const,
               image: require("../../assets/images/quick-actions/adhkaar.webp"),
+            },
+            {
+              id: "hifz",
+              title: "Hifz",
+              subtitle: "Memorization suite",
+              icon: Brain,
+              path: "/hifz" as const,
+              image: require("../../assets/images/quick-actions/hifz.webp"),
             },
           ]}
           keyExtractor={(item) => item.id}

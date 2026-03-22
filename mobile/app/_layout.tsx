@@ -12,6 +12,7 @@ import { DownloadsProvider } from "../lib/DownloadsContext";
 import MiniPlayer from "../components/MiniPlayer";
 import { View } from "react-native";
 import { registerWidgetUpdateTask } from "../lib/WidgetManager";
+import { HifzProvider } from "../lib/HifzContext";
 
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -47,14 +48,16 @@ export default function RootLayout() {
               <AudioProvider>
                 <BookmarksProvider>
                   <AppSettingsProvider>
-                    <View style={{ flex: 1 }}>
-                      {!loaded && !error ? null : (
-                        <>
-                          <Stack screenOptions={{ headerShown: false }} />
-                          <MiniPlayer />
-                        </>
-                      )}
-                    </View>
+                    <HifzProvider>
+                      <View style={{ flex: 1 }}>
+                        {!loaded && !error ? null : (
+                          <>
+                            <Stack screenOptions={{ headerShown: false }} />
+                            <MiniPlayer />
+                          </>
+                        )}
+                      </View>
+                    </HifzProvider>
                   </AppSettingsProvider>
                 </BookmarksProvider>
               </AudioProvider>
