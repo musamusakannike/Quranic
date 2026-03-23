@@ -12,9 +12,6 @@
       "bundleIdentifier": "com.codiac.quranic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "entitlements": {
-        "com.apple.security.application-groups": ["group.com.codiac.quranic"]
       }
     },
     "android": {
@@ -83,20 +80,6 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Quranic to use your location."
-        }
-      ],
-      [
-        "expo-widgets",
-        {
-          "groupIdentifier": "group.com.codiac.quranic",
-          "widgets": [
-            {
-              "name": "PrayerWidget",
-              "displayName": "Prayer Times",
-              "description": "View next prayer time and countdown.",
-              "supportedFamilies": ["systemSmall", "systemMedium"]
-            }
-          ]
         }
       ],
       [

@@ -1,10 +1,11 @@
 import React from "react";
 import { Platform } from "react-native";
-import { PrayerWidget } from "../widgets/PrayerWidget";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getNextPrayer, getPrayerTimes, formatPrayerTime, WidgetData } from "./SolahHelper";
 import * as Location from "expo-location";
 import PrayerWidgetAndroid from "../widgets/AndroidPrayerWidget";
+import * as TaskManager from "expo-task-manager";
+import * as BackgroundTask from "expo-background-task";
 
 export const updateWidget = async () => {
   try {
@@ -28,11 +29,6 @@ export const updateWidget = async () => {
       isha: formatPrayerTime(times.isha),
     };
 
-    if (Platform.OS === "ios") {
-      // Update iOS Widget Snapshot
-      PrayerWidget.updateSnapshot(data);
-    }
-
     if (Platform.OS === "android") {
       // Update Android Widget
       requestWidgetUpdate({
@@ -51,8 +47,6 @@ export const updateWidget = async () => {
     console.error("Failed to update widget:", err);
   }
 };
-import * as TaskManager from "expo-task-manager";
-import * as BackgroundTask from "expo-background-task";
 
 const WIDGET_UPDATE_TASK = "WIDGET_UPDATE_TASK";
 

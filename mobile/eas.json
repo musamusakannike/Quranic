@@ -7,24 +7,15 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development",
-      "ios": {
-        "image": "macos-sequoia-15.6-xcode-26.1"
-      }
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview",
-      "ios": {
-        "image": "macos-sequoia-15.6-xcode-26.1"
-      }
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production",
-      "ios": {
-        "image": "macos-sequoia-15.6-xcode-26.1"
-      }
+      "channel": "production"
     }
   },
   "submit": {
