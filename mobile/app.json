@@ -79,7 +79,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Quranic to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Quranic needs access to your location in the background and foreground to automatically update prayer times and provide the Qibla direction based on your area.",
+          "locationAlwaysPermission": "Quranic needs your location in the background to send accurate prayer time notifications even when the app is closed.",
+          "locationWhenInUsePermission": "Quranic requires your location to calculate accurate prayer times and determine the correct Qibla direction."
         }
       ],
       [
