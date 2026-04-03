@@ -73,6 +73,13 @@
           "enableBackgroundPlayback": true
         }
       ],
+      [
+        "expo-media-control",
+        {
+          "enableBackgroundAudio": true,
+          "audioSessionCategory": "playback"
+        }
+      ],
       "expo-video",
       "expo-font",
       "expo-image",

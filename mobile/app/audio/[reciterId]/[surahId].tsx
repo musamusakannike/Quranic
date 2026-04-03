@@ -101,10 +101,13 @@ export default function AudioPlayerScreen() {
     : defaultAudioUrl;
 
   const {
-    player,
     status,
     currentTrack,
     playTrack,
+    togglePlayback,
+    seekTo,
+    skipToNext,
+    skipToPrevious,
     queue,
     removeFromQueue,
     playNextInQueue,
@@ -223,18 +226,14 @@ export default function AudioPlayerScreen() {
     });
   }, [isVerseMode, currentVerseNumber]);
 
-  const togglePlayback = () => {
+  const handleTogglePlayback = () => {
     void Haptics.selectionAsync();
-    if (status.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
+    togglePlayback();
   };
 
   const seekBackward = () => {
     void Haptics.selectionAsync();
-    player.seekTo(Math.max(0, status.currentTime - 10));
+    skipToPrevious();
   };
 
   const handleNextTrack = () => {
@@ -242,7 +241,7 @@ export default function AudioPlayerScreen() {
     if (queue.length > 0) {
       playNextInQueue();
     } else {
-      player.seekTo(status.currentTime + 10);
+      skipToNext();
     }
   };
 
@@ -252,7 +251,7 @@ export default function AudioPlayerScreen() {
   };
 
   const onSliderSlidingComplete = (val: number) => {
-    player.seekTo(val);
+    seekTo(val);
     setIsSeeking(false);
   };
 
@@ -634,7 +633,7 @@ export default function AudioPlayerScreen() {
         <AnimatedPressable
           onPressIn={() => { playPressed.value = 1; }}
           onPressOut={() => { playPressed.value = 0; }}
-          onPress={togglePlayback}
+          onPress={handleTogglePlayback}
           style={[
             styles.playButton,
             { backgroundColor: colors.primary },

@@ -26,7 +26,7 @@ const withOpacity = (hexColor: string, opacity: number) => {
 };
 
 export default function MiniPlayer() {
-  const { currentTrack, player, status, closePlayer, isMiniPlayerVisible } =
+  const { currentTrack, status, togglePlayback, closePlayer, isMiniPlayerVisible } =
     useAudio();
   const { colors, isDark } = useTheme();
   const segments = useSegments();
@@ -49,13 +49,9 @@ export default function MiniPlayer() {
     bottomOffset = Platform.OS === "ios" ? 105 : 78;
   }
 
-  const togglePlayback = () => {
+  const handleTogglePlayback = () => {
     void Haptics.selectionAsync();
-    if (status.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
+    togglePlayback();
   };
 
   const handlePress = () => {
@@ -158,7 +154,7 @@ export default function MiniPlayer() {
               </Text>
             </View>
             <View style={styles.controls}>
-              <Pressable onPress={togglePlayback} style={styles.iconBtn}>
+              <Pressable onPress={handleTogglePlayback} style={styles.iconBtn}>
                 {!status.isLoaded || status.isBuffering ? (
                   <ActivityIndicator color={colors.primary} size="small" />
                 ) : status.playing ? (
