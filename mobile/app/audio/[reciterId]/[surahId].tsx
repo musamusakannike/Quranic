@@ -76,7 +76,6 @@ export default function AudioPlayerScreen() {
       mode?: "chapter" | "verse_by_verse";
     }>();
 
-  // URL format for mp3quran full surah is serverURL+001.mp3
   const formattedSurahId = surahId.padStart(3, "0");
   const defaultAudioUrl = `${server}${formattedSurahId}.mp3`;
   const isVerseMode = mode === "verse_by_verse";
@@ -219,7 +218,7 @@ export default function AudioPlayerScreen() {
     if (!isVerseMode || !verseListRef.current || currentVerseNumber < 2) return;
     verseListRef.current.scrollToIndex({
       index: currentVerseNumber - 1,
-      viewPosition: 0.45,
+      viewPosition: 0.4,
       animated: true,
     });
   }, [isVerseMode, currentVerseNumber]);
@@ -297,6 +296,7 @@ export default function AudioPlayerScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
+      {/* ── Header ── */}
       <View style={styles.header}>
         <Pressable
           onPress={() => {
@@ -316,7 +316,7 @@ export default function AudioPlayerScreen() {
           <ChevronDown color={colors.textMain} size={24} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-          Now Playing
+          {isVerseMode ? "Read Along" : "Now Playing"}
         </Text>
         <Pressable
           onPress={() => setIsQueueVisible(true)}
@@ -334,6 +334,7 @@ export default function AudioPlayerScreen() {
         </Pressable>
       </View>
 
+      {/* ── Download button ── */}
       <View style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
         {isDownloadedTrack ? (
           <Pressable
@@ -378,111 +379,224 @@ export default function AudioPlayerScreen() {
         )}
       </View>
 
-      <View style={styles.artworkContainer}>
-        <LinearGradient
-          colors={[
-            colors.surface,
-            withOpacity(colors.primary, isDark ? 0.08 : 0.04),
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.artwork,
-            {
-              borderColor: withOpacity(colors.primary, 0.2),
-            },
-          ]}
-        >
-          <View
+      {/* ── Chapter mode: artwork + info ── */}
+      {!isVerseMode && (
+        <View style={styles.artworkContainer}>
+          <LinearGradient
+            colors={[
+              colors.surface,
+              withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={[
-              styles.artworkInnerContainer,
-              {
-                backgroundColor: withOpacity(
-                  colors.primary,
-                  isDark ? 0.2 : 0.1,
-                ),
-              },
+              styles.artwork,
+              { borderColor: withOpacity(colors.primary, 0.2) },
             ]}
           >
-            <Text style={[styles.artworkText, { color: colors.primary }]}>
-              {surahId}
-            </Text>
-          </View>
-        </LinearGradient>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Text
-          style={[styles.surahName, { color: colors.textMain }]}
-          numberOfLines={1}
-        >
-          {surahName}
-        </Text>
-        <Text
-          style={[styles.reciterName, { color: colors.textMuted }]}
-          numberOfLines={1}
-        >
-          {isVerseMode ? `${reciterName} · Verse by verse` : reciterName}
-        </Text>
-      </View>
-
-      {isVerseMode && (
-        <View
-          style={[
-            styles.readAlongContainer,
-            {
-              borderColor: withOpacity(colors.border, 0.8),
-              backgroundColor: withOpacity(colors.surface, 0.82),
-            },
-          ]}
-        >
-          <Text style={[styles.readAlongTitle, { color: colors.textMain }]}>Read Along</Text>
-          <FlashList
-            ref={verseListRef}
-            data={verses}
-            // estimatedItemSize={76}
-            keyExtractor={(item) => String(item.verseNumber)}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.readAlongListContent}
-            renderItem={({ item }) => {
-              const isActive = item.verseNumber === currentVerseNumber;
-              return (
-                <View
-                  style={[
-                    styles.readAlongVerseRow,
-                    {
-                      borderColor: isActive
-                        ? withOpacity(colors.primary, 0.7)
-                        : withOpacity(colors.border, 0.75),
-                      backgroundColor: isActive
-                        ? withOpacity(colors.primary, 0.14)
-                        : withOpacity(colors.background, isDark ? 0.2 : 0.5),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.readAlongVerseNumber,
-                      { color: isActive ? colors.primary : colors.textMuted },
-                    ]}
-                  >
-                    {item.verseNumber}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.readAlongVerseText,
-                      { color: isActive ? colors.textMain : colors.textMuted },
-                    ]}
-                  >
-                    {item.text}
-                  </Text>
-                </View>
-              );
-            }}
-          />
+            <View
+              style={[
+                styles.artworkInnerContainer,
+                {
+                  backgroundColor: withOpacity(
+                    colors.primary,
+                    isDark ? 0.2 : 0.1,
+                  ),
+                },
+              ]}
+            >
+              <Text style={[styles.artworkText, { color: colors.primary }]}>
+                {surahId}
+              </Text>
+            </View>
+          </LinearGradient>
         </View>
       )}
 
+      {!isVerseMode && (
+        <View style={styles.infoContainer}>
+          <Text
+            style={[styles.surahName, { color: colors.textMain }]}
+            numberOfLines={1}
+          >
+            {surahName}
+          </Text>
+          <Text
+            style={[styles.reciterName, { color: colors.textMuted }]}
+            numberOfLines={1}
+          >
+            {reciterName}
+          </Text>
+        </View>
+      )}
+
+      {/* ── Verse mode: compact info bar + read-along panel ── */}
+      {isVerseMode && (
+        <>
+          {/* Compact surah / reciter pill */}
+          <View
+            style={[
+              styles.verseModeInfoBar,
+              {
+                backgroundColor: withOpacity(colors.surface, 0.88),
+                borderColor: withOpacity(colors.border, 0.5),
+              },
+            ]}
+          >
+            {/* Ayah number badge */}
+            <View
+              style={[
+                styles.verseModeAyahBadge,
+                { backgroundColor: withOpacity(colors.primary, 0.15) },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.verseModeAyahBadgeText,
+                  { color: colors.primary },
+                ]}
+              >
+                {currentVerseNumber}
+              </Text>
+            </View>
+
+            <View style={styles.verseModeInfoText}>
+              <Text
+                style={[styles.verseModeInfoSurah, { color: colors.textMain }]}
+                numberOfLines={1}
+              >
+                {surahName}
+              </Text>
+              <Text
+                style={[
+                  styles.verseModeInfoReciter,
+                  { color: colors.textMuted },
+                ]}
+                numberOfLines={1}
+              >
+                {reciterName}
+              </Text>
+            </View>
+
+            {/* "Verse by verse" tag */}
+            <View
+              style={[
+                styles.verseModeTag,
+                { backgroundColor: withOpacity(colors.primary, 0.1) },
+              ]}
+            >
+              <Text
+                style={[styles.verseModeTagText, { color: colors.primary }]}
+              >
+                Verse by verse
+              </Text>
+            </View>
+          </View>
+
+          {/* Read-along verse list */}
+          <View
+            style={[
+              styles.readAlongContainer,
+              {
+                borderColor: withOpacity(colors.border, 0.4),
+                backgroundColor: withOpacity(colors.surface, 0.45),
+              },
+            ]}
+          >
+            <FlashList
+              ref={verseListRef}
+              data={verses}
+              // estimatedItemSize={100}
+              keyExtractor={(item) => String(item.verseNumber)}
+              showsVerticalScrollIndicator={false}
+              style={styles.readAlongList}
+              contentContainerStyle={styles.readAlongListContent}
+              ListEmptyComponent={
+                <View style={styles.readAlongEmptyWrap}>
+                  <Text
+                    style={[
+                      styles.readAlongEmptyText,
+                      { color: colors.textMuted },
+                    ]}
+                  >
+                    Loading verses…
+                  </Text>
+                </View>
+              }
+              renderItem={({ item }) => {
+                const isActive = item.verseNumber === currentVerseNumber;
+                return (
+                  <View
+                    style={[
+                      styles.readAlongVerseRow,
+                      {
+                        borderColor: isActive
+                          ? withOpacity(colors.primary, 0.5)
+                          : "transparent",
+                        backgroundColor: isActive
+                          ? withOpacity(
+                              colors.primary,
+                              isDark ? 0.12 : 0.07,
+                            )
+                          : "transparent",
+                        // subtle glow on active
+                        shadowColor: colors.primary,
+                        shadowOpacity: isActive ? 0.15 : 0,
+                        shadowRadius: 10,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: isActive ? 3 : 0,
+                      },
+                    ]}
+                  >
+                    {/* Verse number pill */}
+                    <View
+                      style={[
+                        styles.readAlongVerseNumPill,
+                        {
+                          backgroundColor: isActive
+                            ? withOpacity(colors.primary, 0.18)
+                            : withOpacity(colors.border, 0.25),
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.readAlongVerseNum,
+                          {
+                            color: isActive
+                              ? colors.primary
+                              : colors.textMuted,
+                          },
+                        ]}
+                      >
+                        {item.verseNumber}
+                      </Text>
+                    </View>
+
+                    {/* Arabic text */}
+                    <Text
+                      style={[
+                        styles.readAlongVerseText,
+                        {
+                          color: isActive
+                            ? colors.textMain
+                            : withOpacity(colors.textMuted, 0.55),
+                          fontSize: isActive ? 26 : 21,
+                          lineHeight: isActive ? 44 : 34,
+                        },
+                      ]}
+                    >
+                      {item.text}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+          </View>
+        </>
+      )}
+
+      {/* ── Progress slider ── */}
       <View style={styles.progressContainer}>
         <Slider
           style={styles.slider}
@@ -506,14 +620,11 @@ export default function AudioPlayerScreen() {
         </View>
       </View>
 
+      {/* ── Playback controls ── */}
       <View style={styles.controlsContainer}>
         <AnimatedPressable
-          onPressIn={() => {
-            skipBackPressed.value = 1;
-          }}
-          onPressOut={() => {
-            skipBackPressed.value = 0;
-          }}
+          onPressIn={() => { skipBackPressed.value = 1; }}
+          onPressOut={() => { skipBackPressed.value = 0; }}
           onPress={seekBackward}
           style={[{ padding: 12 }, skipBackAnimatedStyle]}
         >
@@ -521,18 +632,12 @@ export default function AudioPlayerScreen() {
         </AnimatedPressable>
 
         <AnimatedPressable
-          onPressIn={() => {
-            playPressed.value = 1;
-          }}
-          onPressOut={() => {
-            playPressed.value = 0;
-          }}
+          onPressIn={() => { playPressed.value = 1; }}
+          onPressOut={() => { playPressed.value = 0; }}
           onPress={togglePlayback}
           style={[
             styles.playButton,
-            {
-              backgroundColor: colors.primary,
-            },
+            { backgroundColor: colors.primary },
             playAnimatedStyle,
           ]}
         >
@@ -546,12 +651,8 @@ export default function AudioPlayerScreen() {
         </AnimatedPressable>
 
         <AnimatedPressable
-          onPressIn={() => {
-            skipForwardPressed.value = 1;
-          }}
-          onPressOut={() => {
-            skipForwardPressed.value = 0;
-          }}
+          onPressIn={() => { skipForwardPressed.value = 1; }}
+          onPressOut={() => { skipForwardPressed.value = 0; }}
           onPress={handleNextTrack}
           style={[{ padding: 12 }, skipForwardAnimatedStyle]}
         >
@@ -563,6 +664,7 @@ export default function AudioPlayerScreen() {
         </AnimatedPressable>
       </View>
 
+      {/* ── Queue modal ── */}
       <Modal
         visible={isQueueVisible}
         transparent
@@ -577,7 +679,10 @@ export default function AudioPlayerScreen() {
           <View
             style={[
               styles.modalContent,
-              { backgroundColor: colors.background, height: Dimensions.get('window').height * 0.55 },
+              {
+                backgroundColor: colors.background,
+                height: Dimensions.get("window").height * 0.55,
+              },
             ]}
           >
             <View style={styles.modalHeader}>
@@ -595,7 +700,9 @@ export default function AudioPlayerScreen() {
             {queue.length === 0 ? (
               <View style={styles.emptyQueue}>
                 <ListMusic size={48} color={colors.textMuted} />
-                <Text style={[styles.emptyQueueText, { color: colors.textMuted }]}>
+                <Text
+                  style={[styles.emptyQueueText, { color: colors.textMuted }]}
+                >
                   Queue is empty
                 </Text>
               </View>
@@ -606,12 +713,32 @@ export default function AudioPlayerScreen() {
                 contentContainerStyle={styles.queueList}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item, index }) => (
-                  <View style={[styles.queueItem, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <View
+                    style={[
+                      styles.queueItem,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.surface,
+                      },
+                    ]}
+                  >
                     <View style={styles.queueItemInfo}>
-                      <Text style={[styles.queueItemTitle, { color: colors.textMain }]} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.queueItemTitle,
+                          { color: colors.textMain },
+                        ]}
+                        numberOfLines={1}
+                      >
                         {item.surahName}
                       </Text>
-                      <Text style={[styles.queueItemSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.queueItemSubtitle,
+                          { color: colors.textMuted },
+                        ]}
+                        numberOfLines={1}
+                      >
                         {item.reciterName}
                       </Text>
                     </View>
@@ -634,6 +761,8 @@ export default function AudioPlayerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
+  // ── Header ──────────────────────────────────────────────
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -653,9 +782,6 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiBold",
     fontSize: 16,
   },
-  headerSpacing: {
-    width: 44,
-  },
   downloadButton: {
     width: 44,
     height: 44,
@@ -663,6 +789,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // ── Chapter mode: artwork ────────────────────────────────
   artworkContainer: {
     flex: 1,
     justifyContent: "center",
@@ -694,6 +822,8 @@ const styles = StyleSheet.create({
     fontFamily: "AmiriQuran",
     fontSize: 64,
   },
+
+  // ── Chapter mode: info ───────────────────────────────────
   infoContainer: {
     alignItems: "center",
     paddingHorizontal: 32,
@@ -710,46 +840,106 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
   },
-  readAlongContainer: {
-    borderWidth: 1,
-    borderRadius: 18,
+
+  // ── Verse mode: compact info bar ────────────────────────
+  verseModeInfoBar: {
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: 18,
-    marginBottom: 22,
-    maxHeight: 230,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+  },
+  verseModeAyahBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  verseModeAyahBadgeText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 16,
+  },
+  verseModeInfoText: {
+    flex: 1,
+    gap: 2,
+  },
+  verseModeInfoSurah: {
+    fontFamily: "SatoshiBold",
+    fontSize: 15,
+  },
+  verseModeInfoReciter: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 12,
+  },
+  verseModeTag: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+    flexShrink: 0,
+  },
+  verseModeTagText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 11,
+  },
+
+  // ── Read-along panel ────────────────────────────────────
+  readAlongContainer: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    marginHorizontal: 18,
+    marginBottom: 14,
     overflow: "hidden",
   },
-  readAlongTitle: {
-    fontFamily: "SatoshiBold",
-    fontSize: 14,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 8,
+  readAlongList: {
+    flex: 1,
   },
   readAlongListContent: {
     paddingHorizontal: 10,
-    paddingBottom: 12,
-    gap: 8,
+    paddingVertical: 12,
+    gap: 6,
+  },
+  readAlongEmptyWrap: {
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+  },
+  readAlongEmptyText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
   },
   readAlongVerseRow: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    gap: 6,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
   },
-  readAlongVerseNumber: {
+  readAlongVerseNumPill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginBottom: 2,
+  },
+  readAlongVerseNum: {
     fontFamily: "SatoshiBold",
-    fontSize: 12,
+    fontSize: 11,
   },
   readAlongVerseText: {
     fontFamily: "AmiriQuran",
-    fontSize: 24,
-    lineHeight: 36,
     textAlign: "right",
   },
+
+  // ── Progress ────────────────────────────────────────────
   progressContainer: {
     paddingHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   slider: {
     width: "100%",
@@ -764,6 +954,8 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
+
+  // ── Controls ────────────────────────────────────────────
   controlsContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -783,6 +975,8 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+
+  // ── Queue modal ─────────────────────────────────────────
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
