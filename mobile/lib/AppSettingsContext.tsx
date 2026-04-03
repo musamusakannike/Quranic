@@ -16,6 +16,35 @@ export type ReminderTime = {
   minute: number;
 };
 
+const hasNotificationPermission = async () => {
+  const current = await Notifications.getPermissionsAsync();
+  return (
+    current.granted ||
+    current.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  );
+};
+
+const scheduleJummahReminder = async (currentNotificationId: string | null) => {
+  if (currentNotificationId) {
+    await Notifications.cancelScheduledNotificationAsync(currentNotificationId);
+  }
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Jumu'ah Mubarak",
+      body: "It's Friday. Don't forget to recite Suratul Kahf today.",
+      sound: true,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      channelId: "daily-reminders",
+      weekday: 6,
+      hour: 6,
+      minute: 0,
+    } as Notifications.NotificationTriggerInput,
+  });
+};
+
 export type ReadingView = "list" | "verse_by_verse" | "mushaf";
 export type QuickActionsView = "carousel" | "grid";
 
@@ -48,6 +77,7 @@ type StoredSettings = {
   reminderEnabled: boolean;
   reminderTime: ReminderTime;
   reminderNotificationId: string | null;
+  jummahReminderNotificationId: string | null;
   hasSeenOnboarding: boolean;
   arabicFontSize: number;
   translationFontSize: number;
@@ -63,6 +93,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   reminderEnabled: false,
   reminderTime: { hour: 20, minute: 0 },
   reminderNotificationId: null,
+  jummahReminderNotificationId: null,
   hasSeenOnboarding: false,
   arabicFontSize: 31,
   translationFontSize: 14,
@@ -163,6 +194,26 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const ensureJummahReminder = async () => {
+      const permissionGranted = await hasNotificationPermission();
+      if (!permissionGranted) return;
+
+      const jummahReminderNotificationId = await scheduleJummahReminder(
+        settings.jummahReminderNotificationId,
+      );
+
+      await updateSettings((current) => ({
+        ...current,
+        jummahReminderNotificationId,
+      }));
+    };
+
+    void ensureJummahReminder();
+  }, [isLoaded, settings.jummahReminderNotificationId, updateSettings]);
 
   const setShowTranslations = useCallback(
     async (enabled: boolean) => {
@@ -284,16 +335,25 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
           } as Notifications.NotificationTriggerInput,
         });
 
+      const jummahReminderNotificationId = await scheduleJummahReminder(
+        settings.jummahReminderNotificationId,
+      );
+
       await updateSettings((current) => ({
         ...current,
         reminderEnabled: true,
         reminderTime: time,
         reminderNotificationId,
+        jummahReminderNotificationId,
       }));
 
       return true;
     },
-    [settings.reminderNotificationId, updateSettings],
+    [
+      settings.jummahReminderNotificationId,
+      settings.reminderNotificationId,
+      updateSettings,
+    ],
   );
 
   const contextValue = useMemo<AppSettingsContextValue>(
