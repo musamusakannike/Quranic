@@ -2,15 +2,16 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Modal,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
   ScrollView,
-  Platform,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
@@ -23,8 +24,9 @@ import {
   Search,
   Share2,
   Bookmark,
-  BookOpen,
+  SlidersHorizontal,
 } from "lucide-react-native";
+import Slider from "@react-native-community/slider";
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
 import { useBookmarks } from "../../lib/BookmarksContext";
@@ -75,6 +77,11 @@ export default function ChapterDetailScreen() {
     arabicFontSize,
     translationFontSize,
     readingView,
+    setShowTranslations,
+    setShowTransliterations,
+    setArabicFontSize,
+    setTranslationFontSize,
+    setReadingView,
   } = useAppSettings();
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const [searchValue, setSearchValue] = useState("");
@@ -94,6 +101,7 @@ export default function ChapterDetailScreen() {
   } | null>(null);
 
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+  const [isReaderSettingsOpen, setIsReaderSettingsOpen] = useState(false);
 
   const chapterNumber = useMemo(() => {
     const rawId = Array.isArray(id) ? id[0] : id;
@@ -271,13 +279,13 @@ export default function ChapterDetailScreen() {
     [chapterMeta?.englishname, chapterNumber],
   );
 
-  const toArabicNumber = (num: number) => {
-    const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-    return String(num)
-      .split("")
-      .map((char) => arabicDigits[Number(char)])
-      .join("");
-  };
+  // const toArabicNumber = (num: number) => {
+  //   const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  //   return String(num)
+  //     .split("")
+  //     .map((char) => arabicDigits[Number(char)])
+  //     .join("");
+  // };
 
   const renderVerse = useCallback(
     ({ item }: { item: VerseItem }) => {
@@ -569,10 +577,26 @@ export default function ChapterDetailScreen() {
           />
         </View>
 
-        <Text style={[styles.resultsText, { color: colors.textMuted }]}>
+        <Text style={[styles.resultsText, { color: colors.textMuted }]}> 
           {filteredVerses.length} verse
           {filteredVerses.length === 1 ? "" : "s"}
         </Text>
+
+        <Pressable
+          onPress={() => setIsReaderSettingsOpen(true)}
+          style={[
+            styles.readerSettingsButton,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.border, 0.86),
+            },
+          ]}
+        >
+          <SlidersHorizontal size={16} color={colors.textMain} />
+          <Text style={[styles.readerSettingsButtonText, { color: colors.textMain }]}> 
+            Reading settings
+          </Text>
+        </Pressable>
       </View>
     );
   };
@@ -734,6 +758,16 @@ export default function ChapterDetailScreen() {
                 Page {activeMushafPage}
               </Text>
             </View>
+
+            <Pressable
+              onPress={() => setIsReaderSettingsOpen(true)}
+              style={[
+                styles.mushafBackButtonClean,
+                { backgroundColor: "rgba(255,255,255,0.12)" },
+              ]}
+            >
+              <SlidersHorizontal size={20} color="#FFF" />
+            </Pressable>
           </View>
         </View>
       );
@@ -784,28 +818,232 @@ export default function ChapterDetailScreen() {
             },
           ]}
         >
-          <Pressable
-            onPress={() => {
-              void Haptics.selectionAsync();
-              router.back();
-            }}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.border,
-                backgroundColor: withOpacity(colors.surface, 0.92),
-              },
-            ]}
-          >
-            <ChevronLeft size={18} color={colors.textMain} />
-            <Text style={[styles.backButtonText, { color: colors.textMain }]}>
-              Chapters
-            </Text>
-          </Pressable>
+          <View style={styles.stickyHeaderRow}>
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                router.back();
+              }}
+              style={[
+                styles.backButton,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: withOpacity(colors.surface, 0.92),
+                },
+              ]}
+            >
+              <ChevronLeft size={18} color={colors.textMain} />
+              <Text style={[styles.backButtonText, { color: colors.textMain }]}> 
+                Chapters
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setIsReaderSettingsOpen(true)}
+              style={[
+                styles.headerSettingsIconButton,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: withOpacity(colors.surface, 0.92),
+                },
+              ]}
+            >
+              <SlidersHorizontal size={18} color={colors.textMain} />
+            </Pressable>
+          </View>
         </View>
       )}
 
       {renderContent()}
+
+      <Modal
+        visible={isReaderSettingsOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsReaderSettingsOpen(false)}
+      >
+        <View style={styles.settingsModalOverlay}>
+          <Pressable
+            onPress={() => setIsReaderSettingsOpen(false)}
+            style={StyleSheet.absoluteFill}
+          />
+
+          <View
+            style={[
+              styles.settingsSheet,
+              {
+                backgroundColor: colors.surface,
+                borderColor: withOpacity(colors.border, 0.86),
+                paddingBottom: insets.bottom + 16,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.settingsSheetGrabber,
+                { backgroundColor: withOpacity(colors.border, 0.9) },
+              ]}
+            />
+
+            <View style={styles.settingsSheetHeader}>
+              <Text style={[styles.settingsSheetTitle, { color: colors.textMain }]}>
+                Reading settings
+              </Text>
+              <Pressable
+                onPress={() => setIsReaderSettingsOpen(false)}
+                style={[
+                  styles.settingsDoneButton,
+                  {
+                    backgroundColor: withOpacity(colors.primary, isDark ? 0.28 : 0.14),
+                  },
+                ]}
+              >
+                <Text style={[styles.settingsDoneButtonText, { color: colors.primary }]}> 
+                  Done
+                </Text>
+              </Pressable>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={styles.settingsSheetContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={[styles.settingGroupLabel, { color: colors.textMuted }]}> 
+                Reading mode
+              </Text>
+              <View style={styles.modeSelectorRow}>
+                {[
+                  { key: "list", label: "List" },
+                  { key: "verse_by_verse", label: "Verse" },
+                  { key: "mushaf", label: "Mushaf" },
+                ].map((option) => {
+                  const selected = readingView === option.key;
+                  return (
+                    <Pressable
+                      key={option.key}
+                      onPress={() => {
+                        void setReadingView(option.key as "list" | "verse_by_verse" | "mushaf");
+                      }}
+                      style={[
+                        styles.modeOption,
+                        {
+                          borderColor: selected
+                            ? withOpacity(colors.primary, 0.6)
+                            : withOpacity(colors.border, 0.86),
+                          backgroundColor: selected
+                            ? withOpacity(colors.primary, isDark ? 0.26 : 0.12)
+                            : withOpacity(colors.background, 0.65),
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.modeOptionText,
+                          { color: selected ? colors.primary : colors.textMuted },
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.settingsRow}> 
+                <View style={styles.settingsRowTextWrap}>
+                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                    Show translations
+                  </Text>
+                  <Text style={[styles.settingsRowSubtitle, { color: colors.textMuted }]}> 
+                    English translation under ayah
+                  </Text>
+                </View>
+                <Switch
+                  value={showTranslations}
+                  onValueChange={(nextValue) => {
+                    void setShowTranslations(nextValue);
+                  }}
+                  trackColor={{
+                    false: withOpacity(colors.border, 0.8),
+                    true: withOpacity(colors.primary, 0.45),
+                  }}
+                  thumbColor={showTranslations ? colors.primary : "#F4F4F5"}
+                />
+              </View>
+
+              <View style={styles.settingsRow}> 
+                <View style={styles.settingsRowTextWrap}>
+                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                    Show transliterations
+                  </Text>
+                  <Text style={[styles.settingsRowSubtitle, { color: colors.textMuted }]}> 
+                    Latin transliteration under ayah
+                  </Text>
+                </View>
+                <Switch
+                  value={showTransliterations}
+                  onValueChange={(nextValue) => {
+                    void setShowTransliterations(nextValue);
+                  }}
+                  trackColor={{
+                    false: withOpacity(colors.border, 0.8),
+                    true: withOpacity(colors.primary, 0.45),
+                  }}
+                  thumbColor={showTransliterations ? colors.primary : "#F4F4F5"}
+                />
+              </View>
+
+              <View style={styles.sliderGroup}> 
+                <View style={styles.sliderHeaderRow}>
+                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                    Arabic text size
+                  </Text>
+                  <Text style={[styles.settingsSliderValue, { color: colors.textMuted }]}> 
+                    {Math.round(arabicFontSize)}px
+                  </Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={22}
+                  maximumValue={50}
+                  step={1}
+                  value={arabicFontSize}
+                  onSlidingComplete={(next) => {
+                    void setArabicFontSize(next);
+                  }}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={withOpacity(colors.border, 0.8)}
+                  thumbTintColor={colors.primary}
+                />
+              </View>
+
+              <View style={styles.sliderGroup}> 
+                <View style={styles.sliderHeaderRow}>
+                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                    Translation text size
+                  </Text>
+                  <Text style={[styles.settingsSliderValue, { color: colors.textMuted }]}> 
+                    {Math.round(translationFontSize)}px
+                  </Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={12}
+                  maximumValue={24}
+                  step={1}
+                  value={translationFontSize}
+                  onSlidingComplete={(next) => {
+                    void setTranslationFontSize(next);
+                  }}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={withOpacity(colors.border, 0.8)}
+                  thumbTintColor={colors.primary}
+                />
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <ShareVerseModal
         visible={shareVerseData !== null}
@@ -1001,5 +1239,135 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  stickyHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerSettingsIconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  readerSettingsButton: {
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+  },
+  readerSettingsButtonText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+  },
+  settingsModalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.28)",
+  },
+  settingsSheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: 1,
+    maxHeight: "82%",
+    overflow: "hidden",
+  },
+  settingsSheetGrabber: {
+    width: 44,
+    height: 4,
+    borderRadius: 999,
+    alignSelf: "center",
+    marginTop: 10,
+  },
+  settingsSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  settingsSheetTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 19,
+  },
+  settingsDoneButton: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    minHeight: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsDoneButtonText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 13,
+  },
+  settingsSheetContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  settingGroupLabel: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 12,
+  },
+  modeSelectorRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  modeOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modeOptionText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+  },
+  settingsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  settingsRowTextWrap: {
+    flex: 1,
+    paddingRight: 12,
+    gap: 2,
+  },
+  settingsRowTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 14,
+  },
+  settingsRowSubtitle: {
+    fontFamily: "Satoshi",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  sliderGroup: {
+    gap: 2,
+  },
+  sliderHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  settingsSliderValue: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 13,
+  },
+  slider: {
+    width: "100%",
+    height: 40,
   },
 });
