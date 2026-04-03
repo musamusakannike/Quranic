@@ -706,7 +706,7 @@ export default function ChapterDetailScreen() {
 
               void saveLastReadProgress({
                 chapter: chapterNumber,
-                verse: 1, // Simplified for Mushaf mode
+                verse: pageVerses[0]?.verseNumber ?? 1,
                 page,
                 juz,
               });

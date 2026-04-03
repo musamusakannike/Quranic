@@ -41,6 +41,7 @@ import {
   getFirstVerseForJuz,
   getVersesCount,
   getChapterVerses,
+  getVerseMetadata,
   getVerseTranslation,
 } from "../../lib/QuranHelper";
 import {
@@ -167,6 +168,24 @@ export default function Index() {
   const lastReadChapter = useMemo(() => {
     if (!lastRead) return null;
     return getChapterMetadata(lastRead.chapter);
+  }, [lastRead]);
+
+  const resumeVerse = useMemo(() => {
+    if (!lastRead) return null;
+
+    if (!lastRead.page) {
+      return lastRead.verse;
+    }
+
+    const totalVerses = getVersesCount(lastRead.chapter);
+    for (let verseNumber = 1; verseNumber <= totalVerses; verseNumber += 1) {
+      const metadata = getVerseMetadata(lastRead.chapter, verseNumber);
+      if (metadata?.page === lastRead.page) {
+        return verseNumber;
+      }
+    }
+
+    return lastRead.verse;
   }, [lastRead]);
 
   const readingProgress = useMemo(() => {
@@ -330,11 +349,14 @@ export default function Index() {
                   router.push("/(tabs)/chapters");
                   return;
                 }
+                if (!resumeVerse) {
+                  return;
+                }
                 router.push({
                   pathname: "/chapter/[id]",
                   params: {
                     id: String(lastRead.chapter),
-                    verse: String(lastRead.verse),
+                    verse: String(resumeVerse),
                   },
                 });
               }}
