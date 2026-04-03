@@ -1,13 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, FlatList } from "react-native";
+import { View, Text, StyleSheet, Pressable, FlatList, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../lib/ThemeContext";
 import { useDownloads } from "../../lib/DownloadsContext";
 import { ArrowLeft, Trash2, PlayCircle, Download, MoreVertical, Play } from "lucide-react-native";
-import { Modal, ActivityIndicator } from "react-native";
 import { useAudio } from "../../lib/AudioContext";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 export default function DownloadsScreen() {
@@ -17,19 +15,40 @@ export default function DownloadsScreen() {
   const { playNext } = useAudio();
   const [selectedDownload, setSelectedDownload] = React.useState<any>(null);
 
+  const getModeFromDownload = (item: any) =>
+    item.format === "verse_by_verse" ? "verse_by_verse" : "chapter";
+
   const handlePlayNext = () => {
     if (!selectedDownload) return;
+
+    if (getModeFromDownload(selectedDownload) === "verse_by_verse") {
+      router.push({
+        pathname: "/audio/[reciterId]/[surahId]",
+        params: {
+          reciterId: selectedDownload.reciterId,
+          surahId: selectedDownload.surahId,
+          reciterName: selectedDownload.reciterName,
+          server: selectedDownload.server,
+          surahName: selectedDownload.surahName,
+          mode: "verse_by_verse",
+        },
+      });
+      setSelectedDownload(null);
+      return;
+    }
     
     // Fallback if localUri gets lost or use remote
     const audioUrl = selectedDownload.localUri || `${selectedDownload.server}${selectedDownload.surahId.padStart(3, "0")}.mp3`;
     
     playNext({
+      id: `${selectedDownload.id}-${Date.now()}-next`,
       audioUrl: audioUrl,
       surahId: selectedDownload.surahId,
       surahName: selectedDownload.surahName,
       reciterName: selectedDownload.reciterName,
       reciterId: selectedDownload.reciterId,
       server: selectedDownload.server,
+      mode: getModeFromDownload(selectedDownload),
     });
     setSelectedDownload(null);
   };
@@ -44,6 +63,7 @@ export default function DownloadsScreen() {
         reciterName: item.reciterName,
         server: item.server,
         surahName: item.surahName,
+        mode: getModeFromDownload(item),
       },
     });
   };
@@ -105,8 +125,13 @@ export default function DownloadsScreen() {
                 <Text style={[styles.surahName, { color: colors.textMain }]}>
                   {item.surahName}
                 </Text>
-                <Text style={[styles.reciterName, { color: colors.textMuted }]}>
+                <Text style={[styles.reciterName, { color: colors.textMuted }]}> 
                   {item.reciterName}
+                </Text>
+                <Text style={[styles.formatText, { color: colors.textMuted }]}> 
+                  {item.format === "verse_by_verse"
+                    ? "Verse-by-verse download"
+                    : "Chapter download"}
                 </Text>
               </View>
               <Pressable
@@ -236,6 +261,11 @@ const styles = StyleSheet.create({
   reciterName: {
     fontFamily: "Satoshi",
     fontSize: 14,
+  },
+  formatText: {
+    fontFamily: "Satoshi",
+    fontSize: 12,
+    marginTop: 2,
   },
   deleteButton: {
     padding: 8,

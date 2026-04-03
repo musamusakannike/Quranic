@@ -21,6 +21,8 @@ export interface Track {
   reciterName: string;
   reciterId: string;
   server: string;
+  mode?: "chapter" | "verse_by_verse";
+  verseNumber?: number;
 }
 
 interface AudioContextType {

@@ -1,9 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ActivityIndicator,
+  Modal,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Play, ArrowLeft, Search, Download, Trash2, MoreVertical } from "lucide-react-native";
-import { ActivityIndicator, Modal } from "react-native";
 import * as Haptics from "expo-haptics";
 import { getChapterMetadata } from "../../../lib/QuranHelper";
 import { useTheme } from "../../../lib/ThemeContext";
@@ -28,15 +35,28 @@ function SurahCard({
   reciterId,
   reciterName,
   server,
+  mode,
   colors,
   isDark,
   onOptionsPress,
 }: any) {
   const router = useRouter();
 
-  const { isDownloaded, downloadAudio, deleteAudio, activeDownloads } =
+  const {
+    isDownloaded,
+    downloadAudio,
+    downloadVerseByVerseChapter,
+    deleteAudio,
+    activeDownloads,
+    buildDownloadId,
+  } =
     useDownloads();
-  const downloadId = `${reciterId}-${item.id}`;
+  const isVerseMode = mode === "verse_by_verse";
+  const downloadId = buildDownloadId(
+    reciterId,
+    String(item.id),
+    isVerseMode ? "verse_by_verse" : "chapter",
+  );
   const isDownloadedTrack = isDownloaded(downloadId);
 
   return (
@@ -51,6 +71,7 @@ function SurahCard({
             reciterName,
             server,
             surahName: item.name,
+            mode,
           },
         });
       }}
@@ -128,13 +149,24 @@ function SurahCard({
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();
-                downloadAudio({
-                  reciterId,
-                  reciterName,
-                  surahId: String(item.id),
-                  surahName: item.name,
-                  server,
-                });
+                if (isVerseMode) {
+                  void downloadVerseByVerseChapter({
+                    reciterId,
+                    reciterName,
+                    surahId: String(item.id),
+                    surahName: item.name,
+                    server,
+                  });
+                } else {
+                  void downloadAudio({
+                    reciterId,
+                    reciterName,
+                    surahId: String(item.id),
+                    surahName: item.name,
+                    server,
+                    format: "chapter",
+                  });
+                }
               }}
               style={{
                 width: 36,
@@ -176,35 +208,68 @@ function SurahCard({
 export default function AudioSurahsScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { reciterId, reciterName, server, surahList } = useLocalSearchParams<{
+  const {
+    reciterId,
+    reciterName,
+    reciterNativeName,
+    server,
+    surahList,
+    mode,
+  } = useLocalSearchParams<{
     reciterId: string;
     reciterName: string;
+    reciterNativeName?: string;
     server: string;
     surahList: string;
+    mode?: "chapter" | "verse_by_verse";
   }>();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSurah, setSelectedSurah] = useState<any>(null);
   const { playNext } = useAudio();
-  const { isDownloaded, downloads } = useDownloads();
+  const { isDownloaded, downloads, buildDownloadId } = useDownloads();
+  const isVerseMode = mode === "verse_by_verse";
 
   const handlePlayNext = () => {
     if (!selectedSurah) return;
     const surahIdStr = String(selectedSurah.id);
+
+    if (isVerseMode) {
+      router.push({
+        pathname: "/audio/[reciterId]/[surahId]",
+        params: {
+          reciterId,
+          surahId: surahIdStr,
+          reciterName,
+          server,
+          surahName: selectedSurah.name,
+          mode: "verse_by_verse",
+        },
+      });
+      setSelectedSurah(null);
+      return;
+    }
+
     const formattedSurahId = surahIdStr.padStart(3, "0");
-    const downloadId = `${reciterId}-${surahIdStr}`;
+    const downloadId = buildDownloadId(
+      reciterId,
+      surahIdStr,
+      "chapter",
+    );
     const defaultAudioUrl = `${server}${formattedSurahId}.mp3`;
     const audioUrl = isDownloaded(downloadId)
       ? downloads.find((d) => d.id === downloadId)?.localUri || defaultAudioUrl
       : defaultAudioUrl;
 
     playNext({
+      id: `${reciterId}-${surahIdStr}-${Date.now()}-next`,
       audioUrl,
       surahId: surahIdStr,
       surahName: selectedSurah.name,
       reciterName,
       reciterId,
       server,
+      mode: "chapter",
     });
     setSelectedSurah(null);
   };
@@ -246,6 +311,7 @@ export default function AudioSurahsScreen() {
         reciterId={reciterId}
         reciterName={reciterName}
         server={server}
+        mode={isVerseMode ? "verse_by_verse" : "chapter"}
         colors={colors}
         isDark={isDark}
         onOptionsPress={(surah: any) => setSelectedSurah(surah)}
@@ -314,9 +380,16 @@ export default function AudioSurahsScreen() {
               <Text style={[styles.heroTitle, { color: colors.textMain }]}>
                 {reciterName}
               </Text>
-              <Text style={[styles.heroSubtitle, { color: colors.textMuted }]}>
-                Select a Surah to listen to this reciter.
+              <Text style={[styles.heroSubtitle, { color: colors.textMuted }]}> 
+                {isVerseMode
+                  ? "Select a Surah to listen verse-by-verse with read-along."
+                  : "Select a Surah to listen to this reciter."}
               </Text>
+              {!!reciterNativeName && (
+                <Text style={[styles.heroNativeName, { color: colors.textMuted }]}>
+                  {reciterNativeName}
+                </Text>
+              )}
             </LinearGradient>
 
             <View
@@ -427,6 +500,11 @@ const styles = StyleSheet.create({
     fontFamily: "Satoshi",
     fontSize: 14,
     lineHeight: 20,
+  },
+  heroNativeName: {
+    fontFamily: "AmiriQuran",
+    fontSize: 20,
+    marginTop: 2,
   },
   searchContainer: {
     borderWidth: 1,

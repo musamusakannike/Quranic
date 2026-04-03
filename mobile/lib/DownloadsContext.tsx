@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useToast } from "./ToastContext";
 import * as Network from "expo-network";
 import { Platform } from "react-native";
+import { getGlobalVerseNumber, getVersesCount } from "./QuranHelper";
 
 
 export interface DownloadedAudio {
@@ -20,15 +21,27 @@ export interface DownloadedAudio {
   reciterName: string;
   server: string;
   localUri: string;
+  format: "chapter" | "verse_by_verse";
+  verseCount?: number;
   downloadDate: number;
 }
 
 interface DownloadsContextData {
   downloads: DownloadedAudio[];
   activeDownloads: Record<string, number>; // id -> progress (0 to 1)
+  buildDownloadId: (
+    reciterId: string,
+    surahId: string,
+    format?: "chapter" | "verse_by_verse",
+  ) => string;
   isDownloaded: (id: string) => boolean;
   downloadAudio: (
     item: Omit<DownloadedAudio, "id" | "localUri" | "downloadDate">,
+  ) => Promise<void>;
+  downloadVerseByVerseChapter: (
+    item: Omit<DownloadedAudio, "id" | "localUri" | "downloadDate" | "format"> & {
+      verseCount?: number;
+    },
   ) => Promise<void>;
   deleteAudio: (id: string) => Promise<void>;
   checkOnlineBeforeFetch: () => Promise<boolean>;
@@ -49,6 +62,15 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
     Record<string, number>
   >({});
   const { showToast } = useToast();
+
+  const buildDownloadId = useCallback(
+    (
+      reciterId: string,
+      surahId: string,
+      format: "chapter" | "verse_by_verse" = "chapter",
+    ) => `${reciterId}-${surahId}-${format}`,
+    [],
+  );
 
   useEffect(() => {
     init();
@@ -92,6 +114,90 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const downloadVerseByVerseChapter = async (
+    item: Omit<DownloadedAudio, "id" | "localUri" | "downloadDate" | "format"> & {
+      verseCount?: number;
+    },
+  ) => {
+    if (Platform.OS === "web") {
+      showToast("Downloads are not supported on web", "info");
+      return;
+    }
+
+    const isOnline = await checkOnlineBeforeFetch();
+    if (!isOnline) return;
+
+    const id = buildDownloadId(item.reciterId, item.surahId, "verse_by_verse");
+    if (isDownloaded(id)) {
+      showToast("Already downloaded", "info");
+      return;
+    }
+
+    if (activeDownloads[id] !== undefined) {
+      showToast("Download in progress", "info");
+      return;
+    }
+
+    const surahNumber = Number(item.surahId);
+    const totalVerses = item.verseCount ?? getVersesCount(surahNumber);
+    const chapterDir = `${DOWNLOAD_DIR}${id}/`;
+
+    try {
+      setActiveDownloads((prev) => ({ ...prev, [id]: 0 }));
+
+      const dirInfo = await FileSystem.getInfoAsync(chapterDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(chapterDir, { intermediates: true });
+      }
+
+      for (let verse = 1; verse <= totalVerses; verse++) {
+        const globalVerseNumber = getGlobalVerseNumber(surahNumber, verse);
+        const audioUrl = `${item.server}${globalVerseNumber}.mp3`;
+        const localUri = `${chapterDir}${String(verse).padStart(3, "0")}.mp3`;
+
+        const downloadResumable = FileSystem.createDownloadResumable(
+          audioUrl,
+          localUri,
+          {},
+          (downloadProgress) => {
+            const currentFileProgress =
+              downloadProgress.totalBytesExpectedToWrite > 0
+                ? downloadProgress.totalBytesWritten /
+                  downloadProgress.totalBytesExpectedToWrite
+                : 0;
+            const aggregateProgress = (verse - 1 + currentFileProgress) / totalVerses;
+            setActiveDownloads((prev) => ({ ...prev, [id]: aggregateProgress }));
+          },
+        );
+
+        await downloadResumable.downloadAsync();
+      }
+
+      const newDownload: DownloadedAudio = {
+        ...item,
+        id,
+        localUri: chapterDir,
+        format: "verse_by_verse",
+        verseCount: totalVerses,
+        downloadDate: Date.now(),
+      };
+
+      const newDownloads = [newDownload, ...downloads];
+      setDownloads(newDownloads);
+      await AsyncStorage.setItem(DOWNLOADS_KEY, JSON.stringify(newDownloads));
+      showToast(`Downloaded ${item.surahName} (verse-by-verse)`, "success");
+    } catch (e) {
+      console.error("Verse-by-verse download failed", e);
+      showToast("Download failed", "error");
+    } finally {
+      setActiveDownloads((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
   const checkOnlineBeforeFetch = async () => {
     const networkState = await Network.getNetworkStateAsync();
     if (!networkState.isConnected || !networkState.isInternetReachable) {
@@ -119,7 +225,7 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (!isOnline) return;
 
-    const id = `${item.reciterId}-${item.surahId}`;
+    const id = buildDownloadId(item.reciterId, item.surahId, "chapter");
     if (isDownloaded(id)) {
       showToast("Already downloaded", "info");
       return;
@@ -157,6 +263,7 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
           ...item,
           id,
           localUri: result.uri,
+          format: "chapter",
           downloadDate: Date.now(),
         };
 
@@ -200,8 +307,10 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         downloads,
         activeDownloads,
+        buildDownloadId,
         isDownloaded,
         downloadAudio,
+        downloadVerseByVerseChapter,
         deleteAudio,
         checkOnlineBeforeFetch,
       }}

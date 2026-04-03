@@ -11,7 +11,7 @@ import { useTheme } from "../lib/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { ChevronLeft, ChevronRight, Sun, Moon, Clock, BookOpen, Sparkles, Shield } from "lucide-react-native";
+import { ChevronLeft, Sun, Moon, Clock, BookOpen, Shield } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 const ADHKAAR_CATEGORIES = [

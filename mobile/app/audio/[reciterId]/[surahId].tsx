@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  Modal,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,13 +19,12 @@ import {
   ChevronDown,
   Download,
   Trash2,
-  CheckCircle2,
   ListMusic,
   X,
 } from "lucide-react-native";
 import Slider from "@react-native-community/slider";
-import { Modal, FlatList, Dimensions } from "react-native";
 import * as Haptics from "expo-haptics";
+import { FlashList } from "@shopify/flash-list";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -31,6 +33,11 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../../../lib/ThemeContext";
+import {
+  getChapterVerses,
+  getGlobalVerseNumber,
+  getVersesCount,
+} from "../../../lib/QuranHelper";
 
 import { useAudio } from "../../../lib/AudioContext";
 import { useDownloads } from "../../../lib/DownloadsContext";
@@ -59,42 +66,128 @@ const formatTime = (seconds: number) => {
 export default function AudioPlayerScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { reciterId, surahId, reciterName, server, surahName } =
+  const { reciterId, surahId, reciterName, server, surahName, mode } =
     useLocalSearchParams<{
       reciterId: string;
       surahId: string;
       reciterName: string;
       server: string;
       surahName: string;
+      mode?: "chapter" | "verse_by_verse";
     }>();
 
   // URL format for mp3quran full surah is serverURL+001.mp3
   const formattedSurahId = surahId.padStart(3, "0");
   const defaultAudioUrl = `${server}${formattedSurahId}.mp3`;
-  const downloadId = `${reciterId}-${surahId}`;
+  const isVerseMode = mode === "verse_by_verse";
 
   const {
     isDownloaded,
     downloadAudio,
+    downloadVerseByVerseChapter,
     deleteAudio,
     activeDownloads,
     downloads,
+    buildDownloadId,
   } = useDownloads();
+  const downloadId = buildDownloadId(
+    reciterId,
+    surahId,
+    isVerseMode ? "verse_by_verse" : "chapter",
+  );
   const isDownloadedTrack = isDownloaded(downloadId);
+  const matchedDownload = downloads.find((d) => d.id === downloadId);
   const audioUrl = isDownloadedTrack
-    ? downloads.find((d) => d.id === downloadId)?.localUri || defaultAudioUrl
+    ? matchedDownload?.localUri || defaultAudioUrl
     : defaultAudioUrl;
 
-  const { player, status, currentTrack, playTrack, queue, removeFromQueue, playNextInQueue } = useAudio();
+  const {
+    player,
+    status,
+    currentTrack,
+    playTrack,
+    queue,
+    removeFromQueue,
+    playNextInQueue,
+    clearQueue,
+    setQueue,
+  } = useAudio();
   const [isSeeking, setIsSeeking] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isQueueVisible, setIsQueueVisible] = useState(false);
+  const verseListRef = useRef<any>(null);
+
+  const verses = useMemo(() => {
+    if (!isVerseMode) return [];
+    const chapterNumber = Number(surahId);
+    return getChapterVerses(chapterNumber).map((text, index) => ({
+      verseNumber: index + 1,
+      text,
+    }));
+  }, [isVerseMode, surahId]);
+
+  const currentVerseNumber =
+    currentTrack?.mode === "verse_by_verse" &&
+    currentTrack?.surahId === surahId &&
+    currentTrack?.reciterId === reciterId
+      ? currentTrack.verseNumber ?? 1
+      : 1;
+
+  const verseTracks = useMemo(() => {
+    if (!isVerseMode) return [];
+
+    const chapterNumber = Number(surahId);
+    const totalVerses = getVersesCount(chapterNumber);
+    const isOfflineVersePackage =
+      !!matchedDownload &&
+      matchedDownload.format === "verse_by_verse" &&
+      typeof matchedDownload.localUri === "string";
+
+    return Array.from({ length: totalVerses }, (_, index) => {
+      const verseNumber = index + 1;
+      const globalVerse = getGlobalVerseNumber(chapterNumber, verseNumber);
+      const remoteUrl = `${server}${globalVerse}.mp3`;
+      const localUrl = isOfflineVersePackage
+        ? `${matchedDownload.localUri}${String(verseNumber).padStart(3, "0")}.mp3`
+        : remoteUrl;
+
+      return {
+        id: `${reciterId}-${surahId}-v${verseNumber}`,
+        audioUrl: localUrl,
+        surahId,
+        surahName: `${surahName} · Ayah ${verseNumber}`,
+        reciterName,
+        reciterId,
+        server,
+        mode: "verse_by_verse" as const,
+        verseNumber,
+      };
+    });
+  }, [isVerseMode, surahId, matchedDownload, server, reciterId, surahName, reciterName]);
 
   const playPressed = useSharedValue(0);
   const skipBackPressed = useSharedValue(0);
   const skipForwardPressed = useSharedValue(0);
 
   useEffect(() => {
+    if (isVerseMode) {
+      if (verseTracks.length === 0) return;
+
+      const firstTrack = verseTracks[0];
+      const shouldInitializeQueue =
+        !currentTrack ||
+        currentTrack.surahId !== surahId ||
+        currentTrack.reciterId !== reciterId ||
+        currentTrack.mode !== "verse_by_verse";
+
+      if (shouldInitializeQueue) {
+        clearQueue();
+        setQueue(verseTracks.slice(1));
+        playTrack(firstTrack);
+      }
+      return;
+    }
+
     if (currentTrack?.audioUrl !== audioUrl) {
       playTrack({
         id: `${reciterId}-${surahId}-${Date.now()}`,
@@ -104,9 +197,32 @@ export default function AudioPlayerScreen() {
         reciterName,
         reciterId,
         server,
+        mode: "chapter",
       });
     }
-  }, [audioUrl, surahId, surahName, reciterName, reciterId, server]);
+  }, [
+    isVerseMode,
+    verseTracks,
+    currentTrack,
+    surahId,
+    reciterId,
+    clearQueue,
+    setQueue,
+    playTrack,
+    audioUrl,
+    surahName,
+    reciterName,
+    server,
+  ]);
+
+  useEffect(() => {
+    if (!isVerseMode || !verseListRef.current || currentVerseNumber < 2) return;
+    verseListRef.current.scrollToIndex({
+      index: currentVerseNumber - 1,
+      viewPosition: 0.45,
+      animated: true,
+    });
+  }, [isVerseMode, currentVerseNumber]);
 
   const togglePlayback = () => {
     void Haptics.selectionAsync();
@@ -115,11 +231,6 @@ export default function AudioPlayerScreen() {
     } else {
       player.play();
     }
-  };
-
-  const seekForward = () => {
-    void Haptics.selectionAsync();
-    player.seekTo(status.currentTime + 10);
   };
 
   const seekBackward = () => {
@@ -240,15 +351,26 @@ export default function AudioPlayerScreen() {
           </View>
         ) : (
           <Pressable
-            onPress={() =>
-              downloadAudio({
+            onPress={() => {
+              if (isVerseMode) {
+                void downloadVerseByVerseChapter({
+                  reciterId,
+                  reciterName,
+                  surahId,
+                  surahName,
+                  server,
+                });
+                return;
+              }
+              void downloadAudio({
                 reciterId,
                 reciterName,
                 surahId,
                 surahName,
                 server,
-              })
-            }
+                format: "chapter",
+              });
+            }}
             style={styles.downloadButton}
           >
             <Download color={colors.textMain} size={24} />
@@ -300,9 +422,66 @@ export default function AudioPlayerScreen() {
           style={[styles.reciterName, { color: colors.textMuted }]}
           numberOfLines={1}
         >
-          {reciterName}
+          {isVerseMode ? `${reciterName} · Verse by verse` : reciterName}
         </Text>
       </View>
+
+      {isVerseMode && (
+        <View
+          style={[
+            styles.readAlongContainer,
+            {
+              borderColor: withOpacity(colors.border, 0.8),
+              backgroundColor: withOpacity(colors.surface, 0.82),
+            },
+          ]}
+        >
+          <Text style={[styles.readAlongTitle, { color: colors.textMain }]}>Read Along</Text>
+          <FlashList
+            ref={verseListRef}
+            data={verses}
+            // estimatedItemSize={76}
+            keyExtractor={(item) => String(item.verseNumber)}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.readAlongListContent}
+            renderItem={({ item }) => {
+              const isActive = item.verseNumber === currentVerseNumber;
+              return (
+                <View
+                  style={[
+                    styles.readAlongVerseRow,
+                    {
+                      borderColor: isActive
+                        ? withOpacity(colors.primary, 0.7)
+                        : withOpacity(colors.border, 0.75),
+                      backgroundColor: isActive
+                        ? withOpacity(colors.primary, 0.14)
+                        : withOpacity(colors.background, isDark ? 0.2 : 0.5),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.readAlongVerseNumber,
+                      { color: isActive ? colors.primary : colors.textMuted },
+                    ]}
+                  >
+                    {item.verseNumber}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.readAlongVerseText,
+                      { color: isActive ? colors.textMain : colors.textMuted },
+                    ]}
+                  >
+                    {item.text}
+                  </Text>
+                </View>
+              );
+            }}
+          />
+        </View>
+      )}
 
       <View style={styles.progressContainer}>
         <Slider
@@ -530,6 +709,43 @@ const styles = StyleSheet.create({
     fontFamily: "SatoshiMedium",
     fontSize: 18,
     textAlign: "center",
+  },
+  readAlongContainer: {
+    borderWidth: 1,
+    borderRadius: 18,
+    marginHorizontal: 18,
+    marginBottom: 22,
+    maxHeight: 230,
+    overflow: "hidden",
+  },
+  readAlongTitle: {
+    fontFamily: "SatoshiBold",
+    fontSize: 14,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  readAlongListContent: {
+    paddingHorizontal: 10,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  readAlongVerseRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 6,
+  },
+  readAlongVerseNumber: {
+    fontFamily: "SatoshiBold",
+    fontSize: 12,
+  },
+  readAlongVerseText: {
+    fontFamily: "AmiriQuran",
+    fontSize: 24,
+    lineHeight: 36,
+    textAlign: "right",
   },
   progressContainer: {
     paddingHorizontal: 24,

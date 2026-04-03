@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, FlatList, ImageBackground, Dimensions } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Search, Mic, ArrowLeft, Download, Filter, X, Headphones } from "lucide-react-native";
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -49,6 +48,17 @@ export interface MoshafDefinition {
   moshaf_id: number;
   name: string;
 }
+
+interface VerseByVerseReciter {
+  identifier: string;
+  name: string;
+  englishName: string;
+  type: string;
+}
+
+type ReciterMode = "chapter" | "verse_by_verse";
+
+const FULL_SURAH_LIST = Array.from({ length: 114 }, (_, i) => String(i + 1)).join(",");
 
 function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
   const router = useRouter();
@@ -113,15 +123,16 @@ export default function AudioRecitersScreen() {
   const { colors, isDark } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const [reciters, setReciters] = useState<Reciter[]>([]);
   const [riwayat, setRiwayat] = useState<Riwayah[]>([]);
   const [moshafs, setMoshafs] = useState<MoshafDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reciterMode, setReciterMode] = useState<ReciterMode>("chapter");
   const [selectedRiwayahId, setSelectedRiwayahId] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [verseReciters, setVerseReciters] = useState<VerseByVerseReciter[]>([]);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["60%"], []);
@@ -129,10 +140,6 @@ export default function AudioRecitersScreen() {
   const handleOpenFilters = useCallback(() => {
     void Haptics.selectionAsync();
     bottomSheetModalRef.current?.present();
-  }, []);
-
-  const handleCloseFilters = useCallback(() => {
-    bottomSheetModalRef.current?.dismiss();
   }, []);
 
   const renderBackdrop = useCallback(
@@ -170,15 +177,31 @@ export default function AudioRecitersScreen() {
           fetch("https://mp3quran.net/api/v3/moshaf?language=eng"),
         ]);
 
+        const verseRecitersRes = await fetch(
+          "https://api.alquran.cloud/v1/edition/format/audio",
+        );
+
         const [recitersData, riwayatData, moshafsData] = await Promise.all([
           recitersRes.json(),
           riwayatRes.json(),
           moshafsRes.json(),
         ]);
 
+        const verseRecitersData = await verseRecitersRes.json();
+
         setReciters(recitersData.reciters || []);
         setRiwayat(riwayatData.riwayat || []);
         setMoshafs(moshafsData.riwayat || []); // Note: API returns 'riwayat' key for both
+        setVerseReciters(
+          (verseRecitersData.data || [])
+            .filter((r: VerseByVerseReciter) => r.type === "versebyverse")
+            .map((r: VerseByVerseReciter) => ({
+              identifier: r.identifier,
+              name: r.name,
+              englishName: r.englishName,
+              type: r.type,
+            })),
+        );
       } catch (err) {
         console.error("Error fetching data", err);
         showToast("Error fetching reciters.", "error");
@@ -186,11 +209,10 @@ export default function AudioRecitersScreen() {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, []);
+  }, [showToast]);
 
-  const filteredReciters = useMemo(() => {
+  const filteredChapterReciters = useMemo(() => {
     let result = reciters;
 
     // Filter by Riwayah
@@ -229,7 +251,17 @@ export default function AudioRecitersScreen() {
     return result;
   }, [reciters, searchQuery, selectedRiwayahId, selectedType, moshafs]);
 
-  const renderItem = ({ item, index }: { item: Reciter; index: number }) => {
+  const filteredVerseReciters = useMemo(() => {
+    if (!searchQuery.trim()) return verseReciters;
+    const lowerQuery = searchQuery.toLowerCase();
+    return verseReciters.filter(
+      (r) =>
+        r.englishName.toLowerCase().includes(lowerQuery) ||
+        r.name.toLowerCase().includes(lowerQuery),
+    );
+  }, [verseReciters, searchQuery]);
+
+  const renderChapterItem = ({ item, index }: { item: Reciter; index: number }) => {
     // Find the best moshaf to display based on filters
     let mainMoshaf = item.moshaf[0];
     
@@ -268,6 +300,73 @@ export default function AudioRecitersScreen() {
       />
     );
   };
+
+  const renderVerseItem = ({
+    item,
+  }: {
+    item: VerseByVerseReciter;
+    index: number;
+  }) => {
+    return (
+      <Pressable
+        onPress={() => {
+          void Haptics.selectionAsync();
+          router.push({
+            pathname: "/audio/[reciterId]",
+            params: {
+              reciterId: item.identifier,
+              reciterName: item.englishName,
+              reciterNativeName: item.name,
+              server: `https://cdn.islamic.network/quran/audio/128/${item.identifier}/`,
+              surahList: FULL_SURAH_LIST,
+              mode: "verse_by_verse",
+            },
+          });
+        }}
+      >
+        <LinearGradient
+          colors={[
+            colors.surface,
+            withOpacity(colors.primary, isDark ? 0.08 : 0.04),
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.reciterCard, { borderColor: colors.border }]}
+        >
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                backgroundColor: withOpacity(
+                  colors.primary,
+                  isDark ? 0.35 : 0.14,
+                ),
+              },
+            ]}
+          >
+            <Mic size={24} color={colors.primary} />
+          </View>
+          <View style={styles.reciterInfo}>
+            <Text
+              style={[styles.reciterName, { color: colors.textMain }]}
+              numberOfLines={1}
+            >
+              {item.englishName}
+            </Text>
+            <Text
+              style={[styles.reciterType, { color: colors.textMuted }]}
+              numberOfLines={1}
+            >
+              Verse-by-verse recitation
+            </Text>
+          </View>
+        </LinearGradient>
+      </Pressable>
+    );
+  };
+
+  const isVerseMode = reciterMode === "verse_by_verse";
+  const listData = isVerseMode ? filteredVerseReciters : filteredChapterReciters;
 
   return (
     <SafeAreaView
@@ -331,8 +430,8 @@ export default function AudioRecitersScreen() {
         </View>
       ) : (
         <FlashList
-          data={filteredReciters}
-          renderItem={renderItem}
+          data={listData}
+          renderItem={isVerseMode ? renderVerseItem : renderChapterItem}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
@@ -361,10 +460,74 @@ export default function AudioRecitersScreen() {
                   <Text
                     style={[styles.heroSubtitle, { color: "rgba(255,255,255,0.85)" }]}
                   >
-                    Listen to the Holy Quran recited by world-renowned Qaris.
+                    {isVerseMode
+                      ? "Follow along verse-by-verse with continuous chapter playback."
+                      : "Listen to the Holy Quran recited by world-renowned Qaris."}
                   </Text>
                 </LinearGradient>
               </ImageBackground>
+
+              <View style={styles.modeSwitchRow}>
+                <Pressable
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setReciterMode("chapter");
+                  }}
+                  style={[
+                    styles.modeChip,
+                    {
+                      backgroundColor:
+                        reciterMode === "chapter"
+                          ? colors.primary
+                          : withOpacity(colors.primary, 0.08),
+                      borderColor:
+                        reciterMode === "chapter"
+                          ? colors.primary
+                          : withOpacity(colors.border, 0.9),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.modeChipText,
+                      { color: reciterMode === "chapter" ? "#fff" : colors.textMain },
+                    ]}
+                  >
+                    Chapter Reciters
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setReciterMode("verse_by_verse");
+                  }}
+                  style={[
+                    styles.modeChip,
+                    {
+                      backgroundColor:
+                        reciterMode === "verse_by_verse"
+                          ? colors.primary
+                          : withOpacity(colors.primary, 0.08),
+                      borderColor:
+                        reciterMode === "verse_by_verse"
+                          ? colors.primary
+                          : withOpacity(colors.border, 0.9),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.modeChipText,
+                      {
+                        color:
+                          reciterMode === "verse_by_verse" ? "#fff" : colors.textMain,
+                      },
+                    ]}
+                  >
+                    Verse-by-Verse
+                  </Text>
+                </Pressable>
+              </View>
 
               <View style={styles.searchRow}>
                 <View
@@ -391,30 +554,32 @@ export default function AudioRecitersScreen() {
                   )}
                 </View>
 
-                <Pressable
-                  onPress={handleOpenFilters}
-                  style={[
-                    styles.filterToggleButton,
-                    {
-                      backgroundColor: (selectedRiwayahId || selectedType) ? colors.primary : colors.surface,
-                      borderColor: (selectedRiwayahId || selectedType) ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Filter
-                    size={20}
-                    color={(selectedRiwayahId || selectedType) ? "#fff" : colors.textMain}
-                    strokeWidth={2}
-                  />
-                  {(selectedRiwayahId || selectedType) && (
-                    <View style={styles.filterBadge} />
-                  )}
-                </Pressable>
+                {!isVerseMode && (
+                  <Pressable
+                    onPress={handleOpenFilters}
+                    style={[
+                      styles.filterToggleButton,
+                      {
+                        backgroundColor: selectedRiwayahId || selectedType ? colors.primary : colors.surface,
+                        borderColor: selectedRiwayahId || selectedType ? colors.primary : colors.border,
+                      },
+                    ]}
+                  >
+                    <Filter
+                      size={20}
+                      color={selectedRiwayahId || selectedType ? "#fff" : colors.textMain}
+                      strokeWidth={2}
+                    />
+                    {(selectedRiwayahId || selectedType) && (
+                      <View style={styles.filterBadge} />
+                    )}
+                  </Pressable>
+                )}
               </View>
 
-              <Text style={[styles.resultCount, { color: colors.textMuted }]}>
-                {filteredReciters.length} reciter
-                {filteredReciters.length === 1 ? "" : "s"} found
+              <Text style={[styles.resultCount, { color: colors.textMuted }]}> 
+                {listData.length} reciter
+                {listData.length === 1 ? "" : "s"} found
               </Text>
             </View>
           }
@@ -728,5 +893,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+  },
+  modeSwitchRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modeChip: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    minHeight: 46,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 12,
+  },
+  modeChipText: {
+    fontFamily: "SatoshiBold",
+    fontSize: 13,
   },
 });
