@@ -549,6 +549,14 @@ export default function Index() {
               path: "/hifz" as const,
               image: require("../../assets/images/quick-actions/hifz.webp"),
             },
+            {
+              id: "ai-chat",
+              title: "AI Chat",
+              subtitle: "Ask about the deen",
+              icon: Sparkles,
+              path: "/(tabs)/ai-chat" as const,
+              image: require("../../assets/images/quick-actions/ai.jpeg"),
+            },
           ]}
           key={quickActionsView}
           keyExtractor={(item) => item.id}
