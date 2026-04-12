@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "appwrite-cli": {
+      "source": "appwrite/agent-skills",
+      "sourceType": "github",
+      "computedHash": "fcfe863c4a331f8309639910ed4dccfc59eb749123230a97fccc7a4119d75f30"
+    },
+    "appwrite-typescript": {
+      "source": "appwrite/agent-skills",
+      "sourceType": "github",
+      "computedHash": "38ba75d56d9d6fba0cf6150d9ee9fef5f7ff352b148bf715557c12be6b1a4905"
+    },
     "vercel-react-native-skills": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
