@@ -68,6 +68,7 @@
     "react-dom": "19.2.0",
     "react-native": "0.83.4",
     "react-native-android-widget": "^0.20.1",
+    "react-native-appwrite": "^0.27.1",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-keyboard-controller": "1.20.7",
     "react-native-pager-view": "8.0.0",

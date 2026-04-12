@@ -1,0 +1,37 @@
+{
+  "projectId": "quranic",
+  "endpoint": "https://fra.cloud.appwrite.io/v1",
+  "functions": [
+    {
+      "$id": "ai-chat",
+      "name": "AI Chat Function",
+      "enabled": true,
+      "live": true,
+      "logging": true,
+      "runtime": "node-18.0",
+      "vars": [
+        {
+          "key": "OPENROUTER_API_KEY",
+          "value": ""
+        },
+        {
+          "key": "AI_MODEL",
+          "value": "google/gemini-2.0-flash-lite-001"
+        }
+      ],
+      "events": [],
+      "schedule": "",
+      "timeout": 30,
+      "entrypoint": "src/main.js",
+      "commands": "npm install",
+      "version": "v3",
+      "path": "functions/ai-chat"
+    }
+  ],
+  "sites": [],
+  "tablesDB": [],
+  "tables": [],
+  "buckets": [],
+  "teams": [],
+  "topics": []
+}

@@ -1,0 +1,16 @@
+{
+  "name": "ai-chat-function",
+  "version": "1.0.0",
+  "description": "Appwrite function for AI chat with Islamic knowledge",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "node-appwrite": "^14.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

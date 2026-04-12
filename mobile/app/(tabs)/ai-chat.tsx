@@ -40,7 +40,7 @@ import {
   type AIMessage,
   type AIResponseSegment,
   type ChatSession,
-} from "../../lib/OpenRouterService";
+} from "../../lib/AppwriteAIService";
 
 const withOpacity = (hex: string, opacity: number) => {
   const s = hex.replace("#", "");
