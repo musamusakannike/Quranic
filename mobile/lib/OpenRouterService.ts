@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ?? "";
+const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ?? "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";
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const CHAT_STORAGE_KEY = "@ai_chat_history";
-const MODEL = "meta-llama/llama-3.3-8b-instruct:free";
+const MODEL = "google/gemini-2.0-flash-lite-001";
 
 export type QuranVerseRef = {
   chapter: number;

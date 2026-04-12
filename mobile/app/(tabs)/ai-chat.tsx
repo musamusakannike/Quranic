@@ -336,6 +336,7 @@ export default function AIChatScreen() {
       scrollToBottom();
     } catch (e) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      console.error("ERROR: ", e)
       Alert.alert(
         "Connection Error",
         "Failed to get a response. Please check your internet connection and try again."
