@@ -1,11 +1,52 @@
 @import "tailwindcss";
 
 @theme {
-  --font-headline: var(--font-newsreader);
+  --font-headline: var(--font-cormorant);
   --font-body: var(--font-manrope);
   --font-label: var(--font-manrope);
   --font-arabic: var(--font-amiri-quran);
 
+  /* ── Core Palette ── */
+  --color-ink: #0E1A15;
+  --color-ink-soft: #1A2B24;
+  --color-ink-muted: #243D33;
+  --color-parchment: #F4F7F5;
+  --color-parchment-warm: #EDF2EE;
+  --color-parchment-dim: #D8DED9;
+
+  /* ── Brand Greens ── */
+  --color-teal: #056C5C;
+  --color-teal-vivid: #0A8F7A;
+  --color-teal-deep: #034036;
+  --color-teal-glow: #10B981;
+  --color-teal-faint: rgba(5, 108, 92, 0.08);
+  --color-teal-wash: rgba(5, 108, 92, 0.15);
+
+  /* ── Accent ── */
+  --color-gold: #D4AF37;
+  --color-gold-soft: rgba(212, 175, 55, 0.15);
+
+  /* ── Neutrals ── */
+  --color-slate-50: #F8FAFB;
+  --color-slate-100: #EEF1F0;
+  --color-slate-200: #D6DAD8;
+  --color-slate-300: #A8B0AC;
+  --color-slate-400: #6B7A73;
+  --color-slate-500: #4A5B54;
+  --color-slate-600: #354840;
+  --color-slate-700: #243530;
+  --color-slate-800: #182824;
+  --color-slate-900: #0E1A15;
+
+  /* ── Semantic ── */
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #F9FBFA;
+  --color-surface-glass: rgba(255, 255, 255, 0.06);
+  --color-surface-glass-strong: rgba(255, 255, 255, 0.10);
+  --color-border: rgba(5, 108, 92, 0.12);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── Legacy tokens (kept for existing pages) ── */
   --color-on-error: #ffffff;
   --color-on-primary-fixed: #002113;
   --color-on-secondary-container: #496b5e;
@@ -27,7 +68,6 @@
   --color-on-tertiary-fixed-variant: #574500;
   --color-primary: #006947;
   --color-error-container: #ffdad6;
-  --color-surface: #f5fbf5;
   --color-background: #f5fbf5;
   --color-on-secondary: #ffffff;
   --color-surface-tint: #006c49;
@@ -98,4 +138,71 @@ html {
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-12px); }
+}
+
+/* ── Landing Page Animations ── */
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0); }
+  70% { transform: translate(0, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.02); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Utility animation classes */
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
 }

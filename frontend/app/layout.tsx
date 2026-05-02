@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Newsreader, Manrope, Amiri_Quran } from "next/font/google";
+import { Cormorant, Manrope, Amiri_Quran } from "next/font/google";
 import "./globals.css";
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const cormorant = Cormorant({
+  variable: "--font-cormorant",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   style: ["normal", "italic"],
 });
 
@@ -20,9 +21,34 @@ const amiriQuran = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: "Quranic - Your Spiritual Journey, Reimagined",
+  title: "Quranic — Read, Reflect, and Connect",
   description:
-    "Recite, Listen, and grow your Iman with the ultimate Islamic companion app. Built for the modern seeker.",
+    "Your spiritual companion, reimagined. Read the Holy Quran with beautiful typography, listen to world-renowned reciters, find Qiblah direction, track prayer times, and grow your Iman — all in one elegant app.",
+  keywords: [
+    "Quran",
+    "Quranic",
+    "Islamic app",
+    "Quran reader",
+    "Prayer times",
+    "Qiblah",
+    "Adhkaar",
+    "Hifz",
+    "Muslim",
+    "Islam",
+  ],
+  openGraph: {
+    title: "Quranic — Read, Reflect, and Connect",
+    description:
+      "Your spiritual companion, reimagined. Read, listen, and grow your Iman with the ultimate Islamic app.",
+    type: "website",
+    siteName: "Quranic",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Quranic — Read, Reflect, and Connect",
+    description:
+      "Your spiritual companion, reimagined. Read, listen, and grow your Iman with the ultimate Islamic app.",
+  },
 };
 
 export default function RootLayout({
@@ -39,7 +65,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${newsreader.variable} ${manrope.variable} ${amiriQuran.variable} font-body antialiased`}
+        className={`${cormorant.variable} ${manrope.variable} ${amiriQuran.variable} font-body antialiased`}
       >
         {children}
       </body>
