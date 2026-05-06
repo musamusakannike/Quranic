@@ -4,12 +4,14 @@
     "appwrite-cli": {
       "source": "appwrite/agent-skills",
       "sourceType": "github",
-      "computedHash": "fcfe863c4a331f8309639910ed4dccfc59eb749123230a97fccc7a4119d75f30"
+      "skillPath": "skills/appwrite-cli/SKILL.md",
+      "computedHash": "57bb4f43befd96390b0a01b4b98e3229629206985233d40ab527cf6146f7ed71"
     },
     "appwrite-typescript": {
       "source": "appwrite/agent-skills",
       "sourceType": "github",
-      "computedHash": "38ba75d56d9d6fba0cf6150d9ee9fef5f7ff352b148bf715557c12be6b1a4905"
+      "skillPath": "skills/appwrite-typescript/SKILL.md",
+      "computedHash": "abf6b3631d6aea32fa83c682c9c54881fbe13d81908d1a934be6a13809b3ff61"
     },
     "building-components": {
       "source": "vercel/components.build",
