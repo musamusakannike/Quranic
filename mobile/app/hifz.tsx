@@ -38,6 +38,8 @@ import {
 } from "lucide-react-native";
 
 import { useTheme } from "../lib/ThemeContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { useHifz, type MemorizationStatus, type HifzReciter } from "../lib/HifzContext";
 import { useAudio, type Track } from "../lib/AudioContext";
 import { useToast } from "../lib/ToastContext";
@@ -91,6 +93,8 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
   const { loopConfig, setLoopConfig, getVerseStatus, setVerseStatus, reciter, setReciter } = useHifz();
   const { playTrack, setQueue, clearQueue } = useAudio();
   const { showToast } = useToast();
+  const { t } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
 
   const [selectedChapter, setSelectedChapter] = useState(
@@ -209,7 +213,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     // 1. Check for connection
     const network = await Network.getNetworkStateAsync();
     if (!network.isConnected) {
-      showToast("Internet connection required for loop playback.", "offline");
+      showToast(t("hifz.noInternet"), "offline");
       return;
     }
 
@@ -266,7 +270,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 
     // 3. Optional: stay or navigate. Stay makes sense for "Suite", but text is nice.
     // I'll stay on the Hifz screen but maybe show a success HUD.
-    showToast(`Starting loop: Ayah ${sv} to ${ev}`, "success");
+    showToast(t("hifz.startingLoop", { start: sv, end: ev }), "success");
   };
 
   return (
@@ -284,7 +288,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
         ]}
       >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>Reciter</Text>
+        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.reciter")}</Text>
         <Pressable
           onPress={openReciterPicker}
           style={[
@@ -314,7 +318,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
         ]}
       >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>Surah</Text>
+        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.surah")}</Text>
         <Pressable
           onPress={openPicker}
           style={[
@@ -341,10 +345,10 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
         ]}
       >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>Ayah Range</Text>
+        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.ayahRange")}</Text>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <View style={{ flex: 1, gap: 6 }}>
-            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>From</Text>
+            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>{t("hifz.from")}</Text>
             <View style={[loopStyles.numberInputRow, { borderColor: withOpacity(colors.border, 0.8), backgroundColor: withOpacity(colors.primary, 0.04) }]}>
               <Pressable
                 onPress={() => setStartVerse((v) => clamp(v - 1, 1, endVerse))}
@@ -362,7 +366,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
             </View>
           </View>
           <View style={{ flex: 1, gap: 6 }}>
-            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>To</Text>
+            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>{t("hifz.to")}</Text>
             <View style={[loopStyles.numberInputRow, { borderColor: withOpacity(colors.border, 0.8), backgroundColor: withOpacity(colors.primary, 0.04) }]}>
               <Pressable
                 onPress={() => setEndVerse((v) => clamp(v - 1, startVerse, maxVerses))}
@@ -381,7 +385,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           </View>
         </View>
         <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
-          {endVerse - startVerse + 1} ayah{endVerse - startVerse + 1 !== 1 ? "s" : ""} selected
+          {t(endVerse - startVerse + 1 !== 1 ? "hifz.ayahsSelected_other" : "hifz.ayahsSelected_one", { count: endVerse - startVerse + 1 })}
         </Text>
       </View>
 
@@ -392,7 +396,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
         ]}
       >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>Repetitions</Text>
+        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.repetitions")}</Text>
         <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
           {[2, 3, 5, 7, 10, 15, 20].map((n) => (
             <Pressable
@@ -413,7 +417,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           ))}
         </View>
         <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
-          Each ayah will repeat {repeatCount} times
+          {t("hifz.eachAyahRepeats", { count: repeatCount })}
         </Text>
       </View>
 
@@ -432,7 +436,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
           style={loopStyles.startBtnGradient}
         >
           <Repeat size={18} color="#fff" />
-          <Text style={loopStyles.startBtnText}>Start Loop Session</Text>
+          <Text style={loopStyles.startBtnText}>{t("hifz.startLoop")}</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -457,8 +461,8 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
               <View>
-                <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>Select Reciter</Text>
-                <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>Choose your preferred audio</Text>
+                <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectReciter")}</Text>
+                <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>{t("hifz.selectReciterSubtitle")}</Text>
               </View>
               <TouchableOpacity
                 onPress={closeReciterPicker}
@@ -529,7 +533,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
               <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
-              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>Select Surah</Text>
+              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectSurah")}</Text>
               <TouchableOpacity
                 onPress={closePicker}
                 style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}
@@ -583,6 +587,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 // ─── Hide & Reveal Tab ───────────────────────────────────────────────────────
 function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { getVerseStatus, setVerseStatus } = useHifz();
+  const { t } = useLanguage();
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [hideAll, setHideAll] = useState(true);
   const [revealedVerses, setRevealedVerses] = useState<Set<number>>(new Set());
@@ -658,7 +663,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
                 ]}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={[revealStyles.chapterBtnSub, { color: colors.textMuted }]}>Surah</Text>
+                  <Text style={[revealStyles.chapterBtnSub, { color: colors.textMuted }]}>{t("hifz.surah")}</Text>
                   <Text style={[revealStyles.chapterBtnMain, { color: colors.textMain }]} numberOfLines={1}>
                     {chapterInfo?.name}
                   </Text>
@@ -675,7 +680,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               >
                 {hideAll ? <EyeOff size={18} color={colors.primary} /> : <Eye size={18} color={colors.success} />}
                 <Text style={[revealStyles.toggleBtnText, { color: hideAll ? colors.primary : colors.success }]}>
-                  {hideAll ? "Hidden" : "Shown"}
+                  {hideAll ? t("hifz.hidden") : t("hifz.shown")}
                 </Text>
               </Pressable>
             </View>
@@ -684,7 +689,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               <View style={[revealStyles.hintBox, { backgroundColor: withOpacity(colors.primary, 0.07), borderColor: withOpacity(colors.primary, 0.2) }]}>
                 <Eye size={14} color={colors.primary} />
                 <Text style={[revealStyles.hintText, { color: colors.primary }]}>
-                  Tap any ayah to reveal it and test your memory
+                  {t("hifz.tapAyahHint")}
                 </Text>
               </View>
             )}
@@ -736,7 +741,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
                   <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.18), width: "95%" }]} />
                   <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.14), width: "80%" }]} />
                   <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.10), width: "60%" }]} />
-                  <Text style={[revealStyles.tapRevealText, { color: colors.primary }]}>Tap to reveal</Text>
+                  <Text style={[revealStyles.tapRevealText, { color: colors.primary }]}>{t("hifz.tapToReveal")}</Text>
                 </View>
               )}
 
@@ -762,7 +767,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
-              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>Select Surah</Text>
+              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectSurah")}</Text>
               <TouchableOpacity onPress={closePicker} style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}>
                 <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
@@ -806,6 +811,7 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
 // ─── Progress Dashboard Tab ───────────────────────────────────────────────────
 function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
   const { getChapterStats, resetChapter } = useHifz();
+  const { t } = useLanguage();
   const [viewMode, setViewMode] = useState<"surah" | "juz">("surah");
   const [infoSheet, setInfoSheet] = useState<{ type: "memorized" | "learning" } | null>(null);
 
@@ -851,12 +857,12 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
 
   const handleReset = (ch: { number: number; name: string; verses: number }) => {
     Alert.alert(
-      `Reset ${ch.name}`,
-      "This will clear all memorization data for this Surah. Are you sure?",
+      t("hifzExtra.resetTitle", { name: ch.name }),
+      t("hifzExtra.resetMsg"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("hifzExtra.cancel"), style: "cancel" },
         {
-          text: "Reset",
+          text: t("hifzExtra.reset"),
           style: "destructive",
           onPress: () => {
             void resetChapter(ch.number, ch.verses);
@@ -889,8 +895,8 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
           >
             <CheckCircle2 size={20} color={colors.success} />
             <Text style={[progressStyles.statValue, { color: colors.success }]}>{totalMemorized}</Text>
-            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.success, 0.8) }]}>Memorized</Text>
-            <Text style={[progressStyles.statPct, { color: withOpacity(colors.success, 0.65) }]}>{overallPct}% of Quran</Text>
+            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.success, 0.8) }]}>{t("hifzExtra.memorized")}</Text>
+            <Text style={[progressStyles.statPct, { color: withOpacity(colors.success, 0.65) }]}>{overallPct}{t("hifzExtra.ofQuran")}</Text>
           </LinearGradient>
         </Pressable>
 
@@ -903,8 +909,8 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
           >
             <Brain size={20} color={colors.warning} />
             <Text style={[progressStyles.statValue, { color: colors.warning }]}>{totalLearning}</Text>
-            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.warning, 0.8) }]}>Learning</Text>
-            <Text style={[progressStyles.statPct, { color: withOpacity(colors.warning, 0.65) }]}>{learningPct}% of Quran</Text>
+            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.warning, 0.8) }]}>{t("hifzExtra.learning")}</Text>
+            <Text style={[progressStyles.statPct, { color: withOpacity(colors.warning, 0.65) }]}>{learningPct}{t("hifzExtra.ofQuran")}</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -914,7 +920,7 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <TrendingUp size={16} color={colors.primary} />
-            <Text style={[progressStyles.overallLabel, { color: colors.textMain }]}>Overall Progress</Text>
+            <Text style={[progressStyles.overallLabel, { color: colors.textMain }]}>{t("hifzExtra.overallProgress")}</Text>
           </View>
           <Text style={[progressStyles.overallPct, { color: colors.primary }]}>{overallPct}%</Text>
         </View>
@@ -929,11 +935,11 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
         <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success }} />
-            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>Memorized</Text>
+            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>{t("hifzExtra.memorized")}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warning }} />
-            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>Learning</Text>
+            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>{t("hifzExtra.learning")}</Text>
           </View>
         </View>
       </View>
@@ -942,14 +948,14 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
       {activeChapters.length === 0 ? (
         <View style={[progressStyles.emptyState, { backgroundColor: isDark ? withOpacity(colors.surface, 0.6) : colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
           <Star size={32} color={withOpacity(colors.primary, 0.4)} />
-          <Text style={[progressStyles.emptyTitle, { color: colors.textMain }]}>No Hifz started yet</Text>
+          <Text style={[progressStyles.emptyTitle, { color: colors.textMain }]}>{t("hifzExtra.noHifzTitle")}</Text>
           <Text style={[progressStyles.emptySubtitle, { color: colors.textMuted }]}>
-            Use the Hide & Reveal tab to mark ayahs as memorized
+            {t("hifzExtra.noHifzSubtitle")}
           </Text>
         </View>
       ) : (
         <View style={{ gap: 8 }}>
-          <Text style={[progressStyles.sectionLabel, { color: colors.textMuted }]}>BY SURAH</Text>
+          <Text style={[progressStyles.sectionLabel, { color: colors.textMuted }]}>{t("hifzExtra.bySurah")}</Text>
           {activeChapters.map((ch) => {
             const memPct = (ch.memorized / ch.total) * 100;
             const learnPct = (ch.learning / ch.total) * 100;
@@ -965,7 +971,7 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
                   <View style={{ flex: 1 }}>
                     <Text style={[progressStyles.surahName, { color: colors.textMain }]}>{ch.name}</Text>
                     <Text style={[progressStyles.surahMeta, { color: colors.textMuted }]}>
-                      {ch.memorized} memorized · {ch.learning} learning · {ch.total} total
+                      {ch.memorized} {t("hifzExtra.memorizedLabel")} · {ch.learning} {t("hifzExtra.learningLabel")} · {ch.total} {t("hifzExtra.totalLabel")}
                     </Text>
                   </View>
                   <Pressable
@@ -1020,10 +1026,10 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
                 </View>
                 <View>
                   <Text style={{ fontFamily: "SatoshiBold", fontSize: 20, color: colors.textMain }}>
-                    {infoSheet?.type === "memorized" ? "Memorized Verses" : "Learning Verses"}
+                    {infoSheet?.type === "memorized" ? t("hifzExtra.memorizedVerses") : t("hifzExtra.learningVerses")}
                   </Text>
                   <Text style={{ fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
-                    How your progress is tracked
+                    {t("hifzExtra.howTracked")}
                   </Text>
                 </View>
               </View>
