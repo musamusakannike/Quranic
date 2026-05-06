@@ -8,6 +8,8 @@ import {
   ImageBackground,
 } from "react-native";
 import { useTheme } from "../lib/ThemeContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,7 +22,7 @@ const ADHKAAR_CATEGORIES = [
     title: "Morning",
     subtitle: "Supplications for the morning",
     icon: Sun,
-    color: "#F59E0B", // Amber
+    color: "#F59E0B",
     image: require("../assets/images/adhkaar/sunrise.webp"),
     height: 220,
   },
@@ -29,7 +31,7 @@ const ADHKAAR_CATEGORIES = [
     title: "Evening",
     subtitle: "Supplications for the evening",
     icon: Moon,
-    color: "#6366F1", // Indigo
+    color: "#6366F1",
     image: require("../assets/images/adhkaar/sunset.webp"),
     height: 180,
   },
@@ -38,7 +40,7 @@ const ADHKAAR_CATEGORIES = [
     title: "After Solaah",
     subtitle: "Supplications after every prayer",
     icon: Clock,
-    color: "#10B981", // Emerald
+    color: "#10B981",
     image: require("../assets/images/adhkaar/after-solah.webp"),
     height: 190,
   },
@@ -47,7 +49,7 @@ const ADHKAAR_CATEGORIES = [
     title: "40 Robbanahs",
     subtitle: "Supplications from the Holy Quran",
     icon: BookOpen,
-    color: "#EC4899", // Pink
+    color: "#EC4899",
     image: require("../assets/images/adhkaar/40-robanna.webp"),
     height: 230,
   },
@@ -56,30 +58,23 @@ const ADHKAAR_CATEGORIES = [
     title: "Hisnul Muslim",
     subtitle: "Fortress of the Muslim",
     icon: Shield,
-    color: "#3B82F6", // Blue
+    color: "#3B82F6",
     image: require("../assets/images/adhkaar/sunrise.webp"),
     height: 200,
   },
 ];
 
-const CategoryCard = ({ category, colors, onPress }: any) => {
+const CategoryCard = ({ category, colors, fonts, onPress }: any) => {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.masonryCard,
         { height: category.height },
-        {
-          opacity: pressed ? 0.9 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
+        { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
       ]}
       onPress={onPress}
     >
-      <ImageBackground
-        source={category.image}
-        style={styles.cardImageBackground}
-        imageStyle={styles.cardImage}
-      >
+      <ImageBackground source={category.image} style={styles.cardImageBackground} imageStyle={styles.cardImage}>
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.85)"]}
           style={StyleSheet.absoluteFillObject}
@@ -91,8 +86,8 @@ const CategoryCard = ({ category, colors, onPress }: any) => {
             <category.icon color="#FFF" size={20} />
           </View>
           <View style={styles.cardTextWrap}>
-            <Text style={styles.cardTitle}>{category.title}</Text>
-            <Text style={styles.cardSubtitle} numberOfLines={2}>
+            <Text style={[styles.cardTitle, { fontFamily: fonts.bold }]}>{category.title}</Text>
+            <Text style={[styles.cardSubtitle, { fontFamily: fonts.regular }]} numberOfLines={2}>
               {category.subtitle}
             </Text>
           </View>
@@ -113,12 +108,60 @@ const withOpacity = (hexColor: string, opacity: number) => {
 
 export default function AdhkaarScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
 
+  const ADHKAAR_CATEGORIES = [
+    {
+      id: "morning",
+      title: t("adhkaar.morning"),
+      subtitle: t("adhkaar.morningSubtitle"),
+      icon: Sun,
+      color: "#F59E0B",
+      image: require("../assets/images/adhkaar/sunrise.webp"),
+      height: 220,
+    },
+    {
+      id: "evening",
+      title: t("adhkaar.evening"),
+      subtitle: t("adhkaar.eveningSubtitle"),
+      icon: Moon,
+      color: "#6366F1",
+      image: require("../assets/images/adhkaar/sunset.webp"),
+      height: 180,
+    },
+    {
+      id: "after-solah",
+      title: t("adhkaar.afterSolah"),
+      subtitle: t("adhkaar.afterSolahSubtitle"),
+      icon: Clock,
+      color: "#10B981",
+      image: require("../assets/images/adhkaar/after-solah.webp"),
+      height: 190,
+    },
+    {
+      id: "40-robbanahs",
+      title: t("adhkaar.robbanahs"),
+      subtitle: t("adhkaar.robbanahsSubtitle"),
+      icon: BookOpen,
+      color: "#EC4899",
+      image: require("../assets/images/adhkaar/40-robanna.webp"),
+      height: 230,
+    },
+    {
+      id: "hisnul-muslim",
+      title: t("adhkaar.hisnulMuslim"),
+      subtitle: t("adhkaar.hisnulMuslimSubtitle"),
+      icon: Shield,
+      color: "#3B82F6",
+      image: require("../assets/images/adhkaar/sunrise.webp"),
+      height: 200,
+    },
+  ];
+
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -132,47 +175,45 @@ export default function AdhkaarScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={[styles.backBtn, { backgroundColor: colors.surface }]}
-          onPress={() => router.back()}
-        >
+      <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
+        <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={() => router.back()}>
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>Adhkaar</Text>
+        <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+          {t("adhkaar.title")}
+        </Text>
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.introSection}>
-          <Text style={[styles.introTitle, { color: colors.textMain }]}>
-            Daily Remembrance 🤲
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.introSection, isRTL && { alignItems: "flex-end" }]}>
+          <Text style={[styles.introTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("adhkaar.introTitle")}
           </Text>
-          <Text style={[styles.introSubtitle, { color: colors.textMuted }]}>
-            Establish a connection with Allah through these selected authentic supplications.
+          <Text style={[styles.introSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+            {t("adhkaar.introSubtitle")}
           </Text>
         </View>
 
         <View style={styles.masonryContainer}>
           <View style={styles.masonryColumn}>
             {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 === 0).map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                category={category} 
+              <CategoryCard
+                key={category.id}
+                category={category}
                 colors={colors}
+                fonts={fonts}
                 onPress={() => router.push(`/adhkaar/${category.id}` as any)}
               />
             ))}
           </View>
           <View style={styles.masonryColumn}>
             {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 !== 0).map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                category={category} 
-                colors={colors} 
+              <CategoryCard
+                key={category.id}
+                category={category}
+                colors={colors}
+                fonts={fonts}
                 onPress={() => router.push(`/adhkaar/${category.id}` as any)}
               />
             ))}

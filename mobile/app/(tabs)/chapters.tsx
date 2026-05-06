@@ -15,6 +15,8 @@ import { useRouter } from "expo-router";
 import { ArrowUpDown, Search } from "lucide-react-native";
 
 import { useTheme } from "../../lib/ThemeContext";
+import { useLanguage } from "../../lib/LanguageContext";
+import { useAppFonts } from "../../lib/i18n/useAppFonts";
 import { getChapterMetadata, getVersesCount } from "../../lib/QuranHelper";
 
 type FilterType = "all" | "mecca" | "madina";
@@ -39,6 +41,9 @@ interface ChapterCardProps {
     surface: string;
   };
   isDark: boolean;
+  isRTL: boolean;
+  fonts: ReturnType<typeof useAppFonts>;
+  versesLabel: string;
   onPress: (chapterId: number) => void;
 }
 
@@ -51,7 +56,15 @@ const withOpacity = (hexColor: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
+function ChapterCard({
+  chapter,
+  colors,
+  isDark,
+  isRTL,
+  fonts,
+  versesLabel,
+  onPress,
+}: ChapterCardProps) {
   return (
     <Pressable
       onPress={() => {
@@ -66,7 +79,13 @@ function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.chapterCard, { borderColor: colors.border }]}
+        style={[
+          styles.chapterCard,
+          {
+            borderColor: colors.border,
+            flexDirection: isRTL ? "row-reverse" : "row",
+          },
+        ]}
       >
         <View
           style={[
@@ -79,28 +98,61 @@ function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
             },
           ]}
         >
-          <Text style={[styles.numberText, { color: colors.primary }]}>
+          <Text
+            style={[
+              styles.numberText,
+              { color: colors.primary, fontFamily: fonts.bold },
+            ]}
+          >
             {chapter.id}
           </Text>
         </View>
 
         <View style={styles.chapterBody}>
-          <Text style={[styles.chapterEnglishName, { color: colors.textMain }]}>
+          <Text
+            style={[
+              styles.chapterEnglishName,
+              {
+                color: colors.textMain,
+                fontFamily: fonts.medium,
+                textAlign: isRTL ? "right" : "left",
+              },
+            ]}
+          >
             {chapter.englishName}
           </Text>
           <Text
-            style={[styles.chapterTranslitName, { color: colors.textMuted }]}
+            style={[
+              styles.chapterTranslitName,
+              {
+                color: colors.textMuted,
+                fontFamily: fonts.regular,
+                textAlign: isRTL ? "right" : "left",
+              },
+            ]}
           >
             {chapter.name}
           </Text>
         </View>
 
-        <View style={styles.metaColumn}>
-          <Text style={[styles.chapterArabicName, { color: colors.textMain }]}>
+        <View
+          style={[
+            styles.metaColumn,
+            isRTL && { alignItems: "flex-start" },
+          ]}
+        >
+          <Text
+            style={[styles.chapterArabicName, { color: colors.textMain }]}
+          >
             {chapter.arabicName}
           </Text>
-          <Text style={[styles.chapterMeta, { color: colors.textMuted }]}>
-            {chapter.versesCount} verses • {chapter.revelation}
+          <Text
+            style={[
+              styles.chapterMeta,
+              { color: colors.textMuted, fontFamily: fonts.medium },
+            ]}
+          >
+            {versesLabel} • {chapter.revelation}
           </Text>
         </View>
       </LinearGradient>
@@ -110,6 +162,8 @@ function ChapterCard({ chapter, colors, isDark, onPress }: ChapterCardProps) {
 
 export default function ChaptersScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -118,12 +172,9 @@ export default function ChaptersScreen() {
 
   const chapters = useMemo(() => {
     const list: ChapterListItem[] = [];
-
     for (let chapterNumber = 1; chapterNumber <= 114; chapterNumber += 1) {
       const chapterMeta = getChapterMetadata(chapterNumber);
-
       if (!chapterMeta) continue;
-
       list.push({
         id: chapterNumber,
         name: chapterMeta.name,
@@ -133,7 +184,6 @@ export default function ChaptersScreen() {
         versesCount: getVersesCount(chapterNumber),
       });
     }
-
     return list;
   }, []);
 
@@ -144,27 +194,19 @@ export default function ChaptersScreen() {
     const madina = chapters.filter(
       ({ revelation }) => revelation === "Madina",
     ).length;
-
-    return {
-      total: chapters.length,
-      mecca,
-      madina,
-    };
+    return { total: chapters.length, mecca, madina };
   }, [chapters]);
 
   const filteredChapters = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
-
     return chapters.filter((chapter) => {
       const chapterRevelation = chapter.revelation.toLowerCase();
       const matchesFilter =
         filter === "all" ||
         (filter === "mecca" && chapterRevelation === "mecca") ||
         (filter === "madina" && chapterRevelation === "madina");
-
       if (!matchesFilter) return false;
       if (!normalizedSearch) return true;
-
       return (
         chapter.name.toLowerCase().includes(normalizedSearch) ||
         chapter.englishName.toLowerCase().includes(normalizedSearch) ||
@@ -179,9 +221,9 @@ export default function ChaptersScreen() {
   }, [filteredChapters, sortDirection]);
 
   const filterOptions: { key: FilterType; label: string; count: number }[] = [
-    { key: "all", label: "All", count: chapterStats.total },
-    { key: "mecca", label: "Mecca", count: chapterStats.mecca },
-    { key: "madina", label: "Madina", count: chapterStats.madina },
+    { key: "all", label: t("chapters.all"), count: chapterStats.total },
+    { key: "mecca", label: t("chapters.mecca"), count: chapterStats.mecca },
+    { key: "madina", label: t("chapters.madina"), count: chapterStats.madina },
   ];
 
   return (
@@ -207,6 +249,7 @@ export default function ChaptersScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerWrapper}>
+            {/* ── Hero card ── */}
             <LinearGradient
               colors={[
                 colors.surface,
@@ -216,19 +259,40 @@ export default function ChaptersScreen() {
               end={{ x: 1, y: 1 }}
               style={[
                 styles.heroCard,
-                {
-                  borderColor: withOpacity(colors.primary, 0.2),
-                },
+                { borderColor: withOpacity(colors.primary, 0.2) },
               ]}
             >
-              <Text style={[styles.heroTitle, { color: colors.textMain }]}>
-                Chapters
+              <Text
+                style={[
+                  styles.heroTitle,
+                  {
+                    color: colors.textMain,
+                    fontFamily: fonts.bold,
+                    textAlign: isRTL ? "right" : "left",
+                  },
+                ]}
+              >
+                {t("chapters.title")}
               </Text>
-              <Text style={[styles.heroSubtitle, { color: colors.textMuted }]}>
-                Explore all 114 surahs with quick filters and instant search.
+              <Text
+                style={[
+                  styles.heroSubtitle,
+                  {
+                    color: colors.textMuted,
+                    fontFamily: fonts.regular,
+                    textAlign: isRTL ? "right" : "left",
+                  },
+                ]}
+              >
+                {t("chapters.subtitle")}
               </Text>
 
-              <View style={styles.statsRow}>
+              <View
+                style={[
+                  styles.statsRow,
+                  isRTL && { flexDirection: "row-reverse" },
+                ]}
+              >
                 <View
                   style={[
                     styles.statPill,
@@ -241,12 +305,18 @@ export default function ChaptersScreen() {
                   ]}
                 >
                   <Text
-                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                    style={[
+                      styles.statPillLabel,
+                      { color: colors.textMuted, fontFamily: fonts.medium },
+                    ]}
                   >
-                    Total
+                    {t("chapters.total")}
                   </Text>
                   <Text
-                    style={[styles.statPillValue, { color: colors.primary }]}
+                    style={[
+                      styles.statPillValue,
+                      { color: colors.primary, fontFamily: fonts.bold },
+                    ]}
                   >
                     {chapterStats.total}
                   </Text>
@@ -263,12 +333,18 @@ export default function ChaptersScreen() {
                   ]}
                 >
                   <Text
-                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                    style={[
+                      styles.statPillLabel,
+                      { color: colors.textMuted, fontFamily: fonts.medium },
+                    ]}
                   >
-                    Mecca
+                    {t("chapters.mecca")}
                   </Text>
                   <Text
-                    style={[styles.statPillValue, { color: colors.textMain }]}
+                    style={[
+                      styles.statPillValue,
+                      { color: colors.textMain, fontFamily: fonts.bold },
+                    ]}
                   >
                     {chapterStats.mecca}
                   </Text>
@@ -285,12 +361,18 @@ export default function ChaptersScreen() {
                   ]}
                 >
                   <Text
-                    style={[styles.statPillLabel, { color: colors.textMuted }]}
+                    style={[
+                      styles.statPillLabel,
+                      { color: colors.textMuted, fontFamily: fonts.medium },
+                    ]}
                   >
-                    Madina
+                    {t("chapters.madina")}
                   </Text>
                   <Text
-                    style={[styles.statPillValue, { color: colors.textMain }]}
+                    style={[
+                      styles.statPillValue,
+                      { color: colors.textMain, fontFamily: fonts.bold },
+                    ]}
                   >
                     {chapterStats.madina}
                   </Text>
@@ -298,12 +380,14 @@ export default function ChaptersScreen() {
               </View>
             </LinearGradient>
 
+            {/* ── Search ── */}
             <View
               style={[
                 styles.searchContainer,
                 {
                   backgroundColor: colors.surface,
                   borderColor: colors.border,
+                  flexDirection: isRTL ? "row-reverse" : "row",
                 },
               ]}
             >
@@ -311,16 +395,28 @@ export default function ChaptersScreen() {
               <TextInput
                 value={searchValue}
                 onChangeText={setSearchValue}
-                placeholder="Search by surah name"
+                placeholder={t("chapters.searchPlaceholder")}
                 placeholderTextColor={colors.textMuted}
-                style={[styles.searchInput, { color: colors.textMain }]}
+                style={[
+                  styles.searchInput,
+                  {
+                    color: colors.textMain,
+                    fontFamily: fonts.regular,
+                    textAlign: isRTL ? "right" : "left",
+                  },
+                ]}
               />
             </View>
 
-            <View style={styles.filtersRow}>
-              {filterOptions.map((option, index) => {
+            {/* ── Filters ── */}
+            <View
+              style={[
+                styles.filtersRow,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
+              {filterOptions.map((option) => {
                 const isActive = filter === option.key;
-
                 return (
                   <View key={option.key}>
                     <Pressable
@@ -345,7 +441,10 @@ export default function ChaptersScreen() {
                       <Text
                         style={[
                           styles.filterText,
-                          { color: isActive ? "#FFFFFF" : colors.textMain },
+                          {
+                            color: isActive ? "#FFFFFF" : colors.textMain,
+                            fontFamily: fonts.medium,
+                          },
                         ]}
                       >
                         {option.label} ({option.count})
@@ -378,16 +477,27 @@ export default function ChaptersScreen() {
                     color={colors.textMain}
                     strokeWidth={2.4}
                   />
-                  {/* <Text style={[styles.filterText, { color: colors.textMain }]}>
-                    {sortDirection === "top-to-bottom" ? "Top → Bottom" : "Bottom → Top"}
-                  </Text> */}
                 </Pressable>
               </View>
             </View>
 
-            <Text style={[styles.resultCount, { color: colors.textMuted }]}>
-              {filteredChapters.length} chapter
-              {filteredChapters.length === 1 ? "" : "s"} found
+            {/* ── Result count ── */}
+            <Text
+              style={[
+                styles.resultCount,
+                {
+                  color: colors.textMuted,
+                  fontFamily: fonts.medium,
+                  textAlign: isRTL ? "right" : "left",
+                },
+              ]}
+            >
+              {t(
+                filteredChapters.length === 1
+                  ? "chapters.chaptersFound_one"
+                  : "chapters.chaptersFound_other",
+                { count: filteredChapters.length },
+              )}
             </Text>
           </View>
         }
@@ -396,6 +506,14 @@ export default function ChaptersScreen() {
             chapter={item}
             colors={colors}
             isDark={isDark}
+            isRTL={isRTL}
+            fonts={fonts}
+            versesLabel={t(
+              item.versesCount === 1
+                ? "chapters.verses_one"
+                : "chapters.verses_other",
+              { count: item.versesCount },
+            )}
             onPress={(chapterId) => {
               router.push({
                 pathname: "/chapter/[id]",
@@ -430,12 +548,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroTitle: {
-    fontFamily: "SatoshiBold",
     fontSize: 30,
     letterSpacing: -0.3,
   },
   heroSubtitle: {
-    fontFamily: "Satoshi",
     fontSize: 14,
     lineHeight: 20,
   },
@@ -452,11 +568,9 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   statPillLabel: {
-    fontFamily: "SatoshiMedium",
     fontSize: 12,
   },
   statPillValue: {
-    fontFamily: "SatoshiBold",
     fontSize: 18,
   },
   searchContainer: {
@@ -464,13 +578,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     minHeight: 52,
     paddingHorizontal: 14,
-    flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
   searchInput: {
     flex: 1,
-    fontFamily: "Satoshi",
     fontSize: 14,
   },
   filtersRow: {
@@ -495,11 +607,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterText: {
-    fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
   resultCount: {
-    fontFamily: "SatoshiMedium",
     fontSize: 13,
     marginBottom: 2,
   },
@@ -507,7 +617,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     padding: 14,
-    flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
@@ -519,7 +628,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   numberText: {
-    fontFamily: "SatoshiBold",
     fontSize: 16,
   },
   chapterBody: {
@@ -527,11 +635,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   chapterEnglishName: {
-    fontFamily: "SatoshiMedium",
     fontSize: 16,
   },
   chapterTranslitName: {
-    fontFamily: "Satoshi",
     fontSize: 13,
   },
   metaColumn: {
@@ -545,7 +651,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   chapterMeta: {
-    fontFamily: "SatoshiMedium",
     fontSize: 12,
   },
 });

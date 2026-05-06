@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  ScrollView,
   Pressable,
   Platform,
 } from "react-native";
@@ -17,46 +16,19 @@ import Animated, {
   interpolate,
   Extrapolation,
   useAnimatedScrollHandler,
-  SharedValue,
+  type SharedValue,
 } from "react-native-reanimated";
 import { useTheme } from "../lib/ThemeContext";
 import { useAppSettings } from "../lib/AppSettingsContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { BookOpen, Bookmark, Settings, BellRing } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
-const SLIDES = [
-  {
-    id: "1",
-    title: "Welcome to Quranic",
-    description:
-      "Read, reflect, and connect with the Holy Quran. Immerse yourself in the divine words.",
-    icon: BookOpen,
-  },
-  {
-    id: "2",
-    title: "Seamless Progress",
-    description:
-      "Your recitation progress is saved seamlessly. Pick up exactly where you left off.",
-    icon: Bookmark,
-  },
-  {
-    id: "3",
-    title: "Daily Reminders",
-    description:
-      "Build a consistent habit with daily reminders tailored to your schedule.",
-    icon: BellRing,
-  },
-  {
-    id: "4",
-    title: "Fully Customizable",
-    description:
-      "Personalize your experience with themes, translations, and transliterations.",
-    icon: Settings,
-  },
-];
+const SLIDE_ICONS = [BookOpen, Bookmark, BellRing, Settings];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -100,6 +72,8 @@ const PaginationDot = ({
 export default function OnboardingScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
+  const fonts = useAppFonts();
   const { setHasSeenOnboarding } = useAppSettings();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -107,13 +81,18 @@ export default function OnboardingScreen() {
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const buttonScale = useSharedValue(1);
 
+  // Pull translated slides at render time
+  const slides = (
+    t("onboarding.slides") as unknown as { title: string; description: string }[]
+  ).map((slide, i) => ({
+    ...slide,
+    id: String(i + 1),
+    icon: SLIDE_ICONS[i],
+  }));
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
-    },
-    onMomentumEnd: (event) => {
-      const index = Math.round(event.contentOffset.x / width);
-      // We can't update state directly here in a worklet simply on reanimated 2 so we rely on onScrollEndDrag/onMomentumScrollEnd from ScrollView props if needed or runOnJS.
     },
   });
 
@@ -124,8 +103,7 @@ export default function OnboardingScreen() {
 
   const handleNext = async () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    if (currentIndex < SLIDES.length - 1) {
+    if (currentIndex < slides.length - 1) {
       scrollViewRef.current?.scrollTo({
         x: (currentIndex + 1) * width,
         animated: true,
@@ -137,11 +115,9 @@ export default function OnboardingScreen() {
     }
   };
 
-  const buttonAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: buttonScale.value }],
-    };
-  });
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -157,7 +133,7 @@ export default function OnboardingScreen() {
         scrollEventThrottle={16}
         bounces={false}
       >
-        {SLIDES.map((slide, index) => {
+        {slides.map((slide) => {
           const Icon = slide.icon;
           return (
             <View key={slide.id} style={[styles.slide, { width }]}>
@@ -177,10 +153,20 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.textContainer}>
-                <Text style={[styles.title, { color: colors.textMain }]}>
+                <Text
+                  style={[
+                    styles.title,
+                    { color: colors.textMain, fontFamily: fonts.bold },
+                  ]}
+                >
                   {slide.title}
                 </Text>
-                <Text style={[styles.description, { color: colors.textMuted }]}>
+                <Text
+                  style={[
+                    styles.description,
+                    { color: colors.textMuted, fontFamily: fonts.medium },
+                  ]}
+                >
                   {slide.description}
                 </Text>
               </View>
@@ -191,7 +177,7 @@ export default function OnboardingScreen() {
 
       <View style={styles.footer}>
         <View style={styles.pagination}>
-          {SLIDES.map((_, index) => (
+          {slides.map((_, index) => (
             <PaginationDot
               key={index.toString()}
               index={index}
@@ -214,8 +200,10 @@ export default function OnboardingScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.buttonText}>
-              {currentIndex === SLIDES.length - 1 ? "Get Started" : "Continue"}
+            <Text style={[styles.buttonText, { fontFamily: fonts.bold }]}>
+              {currentIndex === slides.length - 1
+                ? t("onboarding.getStarted")
+                : t("onboarding.continue")}
             </Text>
           </LinearGradient>
         </AnimatedPressable>
@@ -225,9 +213,7 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   slide: {
     flex: 1,
     alignItems: "center",
@@ -252,13 +238,11 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   title: {
-    fontFamily: "SatoshiBold",
     fontSize: 28,
     marginBottom: 16,
     textAlign: "center",
   },
   description: {
-    fontFamily: "SatoshiMedium",
     fontSize: 16,
     textAlign: "center",
     lineHeight: 24,
@@ -292,7 +276,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#FFFFFF",
-    fontFamily: "SatoshiBold",
     fontSize: 18,
   },
 });

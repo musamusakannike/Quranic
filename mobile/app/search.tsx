@@ -15,6 +15,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Search, ChevronLeft, X } from "lucide-react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useTheme } from "../lib/ThemeContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import {
   searchQuran,
   getChapterMetadata,
@@ -32,6 +34,8 @@ const withOpacity = (hexColor: string, opacity: number) => {
 
 export default function GlobalSearchScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -66,53 +70,31 @@ export default function GlobalSearchScreen() {
           void Haptics.selectionAsync();
           router.push({
             pathname: "/chapter/[id]",
-            params: {
-              id: String(item.chapter),
-              verse: String(item.verse),
-            },
+            params: { id: String(item.chapter), verse: String(item.verse) },
           });
         }}
         style={[
           styles.resultCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: withOpacity(colors.border, 0.8),
-          },
+          { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.8) },
         ]}
       >
-        <View style={styles.cardHeader}>
-          <Text style={[styles.chapterInfo, { color: colors.primary }]}>
-            Surah {meta?.englishname} • Ayah {item.verse}
+        <View style={[styles.cardHeader, isRTL && { flexDirection: "row-reverse" }]}>
+          <Text style={[styles.chapterInfo, { color: colors.primary, fontFamily: fonts.bold }]}>
+            {t("search.surahAyah", { name: meta?.englishname, verse: item.verse })}
           </Text>
-          <View
-            style={[
-              styles.matchBadge,
-              { backgroundColor: withOpacity(colors.accent, 0.15) },
-            ]}
-          >
-            <Text
-              style={[
-                styles.matchText,
-                { color: colors.textMain, textTransform: "capitalize" },
-              ]}
-            >
+          <View style={[styles.matchBadge, { backgroundColor: withOpacity(colors.accent, 0.15) }]}>
+            <Text style={[styles.matchText, { color: colors.textMain, textTransform: "capitalize", fontFamily: fonts.bold }]}>
               {item.matchType}
             </Text>
           </View>
         </View>
 
-        <Text
-          style={[styles.arabicText, { color: colors.textMain }]}
-          numberOfLines={2}
-        >
+        <Text style={[styles.arabicText, { color: colors.textMain }]} numberOfLines={2}>
           {item.text}
         </Text>
 
         {item.translation && item.matchType !== "arabic" && (
-          <Text
-            style={[styles.translationText, { color: colors.textMuted }]}
-            numberOfLines={2}
-          >
+          <Text style={[styles.translationText, { color: colors.textMuted, fontFamily: fonts.regular }]} numberOfLines={2}>
             {item.translation}
           </Text>
         )}
@@ -121,9 +103,7 @@ export default function GlobalSearchScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.screen, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -134,31 +114,20 @@ export default function GlobalSearchScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <View style={styles.header}>
+      <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
         <Pressable
           onPress={() => router.back()}
-          style={[
-            styles.backButton,
-            {
-              backgroundColor: withOpacity(colors.surface, 0.5),
-              borderColor: colors.border,
-            },
-          ]}
+          style={[styles.backButton, { backgroundColor: withOpacity(colors.surface, 0.5), borderColor: colors.border }]}
         >
           <ChevronLeft size={20} color={colors.textMain} />
         </Pressable>
 
-        <View
-          style={[
-            styles.searchContainer,
-            { backgroundColor: colors.surface, borderColor: colors.primary },
-          ]}
-        >
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.primary, flexDirection: isRTL ? "row-reverse" : "row" }]}>
           <Search size={18} color={colors.primary} />
           <TextInput
             ref={inputRef}
-            style={[styles.searchInput, { color: colors.textMain }]}
-            placeholder="Search Quran (Arabic, Translations...)"
+            style={[styles.searchInput, { color: colors.textMain, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
+            placeholder={t("search.placeholder")}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -166,12 +135,7 @@ export default function GlobalSearchScreen() {
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
-            <Pressable
-              onPress={() => {
-                setSearchQuery("");
-                inputRef.current?.focus();
-              }}
-            >
+            <Pressable onPress={() => { setSearchQuery(""); inputRef.current?.focus(); }}>
               <X size={18} color={colors.textMuted} />
             </Pressable>
           )}
@@ -191,39 +155,34 @@ export default function GlobalSearchScreen() {
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={[styles.emptyTitle, { color: colors.textMain }]}>
-                No results found
+              <Text style={[styles.emptyTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                {t("search.noResults")}
               </Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                We couldn&apos;t find anything matching &quot;{debouncedQuery}
-                &quot;. Try a different keyword.
+              <Text style={[styles.emptySubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                {t("search.noResultsSubtitle", { query: debouncedQuery })}
               </Text>
             </View>
           }
           ListHeaderComponent={
             results.length > 0 ? (
-              <Text style={[styles.resultsCount, { color: colors.textMuted }]}>
-                Found {results.length === 100 ? "100+" : results.length} verses
+              <Text style={[styles.resultsCount, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                {results.length === 100
+                  ? t("search.foundVersesPlus")
+                  : t(results.length === 1 ? "search.foundVerses_one" : "search.foundVerses_other", { count: results.length })}
               </Text>
             ) : null
           }
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <View
-            style={[
-              styles.iconCircle,
-              { backgroundColor: withOpacity(colors.primary, 0.1) },
-            ]}
-          >
+          <View style={[styles.iconCircle, { backgroundColor: withOpacity(colors.primary, 0.1) }]}>
             <Search size={40} color={colors.primary} strokeWidth={1.5} />
           </View>
-          <Text style={[styles.emptyTitle, { color: colors.textMain }]}>
-            Global Search
+          <Text style={[styles.emptyTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            {t("search.title")}
           </Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-            Search across Arabic texts, English translations, and
-            transliterations in milliseconds.
+          <Text style={[styles.emptySubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+            {t("search.subtitle")}
           </Text>
         </View>
       )}

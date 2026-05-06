@@ -36,6 +36,8 @@ import * as Haptics from "expo-haptics";
 
 import { useTheme } from "../../lib/ThemeContext";
 import { useAppSettings } from "../../lib/AppSettingsContext";
+import { useLanguage } from "../../lib/LanguageContext";
+import { useAppFonts } from "../../lib/i18n/useAppFonts";
 import {
   getChapterMetadata,
   getFirstVerseForJuz,
@@ -82,13 +84,13 @@ const withOpacity = (hexColor: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-const getGreeting = () => {
+const getGreetingKey = () => {
   const hour = new Date().getHours();
-  if (hour < 5) return "Night recitation";
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  if (hour < 21) return "Good evening";
-  return "Good evening";
+  if (hour < 5) return "home.greetingNight";
+  if (hour < 12) return "home.greetingMorning";
+  if (hour < 17) return "home.greetingAfternoon";
+  if (hour < 21) return "home.greetingEvening";
+  return "home.greetingEvening";
 };
 
 const formatReminderTime = (hour: number, minute: number) => {
@@ -103,6 +105,8 @@ const formatReminderTime = (hour: number, minute: number) => {
 export default function Index() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const { reminderEnabled, reminderTime, quickActionsView, setQuickActionsView } =
     useAppSettings();
   const [lastRead, setLastRead] = useState<LastReadProgress | null>(null);
@@ -158,12 +162,14 @@ export default function Index() {
     ]).start(() => setJuzSheetVisible(false));
   };
 
-  const greetingText = useMemo(() => getGreeting(), []);
+  const greetingText = useMemo(() => t(getGreetingKey()), [t]);
 
   const reminderText = useMemo(() => {
-    if (!reminderEnabled) return "Reminder off";
-    return `Reminder at ${formatReminderTime(reminderTime.hour, reminderTime.minute)}`;
-  }, [reminderEnabled, reminderTime.hour, reminderTime.minute]);
+    if (!reminderEnabled) return t("home.reminderOff");
+    return t("home.reminderAt", {
+      time: formatReminderTime(reminderTime.hour, reminderTime.minute),
+    });
+  }, [reminderEnabled, reminderTime.hour, reminderTime.minute, t]);
 
   const lastReadChapter = useMemo(() => {
     if (!lastRead) return null;
@@ -278,13 +284,13 @@ export default function Index() {
 
           <View style={styles.heroContent}>
             {/* ─── Header Row ─── */}
-            <View style={styles.headerRow}>
+            <View style={[styles.headerRow, isRTL && { flexDirection: "row-reverse" }]}>
               <View style={styles.headerTextBlock}>
-                <Text style={[styles.greetingLabel, styles.heroGreetingLabel]}>
-                  Assalamu alaikum
+                <Text style={[styles.greetingLabel, styles.heroGreetingLabel, { fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                  {t("home.greeting")}
                 </Text>
                 <Text
-                  style={[styles.greetingHeading, styles.heroGreetingHeading]}
+                  style={[styles.greetingHeading, styles.heroGreetingHeading, { fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}
                 >
                   {greetingText} 🌙
                 </Text>
@@ -334,6 +340,7 @@ export default function Index() {
                   styles.reminderPillText,
                   {
                     color: reminderEnabled ? colors.success : colors.textMuted,
+                    fontFamily: fonts.regular,
                   },
                 ]}
               >
@@ -362,7 +369,7 @@ export default function Index() {
               }}
             >
               <View style={styles.continueCard}>
-                <View style={styles.continueCardTop}>
+                <View style={[styles.continueCardTop, isRTL && { flexDirection: "row-reverse" }]}>
                   <View style={styles.continueCardLeft}>
                     <Text
                       style={[
@@ -375,7 +382,7 @@ export default function Index() {
                         },
                       ]}
                     >
-                      {lastRead ? "Continue reading" : "Start reading"}
+                      {lastRead ? t("home.continueReading") : t("home.startReading")}
                     </Text>
                     {lastRead && lastReadChapter ? (
                       <>
@@ -393,13 +400,12 @@ export default function Index() {
                           {lastReadChapter.arabicname}
                         </Text>
                         <Text style={[styles.continueMeta, { color: "#BBB" }]}>
-                          Ayah {lastRead.verse} • Juz {lastRead.juz ?? "–"} • Pg{" "}
-                          {lastRead.page ?? "–"}
+                          {t("home.ayah", { verse: lastRead.verse })} • {t("home.juz", { juz: lastRead.juz ?? "–" })} • {t("home.page", { page: lastRead.page ?? "–" })}
                         </Text>
                       </>
                     ) : (
                       <Text style={[styles.continueMeta, { color: "#BBB" }]}>
-                        Your position is saved automatically
+                        {t("home.positionSaved")}
                       </Text>
                     )}
                   </View>
@@ -442,14 +448,14 @@ export default function Index() {
                         { color: colors.textMuted },
                       ]}
                     >
-                      {readingProgress.percentage}% through surah
+                      {t("home.progressLabel", { percent: readingProgress.percentage })}
                     </Text>
                   </View>
                 ) : null}
 
-                <View style={styles.continueCtaRow}>
-                  <Text style={[styles.continueCta, { color: colors.success }]}>
-                    {lastRead ? "Resume" : "Open chapters"}
+                <View style={[styles.continueCtaRow, isRTL && { flexDirection: "row-reverse" }]}>
+                  <Text style={[styles.continueCta, { color: colors.success, fontFamily: fonts.medium }]}>
+                    {lastRead ? t("home.resume") : t("home.openChapters")}
                   </Text>
                   <ChevronRight size={15} color={colors.success} />
                 </View>
@@ -461,11 +467,11 @@ export default function Index() {
         {/* ─── Quick Actions ─── */}
         <View style={[styles.sectionHeader, { paddingHorizontal: 16 }]}>
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-              Quick Actions
+            <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+              {t("home.quickActions")}
             </Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-              Access essential features quickly
+            <Text style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+              {t("home.quickActionsSubtitle")}
             </Text>
           </View>
           <Pressable
@@ -495,64 +501,64 @@ export default function Index() {
           data={[
             {
               id: "audio",
-              title: "Audio",
-              subtitle: "Listen to reciters",
+              title: t("home.audio"),
+              subtitle: t("home.audioSubtitle"),
               icon: Headphones,
               path: "/audio" as const,
               image: require("../../assets/images/quick-actions/audio.webp"),
             },
             {
               id: "chapters",
-              title: "Chapters",
-              subtitle: "All surahs",
+              title: t("home.chaptersCard"),
+              subtitle: t("home.chaptersSubtitle"),
               icon: BookOpen,
               path: "/(tabs)/chapters" as const,
               image: require("../../assets/images/quick-actions/chapters.webp"),
             },
             {
               id: "qiblah",
-              title: "Qiblah",
-              subtitle: "Direction",
+              title: t("home.qiblah"),
+              subtitle: t("home.qiblahSubtitle"),
               icon: Compass,
               path: "/qiblah" as const,
               image: require("../../assets/images/quick-actions/qiblah.webp"),
             },
             {
               id: "solah",
-              title: "Solah",
-              subtitle: "Prayer times",
+              title: t("home.solah"),
+              subtitle: t("home.solahSubtitle"),
               icon: Clock,
               path: "/solah" as const,
               image: require("../../assets/images/quick-actions/solah.webp"),
             },
             {
               id: "hijri",
-              title: "Hijri",
-              subtitle: "Islamic calendar",
+              title: t("home.hijri"),
+              subtitle: t("home.hijriSubtitle"),
               icon: CalendarDays,
               path: "/hijri-calendar" as const,
               image: require("../../assets/images/quick-actions/hijri.webp"),
             },
             {
               id: "adhkaar",
-              title: "Adhkaar",
-              subtitle: "Daily supplications",
+              title: t("home.adhkaar"),
+              subtitle: t("home.adhkaarSubtitle"),
               icon: Sparkles,
               path: "/adhkaar" as const,
               image: require("../../assets/images/quick-actions/adhkaar.webp"),
             },
             {
               id: "hifz",
-              title: "Hifz",
-              subtitle: "Memorization suite",
+              title: t("home.hifz"),
+              subtitle: t("home.hifzSubtitle"),
               icon: Brain,
               path: "/hifz" as const,
               image: require("../../assets/images/quick-actions/hifz.webp"),
             },
             {
               id: "ai-chat",
-              title: "AI Chat",
-              subtitle: "Ask about the deen",
+              title: t("home.aiChat"),
+              subtitle: t("home.aiChatSubtitle"),
               icon: Sparkles,
               path: "/(tabs)/ai-chat" as const,
               image: require("../../assets/images/quick-actions/ai.jpeg"),
@@ -606,13 +612,13 @@ export default function Index() {
                     <item.icon color="#FFFFFF" size={20} />
                   </View>
                   <View>
-                    <Text style={[styles.quickCardTitle, { color: "#FFFFFF" }]}>
+                    <Text style={[styles.quickCardTitle, { color: "#FFFFFF", fontFamily: fonts.bold }]}>
                       {item.title}
                     </Text>
                     <Text
                       style={[
                         styles.quickCardSubtitle,
-                        { color: "rgba(255,255,255,0.8)" },
+                        { color: "rgba(255,255,255,0.8)", fontFamily: fonts.regular },
                       ]}
                     >
                       {item.subtitle}
@@ -626,20 +632,20 @@ export default function Index() {
 
         {/* ─── Juz Navigator ─── */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 140, gap: 16 }}>
-          <View style={styles.sectionHeader}>
+          <View style={[styles.sectionHeader, isRTL && { flexDirection: "row-reverse" }]}>
             <View>
-              <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-                Quick Juz
+              <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                {t("home.quickJuz")}
               </Text>
               <Text
-                style={[styles.sectionSubtitle, { color: colors.textMuted }]}
+                style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}
               >
-                Jump to any part of the Quran
+                {t("home.quickJuzSubtitle")}
               </Text>
             </View>
-            <Pressable onPress={openJuzSheet} style={styles.seeAllBtn}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                See all
+            <Pressable onPress={openJuzSheet} style={[styles.seeAllBtn, isRTL && { flexDirection: "row-reverse" }]}>
+              <Text style={[styles.seeAllText, { color: colors.primary, fontFamily: fonts.medium }]}>
+                {t("home.seeAll")}
               </Text>
               <ChevronRight size={14} color={colors.primary} />
             </Pressable>
@@ -690,10 +696,10 @@ export default function Index() {
                   <Text
                     style={[
                       styles.juzScrollLabel,
-                      { color: withOpacity(colors.primary, 0.75) },
+                      { color: withOpacity(colors.primary, 0.75), fontFamily: fonts.regular },
                     ]}
                   >
-                    Juz
+                    {t("home.juzLabel")}
                   </Text>
                 </LinearGradient>
               </Pressable>
@@ -714,18 +720,18 @@ export default function Index() {
               colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
               style={StyleSheet.absoluteFillObject}
             />
-            <View style={styles.ayahCardTop}>
+            <View style={[styles.ayahCardTop, isRTL && { flexDirection: "row-reverse" }]}>
               <View style={{ gap: 2, flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: "#FFFFFF" }]}>
-                  Ayah of the Day
+                <Text style={[styles.sectionTitle, { color: "#FFFFFF", fontFamily: fonts.bold }]}>
+                  {t("home.ayahOfDay")}
                 </Text>
                 <Text
                   style={[
                     styles.sectionSubtitle,
-                    { color: "rgba(255,255,255,0.7)" },
+                    { color: "rgba(255,255,255,0.7)", fontFamily: fonts.regular },
                   ]}
                 >
-                  Surah {dailyAyah.chapterName} · Ayah {dailyAyah.target.verse}
+                  {t("home.surahAyah", { name: dailyAyah.chapterName, verse: dailyAyah.target.verse })}
                 </Text>
               </View>
               <View
@@ -734,8 +740,8 @@ export default function Index() {
                   { backgroundColor: withOpacity(colors.primary, 0.25) },
                 ]}
               >
-                <Text style={[styles.dailyPillText, { color: "#FFFFFF" }]}>
-                  Daily
+                <Text style={[styles.dailyPillText, { color: "#FFFFFF", fontFamily: fonts.medium }]}>
+                  {t("home.daily")}
                 </Text>
               </View>
             </View>
@@ -775,9 +781,9 @@ export default function Index() {
                   },
                 });
               }}
-              style={[styles.readAyahBtn, { backgroundColor: colors.primary }]}
+              style={[styles.readAyahBtn, { backgroundColor: colors.primary, flexDirection: isRTL ? "row-reverse" : "row" }]}
             >
-              <Text style={styles.readAyahBtnText}>Read Ayah</Text>
+              <Text style={[styles.readAyahBtnText, { fontFamily: fonts.bold }]}>{t("home.readAyah")}</Text>
               <ChevronRight size={14} color="#fff" />
             </Pressable>
           </ImageBackground>
@@ -823,15 +829,13 @@ export default function Index() {
               />
             </View>
 
-            <View style={styles.sheetHeader}>
+            <View style={[styles.sheetHeader, isRTL && { flexDirection: "row-reverse" }]}>
               <View>
-                <Text style={[styles.sheetTitle, { color: colors.textMain }]}>
-                  All Juz
+                <Text style={[styles.sheetTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                  {t("home.allJuz")}
                 </Text>
-                <Text
-                  style={[styles.sheetSubtitle, { color: colors.textMuted }]}
-                >
-                  30 parts of the Holy Quran
+                <Text style={[styles.sheetSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                  {t("home.allJuzSubtitle")}
                 </Text>
               </View>
               <TouchableOpacity
@@ -882,10 +886,10 @@ export default function Index() {
                     <Text
                       style={[
                         styles.sheetJuzLabel,
-                        { color: withOpacity(colors.primary, 0.65) },
+                        { color: withOpacity(colors.primary, 0.65), fontFamily: fonts.regular },
                       ]}
                     >
-                      Juz
+                      {t("home.juzLabel")}
                     </Text>
                   </LinearGradient>
                 </Pressable>

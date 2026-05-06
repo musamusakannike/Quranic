@@ -9,19 +9,21 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "../lib/ThemeContext";
 import { useAppSettings } from "../lib/AppSettingsContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { StatusBar } from "expo-status-bar";
 import * as ExpoSplashScreen from "expo-splash-screen";
 
 export default function SplashScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
+  const fonts = useAppFonts();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
-
   const { hasSeenOnboarding } = useAppSettings();
 
   useEffect(() => {
-    // Hide native splash screen as soon as this JS component mounts!
     void ExpoSplashScreen.hideAsync();
 
     opacity.value = withTiming(1, { duration: 800 });
@@ -41,12 +43,10 @@ export default function SplashScreen() {
     return () => clearTimeout(timeout);
   }, [router, opacity, translateY]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [{ translateY: translateY.value }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -57,9 +57,13 @@ export default function SplashScreen() {
         Quranic
       </Animated.Text>
       <Animated.Text
-        style={[styles.subtitle, { color: colors.textMuted }, animatedStyle]}
+        style={[
+          styles.subtitle,
+          { color: colors.textMuted, fontFamily: fonts.medium },
+          animatedStyle,
+        ]}
       >
-        Read, Reflect, and Connect
+        {t("splash.tagline")}
       </Animated.Text>
     </View>
   );
@@ -77,7 +81,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: "SatoshiMedium",
     fontSize: 18,
     letterSpacing: 0.5,
   },

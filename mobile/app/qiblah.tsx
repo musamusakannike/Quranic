@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import { useTheme } from "../lib/ThemeContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,6 +33,8 @@ const withOpacity = (hexColor: string, opacity: number) => {
 
 export default function QiblahScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
 
   const [qiblahBearing, setQiblahBearing] = useState<number | null>(null);
@@ -76,12 +80,11 @@ export default function QiblahScreen() {
       // Request Location Permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied.");
+        setErrorMsg(t("qiblah.locationDenied"));
         return;
       }
 
       try {
-        // High accuracy location for initial fetch
         let location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Highest,
         });
@@ -90,30 +93,22 @@ export default function QiblahScreen() {
           location.coords.longitude,
         );
 
-        // Watch Location
         locationSub = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.High,
-            distanceInterval: 10,
-          },
+          { accuracy: Location.Accuracy.High, distanceInterval: 10 },
           (loc) => {
             calculateQiblahBearing(loc.coords.latitude, loc.coords.longitude);
           }
         );
 
-        // Watch Heading (optimized & accurate compass direction)
         headingSub = await Location.watchHeadingAsync((headingObj) => {
           let heading =
             headingObj.trueHeading >= 0
               ? headingObj.trueHeading
               : headingObj.magHeading;
-
-          if (heading >= 0) {
-            setMagnetometerHeading(heading);
-          }
+          if (heading >= 0) setMagnetometerHeading(heading);
         });
       } catch (err) {
-        setErrorMsg("Could not fetch location or heading.");
+        setErrorMsg(t("qiblah.locationError"));
       }
     })();
 
@@ -154,15 +149,12 @@ export default function QiblahScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={[styles.backBtn, { backgroundColor: colors.surface }]}
-          onPress={() => router.back()}
-        >
+      <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
+        <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={() => router.back()}>
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-          Qiblah
+        <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+          {t("qiblah.title")}
         </Text>
         <View style={styles.headerRight} />
       </View>
@@ -170,15 +162,15 @@ export default function QiblahScreen() {
       <View style={styles.content}>
         {errorMsg ? (
           <View style={styles.center}>
-            <Text style={[styles.errorText, { color: colors.textMuted }]}>
+            <Text style={[styles.errorText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
               {errorMsg}
             </Text>
           </View>
         ) : qiblahBearing === null ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>
-              Finding direction...
+            <Text style={[styles.loadingText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+              {t("qiblah.findingDirection")}
             </Text>
           </View>
         ) : (
@@ -188,101 +180,59 @@ export default function QiblahScreen() {
               style={[
                 styles.compassRing,
                 {
-                  borderColor: isFacingQiblah
-                    ? colors.success
-                    : withOpacity(colors.primary, 0.3),
+                  borderColor: isFacingQiblah ? colors.success : withOpacity(colors.primary, 0.3),
                   backgroundColor: colors.surface,
                 },
               ]}
             >
-              {/* North Marker relative to the device */}
               <View
-                style={[
-                  styles.compassFace,
-                  { transform: [{ rotate: `${-magnetometerHeading}deg` }] },
-                ]}
+                style={[styles.compassFace, { transform: [{ rotate: `${-magnetometerHeading}deg` }] }]}
               >
-                <Text style={[styles.northText, { color: colors.textMain }]}>
-                  N
-                </Text>
-                <Text style={[styles.eastText, { color: colors.textMuted }]}>
-                  E
-                </Text>
-                <Text style={[styles.southText, { color: colors.textMuted }]}>
-                  S
-                </Text>
-                <Text style={[styles.westText, { color: colors.textMuted }]}>
-                  W
-                </Text>
+                <Text style={[styles.northText, { color: colors.textMain, fontFamily: fonts.bold }]}>N</Text>
+                <Text style={[styles.eastText, { color: colors.textMuted, fontFamily: fonts.bold }]}>E</Text>
+                <Text style={[styles.southText, { color: colors.textMuted, fontFamily: fonts.bold }]}>S</Text>
+                <Text style={[styles.westText, { color: colors.textMuted, fontFamily: fonts.bold }]}>W</Text>
               </View>
 
-              {/* Kaaba Direction Marker (Protrusion Indicator) */}
               <View
                 style={[
                   StyleSheet.absoluteFillObject,
-                  {
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                    transform: [{ rotate: `${needleRotation}deg` }],
-                    zIndex: 10,
-                  },
+                  { alignItems: "center", justifyContent: "flex-start", transform: [{ rotate: `${needleRotation}deg` }], zIndex: 10 },
                 ]}
               >
                 <Image
                   source={require("../assets/images/kaaba.webp")}
-                  style={[
-                    styles.kaabaIndicator,
-                    isFacingQiblah && { tintColor: undefined },
-                  ]}
+                  style={[styles.kaabaIndicator, isFacingQiblah && { tintColor: undefined }]}
                 />
               </View>
             </View>
 
-            <View style={styles.infoContainer}>
-              <View
-                style={[
-                  styles.infoCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: withOpacity(colors.border, 0.5),
-                  },
-                ]}
-              >
-                <Text style={[styles.infoLabel, { color: colors.textMuted }]}>
-                  Your Heading
+            <View style={[styles.infoContainer, isRTL && { flexDirection: "row-reverse" }]}>
+              <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
+                <Text style={[styles.infoLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                  {t("qiblah.yourHeading")}
                 </Text>
-                <Text style={[styles.infoValue, { color: colors.textMain }]}>
+                <Text style={[styles.infoValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
                   {Math.round(magnetometerHeading)}°
                 </Text>
               </View>
-
-              <View
-                style={[
-                  styles.infoCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: withOpacity(colors.border, 0.5),
-                  },
-                ]}
-              >
-                <Text style={[styles.infoLabel, { color: colors.textMuted }]}>
-                  Qiblah
+              <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
+                <Text style={[styles.infoLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                  {t("qiblah.qiblahLabel")}
                 </Text>
-                <Text style={[styles.infoValue, { color: colors.textMain }]}>
+                <Text style={[styles.infoValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
                   {Math.round(qiblahBearing)}°
                 </Text>
               </View>
             </View>
 
             {isFacingQiblah ? (
-              <Text style={[styles.qiblahFoundText, { color: colors.success }]}>
-                You are facing the Qiblah
+              <Text style={[styles.qiblahFoundText, { color: colors.success, fontFamily: fonts.bold }]}>
+                {t("qiblah.facingQiblah")}
               </Text>
             ) : (
-              <Text
-                style={[styles.instructionText, { color: colors.textMuted }]}
-              >
-                Rotate your device until the arrow points up
+              <Text style={[styles.instructionText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                {t("qiblah.rotateDevice")}
               </Text>
             )}
           </View>

@@ -16,6 +16,8 @@ import { useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "../lib/ThemeContext";
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -132,6 +134,8 @@ const withOpacity = (hexColor: string, opacity: number) => {
 
 export default function SolahTimesScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
 
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesMap | null>(null);
@@ -167,21 +171,19 @@ export default function SolahTimesScreen() {
       // Request Location Permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
+        setErrorMsg(t("solah.locationDenied"));
         return;
       }
 
       try {
         let location = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = location.coords;
-
         const times = getPrayerTimes(latitude, longitude);
         setPrayerTimes(times);
-
         const nextP = getNextPrayer(latitude, longitude);
         setNextPrayer(nextP);
       } catch (err) {
-        setErrorMsg("Could not fetch location.");
+        setErrorMsg(t("solah.locationError"));
       }
     })();
   }, []);
@@ -215,10 +217,7 @@ export default function SolahTimesScreen() {
 
       const permissionGranted = await requestNotificationPermission();
       if (!permissionGranted) {
-        Alert.alert(
-          "Permission required",
-          "Please enable notifications to set daily salah reminders.",
-        );
+        Alert.alert(t("settings.permissionRequired"), t("solah.notificationPermission"));
         return;
       }
 
@@ -227,7 +226,7 @@ export default function SolahTimesScreen() {
       }
 
       const prayerTime = prayerTimes[prayerKey];
-      const label = PRAYER_ROWS.find((row) => row.key === prayerKey)?.label ?? "Salah";
+      const label = PRAYER_ROWS_TRANSLATED.find((row) => row.key === prayerKey)?.label ?? "Salah";
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: `${label} Salah Reminder`,
@@ -249,7 +248,7 @@ export default function SolahTimesScreen() {
       setReminders(nextState);
       await saveReminders(nextState);
     } catch {
-      Alert.alert("Error", "Could not update this reminder right now.");
+      Alert.alert(t("solah.error"), t("solah.reminderError"));
     } finally {
       setBusyPrayer(null);
     }
@@ -257,13 +256,26 @@ export default function SolahTimesScreen() {
 
   const reminderSummaryText =
     activeReminderCount === 0
-      ? "No daily reminders active"
-      : `${activeReminderCount} daily reminder${activeReminderCount > 1 ? "s" : ""} active`;
+      ? t("solah.noReminders")
+      : t(
+          activeReminderCount === 1
+            ? "solah.remindersActive_one"
+            : "solah.remindersActive_other",
+          { count: activeReminderCount },
+        );
+
+  // Build prayer rows with translated labels
+  const PRAYER_ROWS_TRANSLATED = [
+    { key: "fajr" as PrayerListKey, label: t("solah.fajr"), remindable: true },
+    { key: "sunrise" as PrayerListKey, label: t("solah.sunrise"), remindable: false },
+    { key: "dhuhr" as PrayerListKey, label: t("solah.dhuhr"), remindable: true },
+    { key: "asr" as PrayerListKey, label: t("solah.asr"), remindable: true },
+    { key: "maghrib" as PrayerListKey, label: t("solah.maghrib"), remindable: true },
+    { key: "isha" as PrayerListKey, label: t("solah.isha"), remindable: true },
+  ];
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -277,32 +289,28 @@ export default function SolahTimesScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={[styles.backBtn, { backgroundColor: colors.surface }]}
-          onPress={() => router.back()}
-        >
+      <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
+        <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={() => router.back()}>
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain }]}>Solat Times</Text>
+        <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+          {t("solah.title")}
+        </Text>
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {errorMsg ? (
           <View style={styles.center}>
-            <Text style={[styles.errorText, { color: colors.textMuted }]}> 
+            <Text style={[styles.errorText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
               {errorMsg}
             </Text>
           </View>
         ) : !prayerTimes ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}> 
-              Calculating times...
+            <Text style={[styles.loadingText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+              {t("solah.calculating")}
             </Text>
           </View>
         ) : (
@@ -314,74 +322,56 @@ export default function SolahTimesScreen() {
                 imageStyle={{ borderRadius: 18 }}
               >
                 <View style={styles.nextPrayerOverlay}>
-                  <Text style={styles.nextPrayerLabel}>NEXT PRAYER</Text>
-                  <View style={styles.nextPrayerRow}>
-                    <Text style={styles.nextPrayerName}>{nextPrayer.label}</Text>
-                    <Text style={styles.nextPrayerTime}>{formatTime(nextPrayer.time)}</Text>
+                  <Text style={[styles.nextPrayerLabel, { fontFamily: fonts.medium }]}>
+                    {t("solah.nextPrayer")}
+                  </Text>
+                  <View style={[styles.nextPrayerRow, isRTL && { flexDirection: "row-reverse" }]}>
+                    <Text style={[styles.nextPrayerName, { fontFamily: fonts.bold }]}>{nextPrayer.label}</Text>
+                    <Text style={[styles.nextPrayerTime, { fontFamily: fonts.bold }]}>{formatTime(nextPrayer.time)}</Text>
                   </View>
                 </View>
               </ImageBackground>
             ) : null}
 
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: withOpacity(colors.border, 0.6),
-                },
-              ]}
-            >
-              <View style={styles.summaryTopRow}>
+            <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.6) }]}>
+              <View style={[styles.summaryTopRow, isRTL && { flexDirection: "row-reverse" }]}>
                 <Bell size={18} color={colors.primary} />
-                <Text style={[styles.summaryTitle, { color: colors.textMain }]}> 
-                  Solah reminders
+                <Text style={[styles.summaryTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                  {t("solah.reminders")}
                 </Text>
               </View>
-              <Text style={[styles.summaryText, { color: colors.textMuted }]}> 
+              <Text style={[styles.summaryText, { color: colors.textMuted, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
                 {reminderSummaryText}
               </Text>
             </View>
 
-            <View
-              style={[
-                styles.timesCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: withOpacity(colors.border, 0.5),
-                },
-              ]}
-            >
-              <Text style={[styles.cardTitle, { color: colors.textMain }]}> 
-                Today&apos;s prayer times
+            <View style={[styles.timesCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
+              <Text style={[styles.cardTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+                {t("solah.todayTimes")}
               </Text>
-              <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}> 
-                Toggle any solah to receive a daily local reminder at that time.
+              <Text style={[styles.cardSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+                {t("solah.todayTimesSubtitle")}
               </Text>
 
-              {PRAYER_ROWS.map((row, index) => {
-                const isLast = index === PRAYER_ROWS.length - 1;
+              {PRAYER_ROWS_TRANSLATED.map((row, index) => {
+                const isLast = index === PRAYER_ROWS_TRANSLATED.length - 1;
                 const isBusy = row.remindable && busyPrayer === row.key;
-                const isEnabled = row.remindable
-                  ? reminders[row.key as PrayerKey].enabled
-                  : false;
+                const isEnabled = row.remindable ? reminders[row.key as PrayerKey].enabled : false;
 
                 return (
                   <View
                     key={row.key}
                     style={[
                       styles.prayerRow,
-                      {
-                        borderBottomWidth: isLast ? 0 : 1,
-                        borderBottomColor: withOpacity(colors.border, 0.3),
-                      },
+                      isRTL && { flexDirection: "row-reverse" },
+                      { borderBottomWidth: isLast ? 0 : 1, borderBottomColor: withOpacity(colors.border, 0.3) },
                     ]}
                   >
-                    <View>
-                      <Text style={[styles.prayerName, { color: colors.textMain }]}> 
+                    <View style={isRTL ? { alignItems: "flex-end" } : undefined}>
+                      <Text style={[styles.prayerName, { color: colors.textMain, fontFamily: fonts.bold }]}>
                         {row.label}
                       </Text>
-                      <Text style={[styles.prayerTime, { color: colors.textMuted }]}> 
+                      <Text style={[styles.prayerTime, { color: colors.textMuted, fontFamily: fonts.regular }]}>
                         {formatPrayerTime(prayerTimes[row.key])}
                       </Text>
                     </View>
@@ -393,10 +383,7 @@ export default function SolahTimesScreen() {
                         <Switch
                           value={isEnabled}
                           onValueChange={(nextValue) => {
-                            void togglePrayerReminder(
-                              row.key as PrayerKey,
-                              nextValue,
-                            );
+                            void togglePrayerReminder(row.key as PrayerKey, nextValue);
                           }}
                           disabled={busyPrayer !== null}
                           trackColor={{
@@ -407,8 +394,8 @@ export default function SolahTimesScreen() {
                         />
                       )
                     ) : (
-                      <Text style={[styles.sunriseLabel, { color: colors.textMuted }]}> 
-                        No reminder
+                      <Text style={[styles.sunriseLabel, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                        {t("solah.noReminder")}
                       </Text>
                     )}
                   </View>

@@ -10,17 +10,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import moment from "moment-hijri";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Dot,
-} from "lucide-react-native";
+import momentHijri from "moment-hijri";
+// moment-hijri has a type conflict with the bundled moment types; cast to any to work around it
+const moment = momentHijri as any;
+import { ChevronLeft, ChevronRight, Dot } from "lucide-react-native";
 
 import { useTheme } from "../lib/ThemeContext";
-
-const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+import { useLanguage } from "../lib/LanguageContext";
+import { useAppFonts } from "../lib/i18n/useAppFonts";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -42,6 +39,8 @@ type DayCell = {
 export default function HijriCalendarScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
 
   const [monthCursor, setMonthCursor] = useState(() =>
     moment().startOf("iMonth").format("iYYYY-iMM-iDD"),
@@ -65,18 +64,19 @@ export default function HijriCalendarScreen() {
     [],
   );
 
+  // Translated week day abbreviations
+  const weekDays = t("hijriCalendar.weekDays") as unknown as string[];
+
   const dayCells = useMemo<DayCell[]>(() => {
     const start = monthMoment.clone().startOf("iMonth");
     const daysInMonth = start.iDaysInMonth();
     const startWeekday = start.day();
-
     const cells: DayCell[] = [];
 
     for (let index = 0; index < 42; index += 1) {
       const offset = index - startWeekday;
       const date = start.clone().add(offset, "day");
       const key = date.format("iYYYY-iMM-iDD");
-
       cells.push({
         id: `${key}-${index}`,
         hijriDay: date.format("iD"),
@@ -107,7 +107,8 @@ export default function HijriCalendarScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <View style={styles.headerRow}>
+      {/* ── Header ── */}
+      <View style={[styles.headerRow, isRTL && { flexDirection: "row-reverse" }]}>
         <Pressable
           onPress={() => router.back()}
           style={[styles.iconButton, { backgroundColor: colors.surface }]}
@@ -116,18 +117,19 @@ export default function HijriCalendarScreen() {
         </Pressable>
 
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.textMain }]}>Hijri Calendar</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>Islamic date planner</Text>
+          <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            {t("hijriCalendar.title")}
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+            {t("hijriCalendar.subtitle")}
+          </Text>
         </View>
 
-        <View style={styles.iconButton}>
-        </View>
+        <View style={styles.iconButton} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* ── Today card ── */}
         <LinearGradient
           colors={[
             withOpacity(colors.primary, isDark ? 0.22 : 0.12),
@@ -140,32 +142,35 @@ export default function HijriCalendarScreen() {
             { borderColor: withOpacity(colors.primary, isDark ? 0.44 : 0.24) },
           ]}
         >
-          <Text style={[styles.todayLabel, { color: colors.primary }]}>Today</Text>
-          <Text style={[styles.todayHijriText, { color: colors.textMain }]}>
+          <Text style={[styles.todayLabel, { color: colors.primary, fontFamily: fonts.bold }]}>
+            {t("hijriCalendar.today")}
+          </Text>
+          <Text style={[styles.todayHijriText, { color: colors.textMain, fontFamily: fonts.bold }]}>
             {todayHijriLabel}
           </Text>
-          <View style={styles.gregorianWrap}>
+          <View style={[styles.gregorianWrap, isRTL && { flexDirection: "row-reverse" }]}>
             <Dot size={16} color={colors.textMuted} />
-            <Text style={[styles.todayGregorianText, { color: colors.textMuted }]}> 
+            <Text style={[styles.todayGregorianText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
               {todayGregorianLabel}
             </Text>
           </View>
         </LinearGradient>
 
+        {/* ── Calendar card ── */}
         <View
           style={[
             styles.calendarCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.8),
-            },
+            { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.8) },
           ]}
         >
-          <View style={styles.monthNavRow}>
+          {/* Month navigation */}
+          <View style={[styles.monthNavRow, isRTL && { flexDirection: "row-reverse" }]}>
             <Pressable
-              onPress={() => {
-                setMonthCursor(monthMoment.clone().subtract(1, "iMonth").format("iYYYY-iMM-iDD"));
-              }}
+              onPress={() =>
+                setMonthCursor(
+                  monthMoment.clone().subtract(1, "iMonth").format("iYYYY-iMM-iDD"),
+                )
+              }
               style={[
                 styles.monthNavBtn,
                 {
@@ -177,12 +182,16 @@ export default function HijriCalendarScreen() {
               <ChevronLeft size={18} color={colors.textMain} />
             </Pressable>
 
-            <Text style={[styles.monthTitle, { color: colors.textMain }]}>{headerTitle}</Text>
+            <Text style={[styles.monthTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+              {headerTitle}
+            </Text>
 
             <Pressable
-              onPress={() => {
-                setMonthCursor(monthMoment.clone().add(1, "iMonth").format("iYYYY-iMM-iDD"));
-              }}
+              onPress={() =>
+                setMonthCursor(
+                  monthMoment.clone().add(1, "iMonth").format("iYYYY-iMM-iDD"),
+                )
+              }
               style={[
                 styles.monthNavBtn,
                 {
@@ -195,16 +204,18 @@ export default function HijriCalendarScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.weekHeaderRow}>
-            {WEEK_DAYS.map((day) => (
-              <View key={day} style={styles.weekDayWrapper}>
-                <Text style={[styles.weekDayLabel, { color: colors.textMuted }]}>
+          {/* Week day headers */}
+          <View style={[styles.weekHeaderRow, isRTL && { flexDirection: "row-reverse" }]}>
+            {weekDays.map((day, i) => (
+              <View key={i} style={styles.weekDayWrapper}>
+                <Text style={[styles.weekDayLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>
                   {day}
                 </Text>
               </View>
             ))}
           </View>
 
+          {/* Day grid */}
           <View style={styles.grid}>
             {dayCells.map((cell) => {
               const textColor = cell.inCurrentMonth
@@ -226,8 +237,15 @@ export default function HijriCalendarScreen() {
                       },
                     ]}
                   >
-                    <Text style={[styles.hijriDayNumber, { color: textColor }]}>{cell.hijriDay}</Text>
-                    <Text style={[styles.gregorianDayNumber, { color: withOpacity(textColor, 0.55) }]}>
+                    <Text style={[styles.hijriDayNumber, { color: textColor, fontFamily: fonts.bold }]}>
+                      {cell.hijriDay}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.gregorianDayNumber,
+                        { color: withOpacity(textColor, 0.55), fontFamily: fonts.regular },
+                      ]}
+                    >
                       {cell.gregorianDay}
                     </Text>
                   </View>
@@ -242,9 +260,7 @@ export default function HijriCalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -259,11 +275,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   headerTitle: {
-    fontFamily: "SatoshiBold",
     fontSize: 20,
   },
   headerSubtitle: {
-    fontFamily: "Satoshi",
     fontSize: 12,
   },
   iconButton: {
@@ -287,13 +301,11 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   todayLabel: {
-    fontFamily: "SatoshiBold",
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   todayHijriText: {
-    fontFamily: "SatoshiBold",
     fontSize: 24,
     letterSpacing: -0.3,
   },
@@ -303,7 +315,6 @@ const styles = StyleSheet.create({
     marginLeft: -3,
   },
   todayGregorianText: {
-    fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
   calendarCard: {
@@ -318,7 +329,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   monthTitle: {
-    fontFamily: "SatoshiBold",
     fontSize: 19,
     letterSpacing: -0.2,
   },
@@ -340,7 +350,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   weekDayLabel: {
-    fontFamily: "SatoshiMedium",
     fontSize: 13,
   },
   grid: {
@@ -363,12 +372,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   hijriDayNumber: {
-    fontFamily: "SatoshiBold",
     fontSize: 16,
     lineHeight: 20,
   },
   gregorianDayNumber: {
-    fontFamily: "Satoshi",
     fontSize: 10,
     lineHeight: 12,
   },

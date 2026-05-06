@@ -4,9 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { Bookmark, ChevronRight, BookOpen } from "lucide-react-native";
+import { Bookmark, BookOpen } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../lib/ThemeContext";
+import { useLanguage } from "../../lib/LanguageContext";
+import { useAppFonts } from "../../lib/i18n/useAppFonts";
 import { useAppSettings } from "../../lib/AppSettingsContext";
 import { useBookmarks } from "../../lib/BookmarksContext";
 import {
@@ -26,15 +28,15 @@ const withOpacity = (hexColor: string, opacity: number) => {
 
 export default function BookmarksScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const { bookmarks, removeBookmark } = useBookmarks();
   const { arabicFontSize, translationFontSize } = useAppSettings();
   const router = useRouter();
 
   if (bookmarks.length === 0) {
     return (
-      <SafeAreaView
-        style={[styles.screen, { backgroundColor: colors.background }]}
-      >
+      <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <LinearGradient
           colors={[
@@ -45,27 +47,23 @@ export default function BookmarksScreen() {
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.emptyContainer}>
-          <View
-            style={[
-              styles.emptyIconCircle,
-              { backgroundColor: withOpacity(colors.primary, 0.1) },
-            ]}
-          >
+          <View style={[styles.emptyIconCircle, { backgroundColor: withOpacity(colors.primary, 0.1) }]}>
             <Bookmark size={40} color={colors.primary} strokeWidth={1.5} />
           </View>
-          <Text style={[styles.emptyTitle, { color: colors.textMain }]}>
-            No Bookmarks
+          <Text style={[styles.emptyTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            {t("bookmarks.emptyTitle")}
           </Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-            Save your favorite ayahs to read them later. Tap the bookmark icon
-            on any verse.
+          <Text style={[styles.emptySubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+            {t("bookmarks.emptySubtitle")}
           </Text>
           <Pressable
             onPress={() => router.push("/(tabs)/chapters")}
             style={[styles.emptyButton, { backgroundColor: colors.primary }]}
           >
             <BookOpen size={18} color="#FFFFFF" />
-            <Text style={styles.emptyButtonText}>Read Quran</Text>
+            <Text style={[styles.emptyButtonText, { fontFamily: fonts.bold }]}>
+              {t("bookmarks.readQuran")}
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -73,9 +71,7 @@ export default function BookmarksScreen() {
   }
 
   return (
-    <SafeAreaView
-      style={[styles.screen, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -86,27 +82,26 @@ export default function BookmarksScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerWrapper}>
-          <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-            Bookmarks
+      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+        <View style={[styles.headerWrapper, isRTL && { alignItems: "flex-end" }]}>
+          <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            {t("bookmarks.title")}
           </Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
-            {bookmarks.length} saved verse{bookmarks.length === 1 ? "" : "s"}
+          <Text style={[styles.headerSubtitle, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+            {t(
+              bookmarks.length === 1
+                ? "bookmarks.savedVerses_one"
+                : "bookmarks.savedVerses_other",
+              { count: bookmarks.length },
+            )}
           </Text>
         </View>
 
-        {bookmarks.map((bookmark, index) => {
+        {bookmarks.map((bookmark) => {
           const meta = getChapterMetadata(bookmark.chapter);
           const verses = getChapterVerses(bookmark.chapter);
           const arabicText = verses[bookmark.verse - 1];
-          const translation = getVerseTranslation(
-            bookmark.chapter,
-            bookmark.verse,
-          );
+          const translation = getVerseTranslation(bookmark.chapter, bookmark.verse);
 
           return (
             <Pressable
@@ -123,29 +118,16 @@ export default function BookmarksScreen() {
               }}
               style={[
                 styles.bookmarkCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: withOpacity(colors.border, 0.8),
-                },
+                { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.8) },
               ]}
             >
-              <View style={styles.cardHeader}>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: withOpacity(colors.primary, 0.15) },
-                  ]}
-                >
-                  <Bookmark
-                    size={14}
-                    color={colors.primary}
-                    fill={colors.primary}
-                  />
+              <View style={[styles.cardHeader, isRTL && { flexDirection: "row-reverse" }]}>
+                <View style={[styles.badge, { backgroundColor: withOpacity(colors.primary, 0.15) }]}>
+                  <Bookmark size={14} color={colors.primary} fill={colors.primary} />
                 </View>
-                <Text style={[styles.chapterInfo, { color: colors.primary }]}>
-                  Surah {meta?.englishname} • Ayah {bookmark.verse}
+                <Text style={[styles.chapterInfo, { color: colors.primary, fontFamily: fonts.bold }]}>
+                  {t("bookmarks.surahAyah", { name: meta?.englishname, verse: bookmark.verse })}
                 </Text>
-
                 <Pressable
                   onPress={async () => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -154,8 +136,8 @@ export default function BookmarksScreen() {
                   style={styles.removeBtn}
                   hitSlop={15}
                 >
-                  <Text style={[styles.removeTxt, { color: colors.textMuted }]}>
-                    Remove
+                  <Text style={[styles.removeTxt, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                    {t("bookmarks.remove")}
                   </Text>
                 </Pressable>
               </View>
@@ -163,11 +145,7 @@ export default function BookmarksScreen() {
               <Text
                 style={[
                   styles.arabicText,
-                  {
-                    color: colors.textMain,
-                    fontSize: arabicFontSize,
-                    lineHeight: arabicFontSize * 1.8,
-                  },
+                  { color: colors.textMain, fontSize: arabicFontSize, lineHeight: arabicFontSize * 1.8 },
                 ]}
                 numberOfLines={2}
               >
@@ -182,6 +160,7 @@ export default function BookmarksScreen() {
                       color: colors.textMuted,
                       fontSize: translationFontSize,
                       lineHeight: translationFontSize * 1.5,
+                      fontFamily: fonts.regular,
                     },
                   ]}
                   numberOfLines={2}
@@ -198,9 +177,7 @@ export default function BookmarksScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
+  screen: { flex: 1 },
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -212,12 +189,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   headerTitle: {
-    fontFamily: "SatoshiBold",
     fontSize: 28,
     letterSpacing: -0.3,
   },
   headerSubtitle: {
-    fontFamily: "SatoshiMedium",
     fontSize: 15,
     marginTop: 2,
   },
@@ -236,12 +211,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyTitle: {
-    fontFamily: "SatoshiBold",
     fontSize: 24,
     marginBottom: 10,
   },
   emptySubtitle: {
-    fontFamily: "Satoshi",
     fontSize: 15,
     textAlign: "center",
     lineHeight: 22,
@@ -257,7 +230,6 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: "#FFFFFF",
-    fontFamily: "SatoshiBold",
     fontSize: 16,
   },
   bookmarkCard: {
@@ -279,7 +251,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chapterInfo: {
-    fontFamily: "SatoshiBold",
     fontSize: 14,
     flex: 1,
   },
@@ -287,7 +258,6 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   removeTxt: {
-    fontFamily: "SatoshiMedium",
     fontSize: 12,
   },
   arabicText: {
@@ -295,7 +265,5 @@ const styles = StyleSheet.create({
     textAlign: "right",
     paddingVertical: 5,
   },
-  translationText: {
-    fontFamily: "Satoshi",
-  },
+  translationText: {},
 });
