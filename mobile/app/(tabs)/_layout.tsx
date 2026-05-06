@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { useTheme } from "../../lib/ThemeContext";
+import { useLanguage } from "../../lib/LanguageContext";
 import { Home, BookOpen, Bookmark, Settings } from "lucide-react-native";
 import { Platform, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -68,6 +69,7 @@ function TabIcon({
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
   const canUseLiquidGlass =
     Platform.OS === "ios" && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 
@@ -151,7 +153,7 @@ export default function TabLayout() {
           overflow: "hidden",
         },
         tabBarLabelStyle: {
-          fontFamily: "SatoshiMedium",
+          fontFamily: isRTL ? "CairoMedium" : "SatoshiMedium",
           fontSize: 12,
           marginTop: 4,
         },
@@ -160,7 +162,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
@@ -177,7 +179,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chapters"
         options={{
-          title: "Chapters",
+          title: t("tabs.chapters"),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
@@ -194,7 +196,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookmarks"
         options={{
-          title: "Bookmarks",
+          title: t("tabs.bookmarks"),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
@@ -217,7 +219,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("tabs.settings"),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}

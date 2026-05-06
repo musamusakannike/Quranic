@@ -22,6 +22,9 @@ import {
   ReadingView,
   useAppSettings,
 } from "../../lib/AppSettingsContext";
+import { useLanguage } from "../../lib/LanguageContext";
+import { useAppFonts } from "../../lib/i18n/useAppFonts";
+import type { AppLocale } from "../../lib/i18n";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -49,6 +52,8 @@ const formatReminderTime = ({ hour, minute }: ReminderTime) => {
 
 export default function SettingsScreen() {
   const { colors, theme, setTheme, resolvedTheme, isDark } = useTheme();
+  const { t, locale, setLocale, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const {
     showTranslations,
     showTransliterations,
@@ -82,8 +87,8 @@ export default function SettingsScreen() {
     const enabled = await enableReminder(reminderTime);
     if (!enabled) {
       Alert.alert(
-        "Permission required",
-        "Please allow notifications from device settings to receive reminders.",
+        t("settings.permissionRequired"),
+        t("settings.notificationPermissionMsg"),
       );
     }
   };
@@ -126,8 +131,11 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.title, { color: colors.textMain }]}>Settings</Text>
+        <Text style={[styles.title, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+          {t("settings.title")}
+        </Text>
 
+        {/* ── Language ─────────────────────────────────────────────────── */}
         <View
           style={[
             styles.sectionCard,
@@ -137,18 +145,79 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-            Appearance
+          <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.language")}
           </Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-            Choose app theme mode
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.languageSubtitle")}
           </Text>
 
-          <View style={styles.segmentedRow}>
+          <View style={[styles.segmentedRow, isRTL && { flexDirection: "row-reverse" }]}>
+            {(
+              [
+                { key: "en" as AppLocale, label: t("settings.languageEnglish") },
+                { key: "ar" as AppLocale, label: t("settings.languageArabic") },
+              ] as { key: AppLocale; label: string }[]
+            ).map((option) => {
+              const selected = locale === option.key;
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => {
+                    void setLocale(option.key);
+                  }}
+                  style={[
+                    styles.segmentButton,
+                    {
+                      backgroundColor: selected
+                        ? withOpacity(colors.primary, isDark ? 0.3 : 0.14)
+                        : withOpacity(colors.background, 0.55),
+                      borderColor: selected
+                        ? withOpacity(colors.primary, 0.55)
+                        : withOpacity(colors.border, 0.8),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentLabel,
+                      {
+                        color: selected ? colors.primary : colors.textMuted,
+                        fontFamily: option.key === "ar" ? "CairoBold" : "SatoshiMedium",
+                        fontSize: option.key === "ar" ? 15 : 13,
+                      },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ── Appearance ───────────────────────────────────────────────── */}
+        <View
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: withOpacity(colors.border, 0.85),
+            },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.appearance")}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.appearanceSubtitle")}
+          </Text>
+
+          <View style={[styles.segmentedRow, isRTL && { flexDirection: "row-reverse" }]}>
             {[
-              { key: "system", label: "Device" },
-              { key: "light", label: "Light" },
-              { key: "dark", label: "Dark" },
+              { key: "system", label: t("settings.themeDevice") },
+              { key: "light", label: t("settings.themeLight") },
+              { key: "dark", label: t("settings.themeDark") },
             ].map((option) => {
               const selected = theme === option.key;
               return (
@@ -172,7 +241,7 @@ export default function SettingsScreen() {
                   <Text
                     style={[
                       styles.segmentLabel,
-                      { color: selected ? colors.primary : colors.textMuted },
+                      { color: selected ? colors.primary : colors.textMuted, fontFamily: fonts.medium },
                     ]}
                   >
                     {option.label}
@@ -182,11 +251,12 @@ export default function SettingsScreen() {
             })}
           </View>
 
-          <Text style={[styles.helperText, { color: colors.textMuted }]}>
-            Current: {resolvedTheme}
+          <Text style={[styles.helperText, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.currentTheme", { theme: resolvedTheme })}
           </Text>
         </View>
 
+        {/* ── Chapter display ───────────────────────────────────────────── */}
         <View
           style={[
             styles.sectionCard,
@@ -196,24 +266,24 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-            Chapter display
+          <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.chapterDisplay")}
           </Text>
 
           <Text
             style={[
               styles.sectionSubtitle,
-              { color: colors.textMuted, marginBottom: 4 },
+              { color: colors.textMuted, marginBottom: 4, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" },
             ]}
           >
-            Choose reading view
+            {t("settings.chooseReadingView")}
           </Text>
 
-          <View style={[styles.segmentedRow, { marginBottom: 16 }]}>
+          <View style={[styles.segmentedRow, { marginBottom: 16 }, isRTL && { flexDirection: "row-reverse" }]}>
             {[
-              { key: "list", label: "List" },
-              { key: "verse_by_verse", label: "Verse by Verse" },
-              { key: "mushaf", label: "Mushaf" },
+              { key: "list", label: t("settings.viewList") },
+              { key: "verse_by_verse", label: t("settings.viewVerseByVerse") },
+              { key: "mushaf", label: t("settings.viewMushaf") },
             ].map((option) => {
               const selected = readingView === option.key;
               return (
@@ -237,7 +307,7 @@ export default function SettingsScreen() {
                   <Text
                     style={[
                       styles.segmentLabel,
-                      { color: selected ? colors.primary : colors.textMuted },
+                      { color: selected ? colors.primary : colors.textMuted, fontFamily: fonts.medium },
                     ]}
                   >
                     {option.label}
@@ -257,15 +327,15 @@ export default function SettingsScreen() {
             ]}
           />
 
-          <View style={styles.settingRow}>
+          <View style={[styles.settingRow, isRTL && { flexDirection: "row-reverse" }]}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
-                Show translations
+              <Text style={[styles.settingLabel, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                {t("settings.showTranslations")}
               </Text>
               <Text
-                style={[styles.settingDescription, { color: colors.textMuted }]}
+                style={[styles.settingDescription, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
               >
-                Disabled by default
+                {t("settings.showTranslationsDesc")}
               </Text>
             </View>
             <Switch
@@ -288,15 +358,15 @@ export default function SettingsScreen() {
             ]}
           />
 
-          <View style={styles.settingRow}>
+          <View style={[styles.settingRow, isRTL && { flexDirection: "row-reverse" }]}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
-                Show transliterations
+              <Text style={[styles.settingLabel, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                {t("settings.showTransliterations")}
               </Text>
               <Text
-                style={[styles.settingDescription, { color: colors.textMuted }]}
+                style={[styles.settingDescription, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
               >
-                Latin script under each ayah
+                {t("settings.showTransliterationsDesc")}
               </Text>
             </View>
             <Switch
@@ -313,6 +383,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* ── Typography ────────────────────────────────────────────────── */}
         <View
           style={[
             styles.sectionCard,
@@ -322,19 +393,19 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-            Typography
+          <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.typography")}
           </Text>
 
-          <View style={styles.settingRow}>
+          <View style={[styles.settingRow, isRTL && { flexDirection: "row-reverse" }]}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
-                Arabic text size
+              <Text style={[styles.settingLabel, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                {t("settings.arabicTextSize")}
               </Text>
               <Text
-                style={[styles.settingDescription, { color: colors.textMuted }]}
+                style={[styles.settingDescription, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
               >
-                {Math.round(arabicFontSize)}px
+                {t("settings.sizeLabel", { size: Math.round(arabicFontSize) })}
               </Text>
             </View>
           </View>
@@ -360,15 +431,15 @@ export default function SettingsScreen() {
             ]}
           />
 
-          <View style={styles.settingRow}>
+          <View style={[styles.settingRow, isRTL && { flexDirection: "row-reverse" }]}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
-                Translation text size
+              <Text style={[styles.settingLabel, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                {t("settings.translationTextSize")}
               </Text>
               <Text
-                style={[styles.settingDescription, { color: colors.textMuted }]}
+                style={[styles.settingDescription, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
               >
-                {Math.round(translationFontSize)}px
+                {t("settings.sizeLabel", { size: Math.round(translationFontSize) })}
               </Text>
             </View>
           </View>
@@ -385,6 +456,7 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* ── Daily Reminder ────────────────────────────────────────────── */}
         <View
           style={[
             styles.sectionCard,
@@ -394,22 +466,22 @@ export default function SettingsScreen() {
             },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
-            Daily Quran reminder
+          <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.dailyReminder")}
           </Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-            Local notification to recite
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+            {t("settings.dailyReminderSubtitle")}
           </Text>
 
-          <View style={styles.settingRow}>
+          <View style={[styles.settingRow, isRTL && { flexDirection: "row-reverse" }]}>
             <View style={styles.settingTextWrap}>
-              <Text style={[styles.settingLabel, { color: colors.textMain }]}>
-                Enable reminder
+              <Text style={[styles.settingLabel, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                {t("settings.enableReminder")}
               </Text>
               <Text
-                style={[styles.settingDescription, { color: colors.textMuted }]}
+                style={[styles.settingDescription, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
               >
-                Sends one reminder every day
+                {t("settings.enableReminderDesc")}
               </Text>
             </View>
             <Switch
@@ -435,10 +507,10 @@ export default function SettingsScreen() {
               },
             ]}
           >
-            <Text style={[styles.timeButtonLabel, { color: colors.textMuted }]}>
-              Reminder time
+            <Text style={[styles.timeButtonLabel, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+              {t("settings.reminderTime")}
             </Text>
-            <Text style={[styles.timeButtonValue, { color: colors.textMain }]}>
+            <Text style={[styles.timeButtonValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
               {reminderLabel}
             </Text>
           </Pressable>
@@ -466,9 +538,9 @@ export default function SettingsScreen() {
                   ]}
                 >
                   <Text
-                    style={[styles.doneButtonText, { color: colors.primary }]}
+                    style={[styles.doneButtonText, { color: colors.primary, fontFamily: fonts.medium }]}
                   >
-                    Done
+                    {t("settings.done")}
                   </Text>
                 </Pressable>
               ) : null}

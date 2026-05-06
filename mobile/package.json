@@ -14,6 +14,9 @@
   },
   "dependencies": {
     "@expo-google-fonts/amiri-quran": "^0.4.1",
+    "@expo-google-fonts/cairo": "^0.4.1",
+    "i18n-js": "4.4.3",
+    "@expo-google-fonts/cairo": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -62,6 +65,7 @@
     "expo-updates": "~55.0.16",
     "expo-video": "~55.0.13",
     "expo-web-browser": "~55.0.12",
+    "i18n-js": "^4.4.3",
     "lucide-react-native": "^0.576.0",
     "moment-hijri": "^3.0.0",
     "react": "19.2.0",
