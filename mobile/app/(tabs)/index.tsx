@@ -603,14 +603,6 @@ export default function Index() {
                   colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.85)"]}
                   style={styles.quickActionOverlay}
                 >
-                  <View
-                    style={[
-                      styles.quickIconWrap,
-                      { backgroundColor: withOpacity(colors.primary, 0.25) },
-                    ]}
-                  >
-                    <item.icon color="#FFFFFF" size={20} />
-                  </View>
                   <View>
                     <Text style={[styles.quickCardTitle, { color: "#FFFFFF", fontFamily: fonts.bold }]}>
                       {item.title}
