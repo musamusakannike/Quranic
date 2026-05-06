@@ -163,9 +163,19 @@ export const AppSettingsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (Platform.OS !== "android") return;
 
+    // Standard daily reminders channel
     void Notifications.setNotificationChannelAsync("daily-reminders", {
       name: "Daily reminders",
       importance: Notifications.AndroidImportance.MAX,
+    });
+
+    // Adhan channel — plays the azan sound for prayer-time notifications
+    void Notifications.setNotificationChannelAsync("adhan-reminders", {
+      name: "Adhan (Prayer call)",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "azan.wav",
+      vibrationPattern: [0, 400, 200, 400],
+      enableVibrate: true,
     });
   }, []);
 

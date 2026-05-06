@@ -3,6 +3,32 @@ import { Coordinates, CalculationMethod, PrayerTimes } from "adhan";
 export type PrayerKey = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
 export type PrayerListKey = PrayerKey | "sunrise";
 
+// ── Rich notification content pool ──────────────────────────────────────────
+// Each entry is a short, meaningful line shown as the notification subtitle.
+// One is picked at random each time a notification fires.
+const NOTIFICATION_EXTRAS: string[] = [
+  "الصَّلَاةُ خَيْرٌ مِنَ النَّوْمِ — Prayer is better than sleep.",
+  "حَافِظُوا عَلَى الصَّلَوَاتِ — Guard your prayers diligently.",
+  "إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا — Prayer is an obligation at fixed times. (4:103)",
+  "وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ — Establish prayer and give zakah. (2:43)",
+  "Purify your heart and stand before Allah.",
+  "Every prayer is a conversation with Allah — don't miss it.",
+  "The first thing you'll be asked about on the Day of Judgement is your prayer.",
+  "Two rak'ahs prayed with full presence are worth more than a thousand prayed absent-mindedly.",
+  "وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ — Seek help through patience and prayer. (2:45)",
+  "Prayer is the pillar of the deen — uphold it.",
+  "Take a moment, make wudu, and reconnect with Allah.",
+  "The coolness of the Prophet's ﷺ eyes was in prayer.",
+  "Between a person and shirk is the abandonment of prayer.",
+  "Prayer wipes away the sins between it and the next prayer.",
+];
+
+/** Returns a random extra line for a prayer notification body. */
+export const getRandomNotificationExtra = (): string => {
+  const index = Math.floor(Math.random() * NOTIFICATION_EXTRAS.length);
+  return NOTIFICATION_EXTRAS[index] ?? NOTIFICATION_EXTRAS[0]!;
+};
+
 export interface PrayerTimesResult {
   fajr: Date;
   sunrise: Date;

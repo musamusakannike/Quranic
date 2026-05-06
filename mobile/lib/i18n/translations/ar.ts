@@ -213,6 +213,15 @@ const ar = {
     asr: "العصر",
     maghrib: "المغرب",
     isha: "العشاء",
+    // Advance reminder
+    advanceReminder: "تذكير مسبق",
+    advanceReminderDesc: "تلقّ إشعاراً قبل وقت الصلاة",
+    advanceOff: "إيقاف",
+    advanceMin: "{{count}} د",
+    advanceNotifTitle: "{{label}} بعد {{count}} دقائق",
+    advanceNotifBody: "استعد لصلاة {{label}} — حان وقت الوضوء.",
+    atTimeNotifTitle: "{{label}} — حان وقت الصلاة",
+    atTimeNotifBody: "حان وقت صلاة {{label}}.",
   },
 
   // ── Adhkaar screen ───────────────────────────────────────────────────────

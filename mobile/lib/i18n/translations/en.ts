@@ -213,6 +213,15 @@ const en = {
     asr: "Asr",
     maghrib: "Maghrib",
     isha: "Isha",
+    // Advance reminder
+    advanceReminder: "Advance reminder",
+    advanceReminderDesc: "Get notified before the prayer time",
+    advanceOff: "Off",
+    advanceMin: "{{count}} min",
+    advanceNotifTitle: "{{label}} prayer in {{count}} minutes",
+    advanceNotifBody: "Prepare for {{label}} — time to make wudu.",
+    atTimeNotifTitle: "{{label}} — Time to Pray",
+    atTimeNotifBody: "It's time for {{label}} prayer.",
   },
 
   // ── Adhkaar screen ───────────────────────────────────────────────────────

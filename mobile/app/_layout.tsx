@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AmiriQuran_400Regular } from "@expo-google-fonts/amiri-quran";
 import {
   Cairo_400Regular,
@@ -19,6 +19,8 @@ import MiniPlayer from "../components/MiniPlayer";
 import { View } from "react-native";
 import { registerWidgetUpdateTask } from "../lib/WidgetManager";
 import { HifzProvider } from "../lib/HifzContext";
+import * as Notifications from "expo-notifications";
+import { useRouter } from "expo-router";
 
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -38,6 +40,9 @@ export default function RootLayout() {
     CairoBold: Cairo_700Bold,
   });
 
+  const router = useRouter();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+
   useEffect(() => {
     void registerWidgetUpdateTask();
   }, []);
@@ -48,6 +53,24 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [error]);
+
+  // Deep-link: tapping a prayer notification opens the Solah screen
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data as
+          | Record<string, unknown>
+          | undefined;
+        const screen = data?.screen as string | undefined;
+        if (screen === "solah") {
+          router.push("/solah");
+        }
+      });
+
+    return () => {
+      notificationListener.current?.remove();
+    };
+  }, [router]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -64,7 +64,12 @@
       ],
       "expo-background-task",
       "expo-localization",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/azan.wav"]
+        }
+      ],
       "expo-secure-store",
       "@react-native-community/datetimepicker",
       [
