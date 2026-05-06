@@ -52,6 +52,24 @@ export default function ShareVerseModal({
 
   if (!verse) return null;
 
+  // Dynamically scale font size based on verse length for better fit
+  const verseLength = verse.text.length;
+  const dynamicArabicSize = (() => {
+    if (verseLength <= 80) return Math.min(arabicFontSize + 6, 42);
+    if (verseLength <= 160) return Math.min(arabicFontSize + 2, 36);
+    if (verseLength <= 280) return Math.min(arabicFontSize - 2, 30);
+    return Math.min(arabicFontSize - 6, 24);
+  })();
+  const dynamicLineHeight = dynamicArabicSize * 2.0;
+
+  const translationLength = verse.translation?.length ?? 0;
+  const dynamicTranslationSize = (() => {
+    if (translationLength <= 100) return translationFontSize + 2;
+    if (translationLength <= 200) return translationFontSize;
+    return Math.max(translationFontSize - 2, 12);
+  })();
+  const dynamicTranslationLineHeight = dynamicTranslationSize * 1.8;
+
   const handleShare = async () => {
     if (isSharing) return;
     setIsSharing(true);
@@ -132,8 +150,8 @@ export default function ShareVerseModal({
                   styles.arabicText,
                   {
                     color: colors.textMain,
-                    fontSize: Math.min(arabicFontSize + 4, 40),
-                    lineHeight: Math.min(arabicFontSize + 4, 40) * 1.6,
+                    fontSize: dynamicArabicSize,
+                    lineHeight: dynamicLineHeight,
                   },
                 ]}
               >
@@ -146,8 +164,8 @@ export default function ShareVerseModal({
                     styles.translationText,
                     {
                       color: colors.textMuted,
-                      fontSize: translationFontSize + 2,
-                      lineHeight: (translationFontSize + 2) * 1.5,
+                      fontSize: dynamicTranslationSize,
+                      lineHeight: dynamicTranslationLineHeight,
                     },
                   ]}
                 >
