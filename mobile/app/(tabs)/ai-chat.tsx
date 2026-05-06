@@ -31,6 +31,8 @@ import {
   MessageSquare,
 } from "lucide-react-native";
 import { useTheme } from "../../lib/ThemeContext";
+import { useLanguage } from "../../lib/LanguageContext";
+import { useAppFonts } from "../../lib/i18n/useAppFonts";
 import {
   sendMessage,
   loadChatSessions,
@@ -258,15 +260,12 @@ function TypingIndicator({ colors }: { colors: ReturnType<typeof useTheme>["colo
   );
 }
 
-const SUGGESTED_QUESTIONS = [
-  "What does the Quran say about patience?",
-  "How do I perform Salah correctly?",
-  "What are the pillars of Islam?",
-  "Tell me about Surah Al-Fatiha",
-];
+const SUGGESTED_QUESTIONS_KEYS = [0, 1, 2, 3] as const;
 
 export default function AIChatScreen() {
   const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
+  const fonts = useAppFonts();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
@@ -338,8 +337,8 @@ export default function AIChatScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       console.error("ERROR: ", e)
       Alert.alert(
-        "Connection Error",
-        "Failed to get a response. Please check your internet connection and try again."
+        t("aiChat.connectionError"),
+        t("aiChat.connectionErrorMsg"),
       );
     } finally {
       setIsLoading(false);
@@ -391,7 +390,7 @@ export default function AIChatScreen() {
         style={[styles.safeArea, { backgroundColor: colors.background }]}
         edges={["top", "left", "right"]}
       >
-        <View style={[styles.header, { borderBottomColor: withOpacity(colors.border, 0.5) }]}>
+        <View style={[styles.header, { borderBottomColor: withOpacity(colors.border, 0.5), flexDirection: isRTL ? "row-reverse" : "row" }]}>
           <Pressable
             onPress={() => setShowHistory(false)}
             style={[styles.headerBtn, { backgroundColor: withOpacity(colors.surface, 0.8) }]}
@@ -403,7 +402,7 @@ export default function AIChatScreen() {
               style={{ transform: [{ rotate: "180deg" }] }}
             />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.textMain }]}>Chat History</Text>
+          <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>{t("aiChat.chatHistory")}</Text>
           <Pressable
             onPress={handleNewChat}
             style={[styles.headerBtn, { backgroundColor: withOpacity(colors.primary, 0.12) }]}
@@ -418,8 +417,8 @@ export default function AIChatScreen() {
           ListEmptyComponent={
             <View style={styles.emptyCenterContainer}>
               <MessageSquare size={36} color={colors.textMuted} strokeWidth={1.5} />
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                No chat history yet
+              <Text style={[styles.emptyText, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                {t("aiChat.noChatHistory")}
               </Text>
             </View>
           }
@@ -429,31 +428,27 @@ export default function AIChatScreen() {
               style={({ pressed }) => [
                 styles.historyItem,
                 {
-                  backgroundColor: pressed
-                    ? withOpacity(colors.primary, 0.08)
-                    : colors.surface,
+                  backgroundColor: pressed ? withOpacity(colors.primary, 0.08) : colors.surface,
                   borderColor: withOpacity(colors.border, 0.5),
+                  flexDirection: isRTL ? "row-reverse" : "row",
                 },
               ]}
             >
               <View style={styles.historyItemContent}>
-                <Text
-                  style={[styles.historyItemTitle, { color: colors.textMain }]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.historyItemTitle, { color: colors.textMain, fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
                   {item.title}
                 </Text>
-                <Text style={[styles.historyItemMeta, { color: colors.textMuted }]}>
-                  {item.messages.length} messages ·{" "}
+                <Text style={[styles.historyItemMeta, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+                  {t(item.messages.length === 1 ? "aiChat.messages_one" : "aiChat.messages_other", { count: item.messages.length })} ·{" "}
                   {new Date(item.updatedAt).toLocaleDateString()}
                 </Text>
               </View>
               <Pressable
                 onPress={() => {
-                  Alert.alert("Delete Chat", "Remove this conversation?", [
-                    { text: "Cancel", style: "cancel" },
+                  Alert.alert(t("aiChat.deleteChat"), t("common.cancel"), [
+                    { text: t("common.cancel"), style: "cancel" },
                     {
-                      text: "Delete",
+                      text: t("aiChat.deleteChat"),
                       style: "destructive",
                       onPress: () => handleDeleteSession(item.id),
                     },
@@ -476,7 +471,7 @@ export default function AIChatScreen() {
       style={[styles.safeArea, { backgroundColor: colors.background }]}
       edges={["top", "left", "right"]}
     >
-      <View style={[styles.header, { borderBottomColor: withOpacity(colors.border, 0.5) }]}>
+      <View style={[styles.header, { borderBottomColor: withOpacity(colors.border, 0.5), flexDirection: isRTL ? "row-reverse" : "row" }]}>
         <Pressable
           onPress={() => {
             setShowHistory(true);
@@ -486,17 +481,12 @@ export default function AIChatScreen() {
         >
           <MessageSquare size={18} color={colors.textMain} strokeWidth={2.2} />
         </Pressable>
-        <View style={styles.headerCenter}>
-          <View
-            style={[
-              styles.headerAiDot,
-              { backgroundColor: withOpacity(colors.primary, 0.15) },
-            ]}
-          >
+        <View style={[styles.headerCenter, isRTL && { flexDirection: "row-reverse" }]}>
+          <View style={[styles.headerAiDot, { backgroundColor: withOpacity(colors.primary, 0.15) }]}>
             <Sparkles size={14} color={colors.primary} strokeWidth={2.3} />
           </View>
-          <Text style={[styles.headerTitle, { color: colors.textMain }]}>
-            Islamic AI
+          <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            {t("aiChat.title")}
           </Text>
         </View>
         <Pressable
@@ -522,34 +512,35 @@ export default function AIChatScreen() {
             >
               <Sparkles size={32} color={colors.primary} strokeWidth={1.8} />
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.textMain }]}>
-              Ask about the Deen
+            <Text style={[styles.emptyTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+              {t("aiChat.subtitle")}
             </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-              Ask anything about Islam, Quran, Sunnah, or Islamic guidance. Every answer is backed by evidence.
+            <Text style={[styles.emptySubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+              {t("aiChat.description")}
             </Text>
             <View style={styles.suggestions}>
-              {SUGGESTED_QUESTIONS.map((q) => (
-                <Pressable
-                  key={q}
-                  onPress={() => handleSuggestedQuestion(q)}
-                  style={({ pressed }) => [
-                    styles.suggestionChip,
-                    {
-                      backgroundColor: pressed
-                        ? withOpacity(colors.primary, 0.15)
-                        : withOpacity(colors.surface, 1),
-                      borderColor: withOpacity(colors.border, 0.7),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.suggestionText, { color: colors.textMuted }]}
+              {SUGGESTED_QUESTIONS_KEYS.map((idx) => {
+                const q = (t("aiChat.suggestedQuestions") as unknown as string[])[idx];
+                return (
+                  <Pressable
+                    key={idx}
+                    onPress={() => handleSuggestedQuestion(q)}
+                    style={({ pressed }) => [
+                      styles.suggestionChip,
+                      {
+                        backgroundColor: pressed
+                          ? withOpacity(colors.primary, 0.15)
+                          : withOpacity(colors.surface, 1),
+                        borderColor: withOpacity(colors.border, 0.7),
+                      },
+                    ]}
                   >
-                    {q}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text style={[styles.suggestionText, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+                      {q}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         ) : (
@@ -592,8 +583,8 @@ export default function AIChatScreen() {
           >
             <TextInput
               ref={inputRef}
-              style={[styles.input, { color: colors.textMain }]}
-              placeholder="Ask an Islamic question..."
+              style={[styles.input, { color: colors.textMain, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}
+              placeholder={t("aiChat.placeholder")}
               placeholderTextColor={colors.textMuted}
               value={inputText}
               onChangeText={setInputText}
@@ -625,8 +616,8 @@ export default function AIChatScreen() {
               )}
             </Pressable>
           </View>
-          <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
-            AI responses may contain errors — always verify with a scholar.
+          <Text style={[styles.disclaimer, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+            {t("aiChat.disclaimer")}
           </Text>
         </View>
       </KeyboardAvoidingView>
