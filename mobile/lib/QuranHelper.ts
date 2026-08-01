@@ -164,6 +164,19 @@ export const getTotalQuranVerses = (): number => {
   return quranMetadata.total_verses;
 };
 
+const ARABIC_DIACRITICS =
+  /[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]/g;
+
+/**
+ * Normalize search text so Arabic queries do not need harakat.
+ */
+export const normalizeSearchText = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(ARABIC_DIACRITICS, "")
+    .replace(/[إأآٱ]/g, "ا")
+    .replace(/ـ/g, "");
+
 /**
  * Get the first verse location for a given Juz.
  */
@@ -204,7 +217,7 @@ export const searchQuran = (
   if (!searchTerm || searchTerm.trim() === "") return [];
 
   const results: SearchResult[] = [];
-  const normalizedTerm = searchTerm.toLowerCase();
+  const normalizedTerm = normalizeSearchText(searchTerm);
 
   for (let chapterIndex = 1; chapterIndex < quranData.length; chapterIndex++) {
     const chapterVerses = quranData[chapterIndex];
@@ -220,16 +233,19 @@ export const searchQuran = (
 
       let matchType: "arabic" | "translation" | "transliteration" | null = null;
 
-      if (arabicText && arabicText.toLowerCase().includes(normalizedTerm)) {
+      if (
+        arabicText &&
+        normalizeSearchText(arabicText).includes(normalizedTerm)
+      ) {
         matchType = "arabic";
       } else if (
         translation &&
-        translation.toLowerCase().includes(normalizedTerm)
+        normalizeSearchText(translation).includes(normalizedTerm)
       ) {
         matchType = "translation";
       } else if (
         transliteration &&
-        transliteration.toLowerCase().includes(normalizedTerm)
+        normalizeSearchText(transliteration).includes(normalizedTerm)
       ) {
         matchType = "transliteration";
       }
