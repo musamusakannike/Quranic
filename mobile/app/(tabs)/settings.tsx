@@ -2,6 +2,8 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import Slider from "@react-native-community/slider";
+import SegmentedControl from "@expo/ui/community/segmented-control";
+import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 
@@ -25,6 +27,7 @@ import {
 import { useLanguage } from "../../lib/LanguageContext";
 import { useAppFonts } from "../../lib/i18n/useAppFonts";
 import type { AppLocale } from "../../lib/i18n";
+import { GlassSurface } from "../../components/GlassSurface";
 
 const withOpacity = (hexColor: string, opacity: number) => {
   const sanitized = hexColor.replace("#", "");
@@ -78,6 +81,43 @@ export default function SettingsScreen() {
     [reminderTime],
   );
 
+  const sectionBorderColor = isDark
+    ? "rgba(255, 255, 255, 0.12)"
+    : withOpacity(colors.border, 0.7);
+
+  const dividerColor = isDark
+    ? "rgba(255, 255, 255, 0.08)"
+    : withOpacity(colors.border, 0.6);
+
+  const activeAccentColor = isDark ? colors.primaryLight : colors.primary;
+  const switchInactiveTrack = isDark
+    ? "rgba(255, 255, 255, 0.18)"
+    : withOpacity(colors.border, 0.7);
+  const sliderInactiveTrack = isDark
+    ? "rgba(255, 255, 255, 0.16)"
+    : withOpacity(colors.border, 0.7);
+
+  // Option lists for the three native segmented controls. Using
+  // `@expo/ui/community/segmented-control` here instead of hand-rolled
+  // Pressables gives a real UISegmentedControl on iOS (which automatically
+  // picks up the Liquid Glass treatment on iOS 26) and a Jetpack Compose
+  // segmented row on Android — no bespoke styling required, which is the
+  // point: it's the system control, so it always looks current.
+  const languageOptions = [
+    { key: "en" as AppLocale, label: t("settings.languageEnglish") },
+    { key: "ar" as AppLocale, label: t("settings.languageArabic") },
+  ];
+  const themeOptions = [
+    { key: "system" as const, label: t("settings.themeDevice") },
+    { key: "light" as const, label: t("settings.themeLight") },
+    { key: "dark" as const, label: t("settings.themeDark") },
+  ];
+  const readingViewOptions = [
+    { key: "list" as ReadingView, label: t("settings.viewList") },
+    { key: "verse_by_verse" as ReadingView, label: t("settings.viewVerseByVerse") },
+    { key: "mushaf" as ReadingView, label: t("settings.viewMushaf") },
+  ];
+
   const handleReminderToggle = async (nextEnabled: boolean) => {
     if (!nextEnabled) {
       await disableReminder();
@@ -127,6 +167,16 @@ export default function SettingsScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <StatusBar style={isDark ? "light" : "dark"} />
+      <LinearGradient
+        colors={[
+          colors.background,
+          withOpacity(colors.primary, isDark ? 0.12 : 0.05),
+          colors.background,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -136,14 +186,9 @@ export default function SettingsScreen() {
         </Text>
 
         {/* ── Language ─────────────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+        <GlassSurface
+          solidColor={colors.surface}
+          style={[styles.sectionCard, { borderColor: sectionBorderColor }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.language")}
@@ -152,59 +197,23 @@ export default function SettingsScreen() {
             {t("settings.languageSubtitle")}
           </Text>
 
-          <View style={[styles.segmentedRow, isRTL && { flexDirection: "row-reverse" }]}>
-            {(
-              [
-                { key: "en" as AppLocale, label: t("settings.languageEnglish") },
-                { key: "ar" as AppLocale, label: t("settings.languageArabic") },
-              ] as { key: AppLocale; label: string }[]
-            ).map((option) => {
-              const selected = locale === option.key;
-              return (
-                <Pressable
-                  key={option.key}
-                  onPress={() => {
-                    void setLocale(option.key);
-                  }}
-                  style={[
-                    styles.segmentButton,
-                    {
-                      backgroundColor: selected
-                        ? withOpacity(colors.primary, isDark ? 0.3 : 0.14)
-                        : withOpacity(colors.background, 0.55),
-                      borderColor: selected
-                        ? withOpacity(colors.primary, 0.55)
-                        : withOpacity(colors.border, 0.8),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentLabel,
-                      {
-                        color: selected ? colors.primary : colors.textMuted,
-                        fontFamily: option.key === "ar" ? "CairoBold" : "SatoshiMedium",
-                        fontSize: option.key === "ar" ? 15 : 13,
-                      },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+          <SegmentedControl
+            values={languageOptions.map((option) => option.label)}
+            selectedIndex={languageOptions.findIndex((option) => option.key === locale)}
+            onChange={(event) => {
+              const option = languageOptions[event.nativeEvent.selectedSegmentIndex];
+              if (option) void setLocale(option.key);
+            }}
+            appearance={isDark ? "dark" : "light"}
+            tintColor={activeAccentColor}
+            style={styles.segmentedControl}
+          />
+        </GlassSurface>
 
         {/* ── Appearance ───────────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+        <GlassSurface
+          solidColor={colors.surface}
+          style={[styles.sectionCard, { borderColor: sectionBorderColor }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.appearance")}
@@ -213,58 +222,27 @@ export default function SettingsScreen() {
             {t("settings.appearanceSubtitle")}
           </Text>
 
-          <View style={[styles.segmentedRow, isRTL && { flexDirection: "row-reverse" }]}>
-            {[
-              { key: "system", label: t("settings.themeDevice") },
-              { key: "light", label: t("settings.themeLight") },
-              { key: "dark", label: t("settings.themeDark") },
-            ].map((option) => {
-              const selected = theme === option.key;
-              return (
-                <Pressable
-                  key={option.key}
-                  onPress={() => {
-                    void setTheme(option.key as "system" | "light" | "dark");
-                  }}
-                  style={[
-                    styles.segmentButton,
-                    {
-                      backgroundColor: selected
-                        ? withOpacity(colors.primary, isDark ? 0.3 : 0.14)
-                        : withOpacity(colors.background, 0.55),
-                      borderColor: selected
-                        ? withOpacity(colors.primary, 0.55)
-                        : withOpacity(colors.border, 0.8),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentLabel,
-                      { color: selected ? colors.primary : colors.textMuted, fontFamily: fonts.medium },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SegmentedControl
+            values={themeOptions.map((option) => option.label)}
+            selectedIndex={themeOptions.findIndex((option) => option.key === theme)}
+            onChange={(event) => {
+              const option = themeOptions[event.nativeEvent.selectedSegmentIndex];
+              if (option) void setTheme(option.key);
+            }}
+            appearance={isDark ? "dark" : "light"}
+            tintColor={activeAccentColor}
+            style={styles.segmentedControl}
+          />
 
           <Text style={[styles.helperText, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.currentTheme", { theme: resolvedTheme })}
           </Text>
-        </View>
+        </GlassSurface>
 
         {/* ── Chapter display ───────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+        <GlassSurface
+          solidColor={colors.surface}
+          style={[styles.sectionCard, { borderColor: sectionBorderColor }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.chapterDisplay")}
@@ -279,49 +257,23 @@ export default function SettingsScreen() {
             {t("settings.chooseReadingView")}
           </Text>
 
-          <View style={[styles.segmentedRow, { marginBottom: 16 }, isRTL && { flexDirection: "row-reverse" }]}>
-            {[
-              { key: "list", label: t("settings.viewList") },
-              { key: "verse_by_verse", label: t("settings.viewVerseByVerse") },
-              { key: "mushaf", label: t("settings.viewMushaf") },
-            ].map((option) => {
-              const selected = readingView === option.key;
-              return (
-                <Pressable
-                  key={option.key}
-                  onPress={() => {
-                    void setReadingView(option.key as ReadingView);
-                  }}
-                  style={[
-                    styles.segmentButton,
-                    {
-                      backgroundColor: selected
-                        ? withOpacity(colors.primary, isDark ? 0.3 : 0.14)
-                        : withOpacity(colors.background, 0.55),
-                      borderColor: selected
-                        ? withOpacity(colors.primary, 0.55)
-                        : withOpacity(colors.border, 0.8),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentLabel,
-                      { color: selected ? colors.primary : colors.textMuted, fontFamily: fonts.medium },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SegmentedControl
+            values={readingViewOptions.map((option) => option.label)}
+            selectedIndex={readingViewOptions.findIndex((option) => option.key === readingView)}
+            onChange={(event) => {
+              const option = readingViewOptions[event.nativeEvent.selectedSegmentIndex];
+              if (option) void setReadingView(option.key);
+            }}
+            appearance={isDark ? "dark" : "light"}
+            tintColor={activeAccentColor}
+            style={[styles.segmentedControl, { marginBottom: 4 }]}
+          />
 
           <View
             style={[
               styles.divider,
               {
-                backgroundColor: withOpacity(colors.border, 0.75),
+                backgroundColor: dividerColor,
                 marginBottom: 16,
               },
             ]}
@@ -343,18 +295,16 @@ export default function SettingsScreen() {
               onValueChange={(nextValue) => {
                 void setShowTranslations(nextValue);
               }}
-              trackColor={{
-                false: withOpacity(colors.border, 0.8),
-                true: withOpacity(colors.primary, 0.45),
-              }}
-              thumbColor={showTranslations ? colors.primary : "#F4F4F5"}
+              trackColor={{ false: switchInactiveTrack, true: activeAccentColor }}
+              ios_backgroundColor={switchInactiveTrack}
+              thumbColor={Platform.OS === "android" ? (isDark ? "#E5E7EB" : "#F4F4F5") : undefined}
             />
           </View>
 
           <View
             style={[
               styles.divider,
-              { backgroundColor: withOpacity(colors.border, 0.75) },
+              { backgroundColor: dividerColor },
             ]}
           />
 
@@ -374,24 +324,17 @@ export default function SettingsScreen() {
               onValueChange={(nextValue) => {
                 void setShowTransliterations(nextValue);
               }}
-              trackColor={{
-                false: withOpacity(colors.border, 0.8),
-                true: withOpacity(colors.primary, 0.45),
-              }}
-              thumbColor={showTransliterations ? colors.primary : "#F4F4F5"}
+              trackColor={{ false: switchInactiveTrack, true: activeAccentColor }}
+              ios_backgroundColor={switchInactiveTrack}
+              thumbColor={Platform.OS === "android" ? (isDark ? "#E5E7EB" : "#F4F4F5") : undefined}
             />
           </View>
-        </View>
+        </GlassSurface>
 
         {/* ── Typography ────────────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+        <GlassSurface
+          solidColor={colors.surface}
+          style={[styles.sectionCard, { borderColor: sectionBorderColor }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.typography")}
@@ -410,22 +353,22 @@ export default function SettingsScreen() {
             </View>
           </View>
           <Slider
-            style={{ width: "100%", height: 40, marginTop: -8 }}
+            style={styles.slider}
             minimumValue={22}
             maximumValue={50}
             step={1}
             value={arabicFontSize}
             onSlidingComplete={setArabicFontSize}
-            minimumTrackTintColor={colors.primary}
-            maximumTrackTintColor={withOpacity(colors.border, 0.8)}
-            thumbTintColor={colors.primary}
+            minimumTrackTintColor={activeAccentColor}
+            maximumTrackTintColor={sliderInactiveTrack}
+            thumbTintColor={activeAccentColor}
           />
 
           <View
             style={[
               styles.divider,
               {
-                backgroundColor: withOpacity(colors.border, 0.75),
+                backgroundColor: dividerColor,
                 marginVertical: 4,
               },
             ]}
@@ -444,27 +387,22 @@ export default function SettingsScreen() {
             </View>
           </View>
           <Slider
-            style={{ width: "100%", height: 40, marginTop: -8 }}
+            style={styles.slider}
             minimumValue={12}
             maximumValue={24}
             step={1}
             value={translationFontSize}
             onSlidingComplete={setTranslationFontSize}
-            minimumTrackTintColor={colors.primary}
-            maximumTrackTintColor={withOpacity(colors.border, 0.8)}
-            thumbTintColor={colors.primary}
+            minimumTrackTintColor={activeAccentColor}
+            maximumTrackTintColor={sliderInactiveTrack}
+            thumbTintColor={activeAccentColor}
           />
-        </View>
+        </GlassSurface>
 
         {/* ── Daily Reminder ────────────────────────────────────────────── */}
-        <View
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: withOpacity(colors.border, 0.85),
-            },
-          ]}
+        <GlassSurface
+          solidColor={colors.surface}
+          style={[styles.sectionCard, { borderColor: sectionBorderColor }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
             {t("settings.dailyReminder")}
@@ -489,64 +427,69 @@ export default function SettingsScreen() {
               onValueChange={(nextValue) => {
                 void handleReminderToggle(nextValue);
               }}
-              trackColor={{
-                false: withOpacity(colors.border, 0.8),
-                true: withOpacity(colors.primary, 0.45),
-              }}
-              thumbColor={reminderEnabled ? colors.primary : "#F4F4F5"}
+              trackColor={{ false: switchInactiveTrack, true: activeAccentColor }}
+              ios_backgroundColor={switchInactiveTrack}
+              thumbColor={Platform.OS === "android" ? (isDark ? "#E5E7EB" : "#F4F4F5") : undefined}
             />
           </View>
 
-          <Pressable
-            onPress={() => setShowTimePicker(true)}
-            style={[
-              styles.timeButton,
-              {
-                borderColor: withOpacity(colors.border, 0.85),
-                backgroundColor: withOpacity(colors.background, 0.55),
-              },
-            ]}
+          {/* The time button is its own small glass "pill" — on iOS 26 it
+              becomes an interactive Liquid Glass capsule that reacts to
+              touch; everywhere else it's a plain bordered row. */}
+          <GlassSurface
+            solidColor={isDark ? withOpacity(colors.surface, 0.7) : withOpacity(colors.background, 0.6)}
+            glassTint={isDark ? withOpacity(colors.primaryLight, 0.12) : undefined}
+            isInteractive
+            borderRadius={14}
           >
-            <Text style={[styles.timeButtonLabel, { color: colors.textMuted, fontFamily: fonts.regular }]}>
-              {t("settings.reminderTime")}
-            </Text>
-            <Text style={[styles.timeButtonValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
-              {reminderLabel}
-            </Text>
-          </Pressable>
+            <Pressable
+              onPress={() => setShowTimePicker(true)}
+              style={[
+                styles.timeButton,
+                { borderColor: sectionBorderColor },
+              ]}
+            >
+              <Text style={[styles.timeButtonLabel, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                {t("settings.reminderTime")}
+              </Text>
+              <Text style={[styles.timeButtonValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                {reminderLabel}
+              </Text>
+            </Pressable>
+          </GlassSurface>
 
           {showTimePicker ? (
             <View style={styles.timePickerWrap}>
               <DateTimePicker
                 mode="time"
                 value={toDateFromTime(reminderTime)}
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                themeVariant={isDark ? "dark" : "light"}
+                textColor={colors.textMain}
                 onChange={(event, date) => {
                   void handleTimeChange(event, date);
                 }}
               />
               {Platform.OS === "ios" ? (
-                <Pressable
-                  onPress={() => setShowTimePicker(false)}
-                  style={[
-                    styles.doneButton,
-                    {
-                      backgroundColor: withOpacity(
-                        colors.primary,
-                        isDark ? 0.3 : 0.16,
-                      ),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.doneButtonText, { color: colors.primary, fontFamily: fonts.medium }]}
+                <Pressable onPress={() => setShowTimePicker(false)}>
+                  <GlassSurface
+                    solidColor={withOpacity(colors.primary, isDark ? 0.32 : 0.16)}
+                    glassTint={activeAccentColor}
+                    isInteractive
+                    borderRadius={999}
+                    style={styles.doneButton}
                   >
-                    {t("settings.done")}
-                  </Text>
+                    <Text
+                      style={[styles.doneButtonText, { color: activeAccentColor, fontFamily: fonts.medium }]}
+                    >
+                      {t("settings.done")}
+                    </Text>
+                  </GlassSurface>
                 </Pressable>
               ) : null}
             </View>
           ) : null}
-        </View>
+        </GlassSurface>
       </ScrollView>
     </SafeAreaView>
   );
@@ -568,8 +511,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sectionCard: {
-    borderWidth: 1,
-    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
     gap: 12,
   },
@@ -582,21 +524,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: -6,
   },
-  segmentedRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  segmentButton: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentLabel: {
-    fontFamily: "SatoshiMedium",
-    fontSize: 13,
+  segmentedControl: {
+    height: 36,
   },
   helperText: {
     fontFamily: "Satoshi",
@@ -622,12 +551,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   divider: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  slider: {
+    width: "100%",
+    height: 40,
+    marginTop: -8,
   },
   timeButton: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     minHeight: 46,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
@@ -649,7 +583,6 @@ const styles = StyleSheet.create({
     minWidth: 72,
     minHeight: 36,
     paddingHorizontal: 14,
-    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },

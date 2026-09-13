@@ -110,7 +110,7 @@ export default function FallbackTabBar({
     transform: [{ translateX: indicatorX.value }],
   }));
 
-  const activeColor = colors.primary;
+  const activeColor = isDark ? colors.primaryLight : colors.primary;
   const inactiveColor = colors.icon;
 
   return (

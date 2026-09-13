@@ -13,12 +13,13 @@ import FallbackTabBar, {
 function IosLiquidGlassTabs() {
   const { colors, isDark } = useTheme();
   const { t, isRTL } = useLanguage();
+  const activeColor = isDark ? colors.primaryLight : colors.primary;
 
   return (
     <NativeTabs
       minimizeBehavior="onScrollDown"
-      tintColor={colors.primary}
-      iconColor={{ default: colors.icon, selected: colors.primary }}
+      tintColor={activeColor}
+      iconColor={{ default: colors.icon, selected: activeColor }}
       labelStyle={{
         default: {
           color: colors.icon,
@@ -26,7 +27,7 @@ function IosLiquidGlassTabs() {
           fontSize: 11,
         },
         selected: {
-          color: colors.primary,
+          color: activeColor,
           fontFamily: isRTL ? "CairoBold" : "SatoshiBold",
           fontSize: 11,
         },
@@ -96,7 +97,7 @@ function IosLiquidGlassTabs() {
 }
 
 function FallbackTabs() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useLanguage();
 
   return (
@@ -111,7 +112,7 @@ function FallbackTabs() {
       }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: isDark ? colors.primaryLight : colors.primary,
         tabBarInactiveTintColor: colors.icon,
       }}
     >
