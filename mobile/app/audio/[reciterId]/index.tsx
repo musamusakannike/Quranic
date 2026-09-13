@@ -332,7 +332,7 @@ export default function AudioSurahsScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <View style={styles.header}>

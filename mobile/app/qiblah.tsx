@@ -97,7 +97,7 @@ export default function QiblahScreen() {
           { accuracy: Location.Accuracy.High, distanceInterval: 10 },
           (loc) => {
             calculateQiblahBearing(loc.coords.latitude, loc.coords.longitude);
-          }
+          },
         );
 
         headingSub = await Location.watchHeadingAsync((headingObj) => {
@@ -145,15 +145,23 @@ export default function QiblahScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* Header */}
       <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
-        <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={() => router.back()}>
+        <Pressable
+          style={[styles.backBtn, { backgroundColor: colors.surface }]}
+          onPress={() => router.back()}
+        >
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colors.textMain, fontFamily: fonts.bold },
+          ]}
+        >
           {t("qiblah.title")}
         </Text>
         <View style={styles.headerRight} />
@@ -162,14 +170,24 @@ export default function QiblahScreen() {
       <View style={styles.content}>
         {errorMsg ? (
           <View style={styles.center}>
-            <Text style={[styles.errorText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+            <Text
+              style={[
+                styles.errorText,
+                { color: colors.textMuted, fontFamily: fonts.medium },
+              ]}
+            >
               {errorMsg}
             </Text>
           </View>
         ) : qiblahBearing === null ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+            <Text
+              style={[
+                styles.loadingText,
+                { color: colors.textMuted, fontFamily: fonts.medium },
+              ]}
+            >
               {t("qiblah.findingDirection")}
             </Text>
           </View>
@@ -180,58 +198,150 @@ export default function QiblahScreen() {
               style={[
                 styles.compassRing,
                 {
-                  borderColor: isFacingQiblah ? colors.success : withOpacity(colors.primary, 0.3),
+                  borderColor: isFacingQiblah
+                    ? colors.success
+                    : withOpacity(colors.primary, 0.3),
                   backgroundColor: colors.surface,
                 },
               ]}
             >
               <View
-                style={[styles.compassFace, { transform: [{ rotate: `${-magnetometerHeading}deg` }] }]}
+                style={[
+                  styles.compassFace,
+                  { transform: [{ rotate: `${-magnetometerHeading}deg` }] },
+                ]}
               >
-                <Text style={[styles.northText, { color: colors.textMain, fontFamily: fonts.bold }]}>N</Text>
-                <Text style={[styles.eastText, { color: colors.textMuted, fontFamily: fonts.bold }]}>E</Text>
-                <Text style={[styles.southText, { color: colors.textMuted, fontFamily: fonts.bold }]}>S</Text>
-                <Text style={[styles.westText, { color: colors.textMuted, fontFamily: fonts.bold }]}>W</Text>
+                <Text
+                  style={[
+                    styles.northText,
+                    { color: colors.textMain, fontFamily: fonts.bold },
+                  ]}
+                >
+                  N
+                </Text>
+                <Text
+                  style={[
+                    styles.eastText,
+                    { color: colors.textMuted, fontFamily: fonts.bold },
+                  ]}
+                >
+                  E
+                </Text>
+                <Text
+                  style={[
+                    styles.southText,
+                    { color: colors.textMuted, fontFamily: fonts.bold },
+                  ]}
+                >
+                  S
+                </Text>
+                <Text
+                  style={[
+                    styles.westText,
+                    { color: colors.textMuted, fontFamily: fonts.bold },
+                  ]}
+                >
+                  W
+                </Text>
               </View>
 
               <View
                 style={[
-                  StyleSheet.absoluteFillObject,
-                  { alignItems: "center", justifyContent: "flex-start", transform: [{ rotate: `${needleRotation}deg` }], zIndex: 10 },
+                  StyleSheet.absoluteFill,
+                  {
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    transform: [{ rotate: `${needleRotation}deg` }],
+                    zIndex: 10,
+                  },
                 ]}
               >
                 <Image
                   source={require("../assets/images/kaaba.webp")}
-                  style={[styles.kaabaIndicator, isFacingQiblah && { tintColor: undefined }]}
+                  style={[
+                    styles.kaabaIndicator,
+                    isFacingQiblah && { tintColor: undefined },
+                  ]}
                 />
               </View>
             </View>
 
-            <View style={[styles.infoContainer, isRTL && { flexDirection: "row-reverse" }]}>
-              <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
-                <Text style={[styles.infoLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+            <View
+              style={[
+                styles.infoContainer,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
+              <View
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: withOpacity(colors.border, 0.5),
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.infoLabel,
+                    { color: colors.textMuted, fontFamily: fonts.medium },
+                  ]}
+                >
                   {t("qiblah.yourHeading")}
                 </Text>
-                <Text style={[styles.infoValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    { color: colors.textMain, fontFamily: fonts.bold },
+                  ]}
+                >
                   {Math.round(magnetometerHeading)}°
                 </Text>
               </View>
-              <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
-                <Text style={[styles.infoLabel, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+              <View
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: withOpacity(colors.border, 0.5),
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.infoLabel,
+                    { color: colors.textMuted, fontFamily: fonts.medium },
+                  ]}
+                >
                   {t("qiblah.qiblahLabel")}
                 </Text>
-                <Text style={[styles.infoValue, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    { color: colors.textMain, fontFamily: fonts.bold },
+                  ]}
+                >
                   {Math.round(qiblahBearing)}°
                 </Text>
               </View>
             </View>
 
             {isFacingQiblah ? (
-              <Text style={[styles.qiblahFoundText, { color: colors.success, fontFamily: fonts.bold }]}>
+              <Text
+                style={[
+                  styles.qiblahFoundText,
+                  { color: colors.success, fontFamily: fonts.bold },
+                ]}
+              >
                 {t("qiblah.facingQiblah")}
               </Text>
             ) : (
-              <Text style={[styles.instructionText, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+              <Text
+                style={[
+                  styles.instructionText,
+                  { color: colors.textMuted, fontFamily: fonts.medium },
+                ]}
+              >
                 {t("qiblah.rotateDevice")}
               </Text>
             )}
@@ -308,7 +418,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   compassFace: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
   },

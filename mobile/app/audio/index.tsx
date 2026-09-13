@@ -1,9 +1,35 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { View, Text, StyleSheet, TextInput, ActivityIndicator, Pressable, ImageBackground } from "react-native";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ActivityIndicator,
+  Pressable,
+  ImageBackground,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Search, Mic, ArrowLeft, Download, Filter, X, Headphones } from "lucide-react-native";
-import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import {
+  Search,
+  Mic,
+  ArrowLeft,
+  Download,
+  Filter,
+  X,
+  Headphones,
+} from "lucide-react-native";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -58,7 +84,9 @@ interface VerseByVerseReciter {
 
 type ReciterMode = "chapter" | "verse_by_verse";
 
-const FULL_SURAH_LIST = Array.from({ length: 114 }, (_, i) => String(i + 1)).join(",");
+const FULL_SURAH_LIST = Array.from({ length: 114 }, (_, i) =>
+  String(i + 1),
+).join(",");
 
 function ReciterCard({ item, index, mainMoshaf, colors, isDark }: any) {
   const router = useRouter();
@@ -130,7 +158,9 @@ export default function AudioRecitersScreen() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [reciterMode, setReciterMode] = useState<ReciterMode>("chapter");
-  const [selectedRiwayahId, setSelectedRiwayahId] = useState<number | null>(null);
+  const [selectedRiwayahId, setSelectedRiwayahId] = useState<number | null>(
+    null,
+  );
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [verseReciters, setVerseReciters] = useState<VerseByVerseReciter[]>([]);
 
@@ -231,12 +261,17 @@ export default function AudioRecitersScreen() {
     if (selectedType) {
       result = result.filter((r: Reciter) =>
         r.moshaf.some((m: Moshaf) => {
-          const moshafDef = moshafs.find((def: MoshafDefinition) => def.id === m.moshaf_type);
+          const moshafDef = moshafs.find(
+            (def: MoshafDefinition) => def.id === m.moshaf_type,
+          );
           if (!moshafDef) return false;
           const nameLower = moshafDef.name.toLowerCase();
-          if (selectedType === "murattal") return nameLower.includes("murattal");
-          if (selectedType === "mujawwad") return nameLower.includes("mojawwad");
-          if (selectedType === "mo-lim") return nameLower.includes("mo'lim") || nameLower.includes("molim");
+          if (selectedType === "murattal")
+            return nameLower.includes("murattal");
+          if (selectedType === "mujawwad")
+            return nameLower.includes("mojawwad");
+          if (selectedType === "mo-lim")
+            return nameLower.includes("mo'lim") || nameLower.includes("molim");
           return false;
         }),
       );
@@ -245,7 +280,9 @@ export default function AudioRecitersScreen() {
     // Filter by Search Query
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
-      result = result.filter((r: Reciter) => r.name.toLowerCase().includes(lowerQuery));
+      result = result.filter((r: Reciter) =>
+        r.name.toLowerCase().includes(lowerQuery),
+      );
     }
 
     return result;
@@ -261,28 +298,41 @@ export default function AudioRecitersScreen() {
     );
   }, [verseReciters, searchQuery]);
 
-  const renderChapterItem = ({ item, index }: { item: Reciter; index: number }) => {
+  const renderChapterItem = ({
+    item,
+    index,
+  }: {
+    item: Reciter;
+    index: number;
+  }) => {
     // Find the best moshaf to display based on filters
     let mainMoshaf = item.moshaf[0];
-    
+
     if (selectedRiwayahId || selectedType) {
       const filteredMoshafs = item.moshaf.filter((m: Moshaf) => {
-        const moshafDef = moshafs.find((def: MoshafDefinition) => def.id === m.moshaf_type);
+        const moshafDef = moshafs.find(
+          (def: MoshafDefinition) => def.id === m.moshaf_type,
+        );
         if (!moshafDef) return false;
-        
-        const matchesRiwayah = !selectedRiwayahId || moshafDef.moshaf_id === selectedRiwayahId;
-        
+
+        const matchesRiwayah =
+          !selectedRiwayahId || moshafDef.moshaf_id === selectedRiwayahId;
+
         let matchesType = true;
         if (selectedType) {
           const nameLower = moshafDef.name.toLowerCase();
-          if (selectedType === "murattal") matchesType = nameLower.includes("murattal");
-          else if (selectedType === "mujawwad") matchesType = nameLower.includes("mojawwad");
-          else if (selectedType === "mo-lim") matchesType = nameLower.includes("mo'lim") || nameLower.includes("molim");
+          if (selectedType === "murattal")
+            matchesType = nameLower.includes("murattal");
+          else if (selectedType === "mujawwad")
+            matchesType = nameLower.includes("mojawwad");
+          else if (selectedType === "mo-lim")
+            matchesType =
+              nameLower.includes("mo'lim") || nameLower.includes("molim");
         }
-        
+
         return matchesRiwayah && matchesType;
       });
-      
+
       if (filteredMoshafs.length > 0) {
         mainMoshaf = filteredMoshafs[0];
       }
@@ -366,7 +416,9 @@ export default function AudioRecitersScreen() {
   };
 
   const isVerseMode = reciterMode === "verse_by_verse";
-  const listData = isVerseMode ? filteredVerseReciters : filteredChapterReciters;
+  const listData = isVerseMode
+    ? filteredVerseReciters
+    : filteredChapterReciters;
 
   return (
     <SafeAreaView
@@ -381,7 +433,7 @@ export default function AudioRecitersScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <View style={styles.header}>
@@ -403,7 +455,9 @@ export default function AudioRecitersScreen() {
           <ArrowLeft color={colors.textMain} size={22} />
         </Pressable>
 
-        <Text style={[styles.headerTitleText, { color: colors.textMain }]}>Browse Reciters</Text>
+        <Text style={[styles.headerTitleText, { color: colors.textMain }]}>
+          Browse Reciters
+        </Text>
 
         <Pressable
           onPress={() => {
@@ -458,7 +512,10 @@ export default function AudioRecitersScreen() {
                     </Text>
                   </View>
                   <Text
-                    style={[styles.heroSubtitle, { color: "rgba(255,255,255,0.85)" }]}
+                    style={[
+                      styles.heroSubtitle,
+                      { color: "rgba(255,255,255,0.85)" },
+                    ]}
                   >
                     {isVerseMode
                       ? "Follow along verse-by-verse with continuous chapter playback."
@@ -490,7 +547,10 @@ export default function AudioRecitersScreen() {
                   <Text
                     style={[
                       styles.modeChipText,
-                      { color: reciterMode === "chapter" ? "#fff" : colors.textMain },
+                      {
+                        color:
+                          reciterMode === "chapter" ? "#fff" : colors.textMain,
+                      },
                     ]}
                   >
                     Chapter Reciters
@@ -520,7 +580,9 @@ export default function AudioRecitersScreen() {
                       styles.modeChipText,
                       {
                         color:
-                          reciterMode === "verse_by_verse" ? "#fff" : colors.textMain,
+                          reciterMode === "verse_by_verse"
+                            ? "#fff"
+                            : colors.textMain,
                       },
                     ]}
                   >
@@ -539,7 +601,11 @@ export default function AudioRecitersScreen() {
                     },
                   ]}
                 >
-                  <Search size={18} color={colors.textMuted} strokeWidth={2.5} />
+                  <Search
+                    size={18}
+                    color={colors.textMuted}
+                    strokeWidth={2.5}
+                  />
                   <TextInput
                     style={[styles.searchInput, { color: colors.textMain }]}
                     placeholder="Search Reciters..."
@@ -560,14 +626,24 @@ export default function AudioRecitersScreen() {
                     style={[
                       styles.filterToggleButton,
                       {
-                        backgroundColor: selectedRiwayahId || selectedType ? colors.primary : colors.surface,
-                        borderColor: selectedRiwayahId || selectedType ? colors.primary : colors.border,
+                        backgroundColor:
+                          selectedRiwayahId || selectedType
+                            ? colors.primary
+                            : colors.surface,
+                        borderColor:
+                          selectedRiwayahId || selectedType
+                            ? colors.primary
+                            : colors.border,
                       },
                     ]}
                   >
                     <Filter
                       size={20}
-                      color={selectedRiwayahId || selectedType ? "#fff" : colors.textMain}
+                      color={
+                        selectedRiwayahId || selectedType
+                          ? "#fff"
+                          : colors.textMain
+                      }
                       strokeWidth={2}
                     />
                     {(selectedRiwayahId || selectedType) && (
@@ -577,7 +653,7 @@ export default function AudioRecitersScreen() {
                 )}
               </View>
 
-              <Text style={[styles.resultCount, { color: colors.textMuted }]}> 
+              <Text style={[styles.resultCount, { color: colors.textMuted }]}>
                 {listData.length} reciter
                 {listData.length === 1 ? "" : "s"} found
               </Text>
@@ -594,9 +670,13 @@ export default function AudioRecitersScreen() {
         backgroundStyle={{ backgroundColor: colors.surface }}
         handleIndicatorStyle={{ backgroundColor: colors.border }}
       >
-        <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
+        <BottomSheetScrollView
+          contentContainerStyle={styles.bottomSheetContent}
+        >
           <View style={styles.sheetHeader}>
-            <Text style={[styles.sheetTitle, { color: colors.textMain }]}>Filters</Text>
+            <Text style={[styles.sheetTitle, { color: colors.textMain }]}>
+              Filters
+            </Text>
             {(selectedRiwayahId || selectedType) && (
               <Pressable
                 onPress={() => {
@@ -605,7 +685,11 @@ export default function AudioRecitersScreen() {
                   setSelectedType(null);
                 }}
               >
-                <Text style={{ color: colors.primary, fontFamily: "SatoshiBold" }}>Reset</Text>
+                <Text
+                  style={{ color: colors.primary, fontFamily: "SatoshiBold" }}
+                >
+                  Reset
+                </Text>
               </Pressable>
             )}
           </View>
@@ -623,12 +707,28 @@ export default function AudioRecitersScreen() {
                 style={[
                   styles.filterChip,
                   {
-                    backgroundColor: selectedRiwayahId === null ? colors.primary : colors.background,
-                    borderColor: selectedRiwayahId === null ? colors.primary : colors.border,
+                    backgroundColor:
+                      selectedRiwayahId === null
+                        ? colors.primary
+                        : colors.background,
+                    borderColor:
+                      selectedRiwayahId === null
+                        ? colors.primary
+                        : colors.border,
                   },
                 ]}
               >
-                <Text style={[styles.filterChipText, { color: selectedRiwayahId === null ? "#fff" : colors.textMain }]}>All</Text>
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    {
+                      color:
+                        selectedRiwayahId === null ? "#fff" : colors.textMain,
+                    },
+                  ]}
+                >
+                  All
+                </Text>
               </Pressable>
               {riwayat.map((item) => (
                 <Pressable
@@ -640,15 +740,26 @@ export default function AudioRecitersScreen() {
                   style={[
                     styles.filterChip,
                     {
-                      backgroundColor: selectedRiwayahId === item.id ? colors.primary : colors.background,
-                      borderColor: selectedRiwayahId === item.id ? colors.primary : colors.border,
+                      backgroundColor:
+                        selectedRiwayahId === item.id
+                          ? colors.primary
+                          : colors.background,
+                      borderColor:
+                        selectedRiwayahId === item.id
+                          ? colors.primary
+                          : colors.border,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.filterChipText,
-                      { color: selectedRiwayahId === item.id ? "#fff" : colors.textMain },
+                      {
+                        color:
+                          selectedRiwayahId === item.id
+                            ? "#fff"
+                            : colors.textMain,
+                      },
                     ]}
                   >
                     {item.name}
@@ -671,12 +782,23 @@ export default function AudioRecitersScreen() {
                 style={[
                   styles.filterChip,
                   {
-                    backgroundColor: selectedType === null ? colors.primary : colors.background,
-                    borderColor: selectedType === null ? colors.primary : colors.border,
+                    backgroundColor:
+                      selectedType === null
+                        ? colors.primary
+                        : colors.background,
+                    borderColor:
+                      selectedType === null ? colors.primary : colors.border,
                   },
                 ]}
               >
-                <Text style={[styles.filterChipText, { color: selectedType === null ? "#fff" : colors.textMain }]}>All</Text>
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    { color: selectedType === null ? "#fff" : colors.textMain },
+                  ]}
+                >
+                  All
+                </Text>
               </Pressable>
               {moshafTypes.map((item) => (
                 <Pressable
@@ -688,15 +810,24 @@ export default function AudioRecitersScreen() {
                   style={[
                     styles.filterChip,
                     {
-                      backgroundColor: selectedType === item.id ? colors.primary : colors.background,
-                      borderColor: selectedType === item.id ? colors.primary : colors.border,
+                      backgroundColor:
+                        selectedType === item.id
+                          ? colors.primary
+                          : colors.background,
+                      borderColor:
+                        selectedType === item.id
+                          ? colors.primary
+                          : colors.border,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.filterChipText,
-                      { color: selectedType === item.id ? "#fff" : colors.textMain },
+                      {
+                        color:
+                          selectedType === item.id ? "#fff" : colors.textMain,
+                      },
                     ]}
                   >
                     {item.name}

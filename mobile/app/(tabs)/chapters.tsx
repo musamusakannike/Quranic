@@ -136,14 +136,9 @@ function ChapterCard({
         </View>
 
         <View
-          style={[
-            styles.metaColumn,
-            isRTL && { alignItems: "flex-start" },
-          ]}
+          style={[styles.metaColumn, isRTL && { alignItems: "flex-start" }]}
         >
-          <Text
-            style={[styles.chapterArabicName, { color: colors.textMain }]}
-          >
+          <Text style={[styles.chapterArabicName, { color: colors.textMain }]}>
             {chapter.arabicName}
           </Text>
           <Text
@@ -239,7 +234,7 @@ export default function ChaptersScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <FlatList

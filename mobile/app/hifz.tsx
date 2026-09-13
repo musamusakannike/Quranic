@@ -40,7 +40,11 @@ import {
 import { useTheme } from "../lib/ThemeContext";
 import { useLanguage } from "../lib/LanguageContext";
 import { useAppFonts } from "../lib/i18n/useAppFonts";
-import { useHifz, type MemorizationStatus, type HifzReciter } from "../lib/HifzContext";
+import {
+  useHifz,
+  type MemorizationStatus,
+  type HifzReciter,
+} from "../lib/HifzContext";
 import { useAudio, type Track } from "../lib/AudioContext";
 import { useToast } from "../lib/ToastContext";
 import {
@@ -89,8 +93,23 @@ const STATUS_BORDER = {
 };
 
 // ─── Loop Mode Tab ───────────────────────────────────────────────────────────
-function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
-  const { loopConfig, setLoopConfig, getVerseStatus, setVerseStatus, reciter, setReciter } = useHifz();
+function LoopTab({
+  colors,
+  isDark,
+  insets,
+}: {
+  colors: any;
+  isDark: boolean;
+  insets: any;
+}) {
+  const {
+    loopConfig,
+    setLoopConfig,
+    getVerseStatus,
+    setVerseStatus,
+    reciter,
+    setReciter,
+  } = useHifz();
   const { playTrack, setQueue, clearQueue } = useAudio();
   const { showToast } = useToast();
   const { t } = useLanguage();
@@ -120,7 +139,9 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     const fetchReciters = async () => {
       setIsLoadingReciters(true);
       try {
-        const response = await fetch("https://api.alquran.cloud/v1/edition/format/audio");
+        const response = await fetch(
+          "https://api.alquran.cloud/v1/edition/format/audio",
+        );
         const json = await response.json();
         if (json.code === 200) {
           // Filter for versebyverse reciters usually to ensure we have audio for each verse
@@ -225,7 +246,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
       endVerse: ev,
       repeatCount,
     };
-    
+
     setLoopConfig(config);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -241,7 +262,7 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     const timestamp = Date.now();
     for (let verseNum = sv; verseNum <= ev; verseNum++) {
       const globalNumber = getGlobalVerseNumber(selectedChapter, verseNum);
-      
+
       // Repeat each verse in the queue
       for (let r = 0; r < repeatCount; r++) {
         loopTracks.push({
@@ -257,11 +278,13 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
     }
 
     if (loopTracks.length > 0) {
-      console.log(`[Hifz] Starting loop: ${loopTracks.length} tracks, reps: x${repeatCount}`);
+      console.log(
+        `[Hifz] Starting loop: ${loopTracks.length} tracks, reps: x${repeatCount}`,
+      );
       clearQueue();
       const first = loopTracks[0];
       const rest = loopTracks.slice(1);
-      
+
       // Order of operations: queue first, then play
       // This ensures playTrack's sync logic doesn't race with empty queue
       setQueue(rest);
@@ -275,198 +298,394 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 
   return (
     <>
-    <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 60 }]}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={{ gap: 20 }}>
-      {/* Reciter selector */}
-      <View
-        style={[
-          loopStyles.card,
-          { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + 60 },
         ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.reciter")}</Text>
-        <Pressable
-          onPress={openReciterPicker}
-          style={[
-            loopStyles.selectorBtn,
-            { borderColor: withOpacity(colors.primary, 0.4), backgroundColor: withOpacity(colors.primary, 0.06) },
-          ]}
-        >
-          <View style={[loopStyles.reciterIcon, { backgroundColor: withOpacity(colors.primary, 0.15) }]}>
-            <Mic size={18} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1, gap: 1 }}>
-            <Text style={[loopStyles.reciterNameMain, { color: colors.textMain }]} numberOfLines={1}>
-              {reciter.englishName}
+        <View style={{ gap: 20 }}>
+          {/* Reciter selector */}
+          <View
+            style={[
+              loopStyles.card,
+              {
+                backgroundColor: isDark
+                  ? withOpacity(colors.surface, 0.9)
+                  : colors.surface,
+                borderColor: withOpacity(colors.border, 0.7),
+              },
+            ]}
+          >
+            <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>
+              {t("hifz.reciter")}
             </Text>
-            <Text style={[loopStyles.reciterNameSub, { color: colors.textMuted }]}>
-              {reciter.name}
-            </Text>
-          </View>
-          <ChevronRight size={18} color={colors.primary} />
-        </Pressable>
-      </View>
-
-      {/* Chapter selector */}
-      <View
-        style={[
-          loopStyles.card,
-          { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
-        ]}
-      >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.surah")}</Text>
-        <Pressable
-          onPress={openPicker}
-          style={[
-            loopStyles.selectorBtn,
-            { borderColor: withOpacity(colors.primary, 0.4), backgroundColor: withOpacity(colors.primary, 0.06) },
-          ]}
-        >
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={[loopStyles.selectorMain, { color: colors.textMain }]}>
-              {chapterInfo?.arabicName}
-            </Text>
-            <Text style={[loopStyles.selectorSub, { color: colors.textMuted }]}>
-              {selectedChapter}. {chapterInfo?.name} · {maxVerses} verses
-            </Text>
-          </View>
-          <ChevronDown size={18} color={colors.primary} />
-        </Pressable>
-      </View>
-
-      {/* Verse Range */}
-      <View
-        style={[
-          loopStyles.card,
-          { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
-        ]}
-      >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.ayahRange")}</Text>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ flex: 1, gap: 6 }}>
-            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>{t("hifz.from")}</Text>
-            <View style={[loopStyles.numberInputRow, { borderColor: withOpacity(colors.border, 0.8), backgroundColor: withOpacity(colors.primary, 0.04) }]}>
-              <Pressable
-                onPress={() => setStartVerse((v) => clamp(v - 1, 1, endVerse))}
-                style={[loopStyles.stepBtn, { backgroundColor: withOpacity(colors.primary, 0.12) }]}
-              >
-                <Text style={[loopStyles.stepBtnText, { color: colors.primary }]}>−</Text>
-              </Pressable>
-              <Text style={[loopStyles.stepValue, { color: colors.textMain }]}>{startVerse}</Text>
-              <Pressable
-                onPress={() => setStartVerse((v) => clamp(v + 1, 1, endVerse))}
-                style={[loopStyles.stepBtn, { backgroundColor: withOpacity(colors.primary, 0.12) }]}
-              >
-                <Text style={[loopStyles.stepBtnText, { color: colors.primary }]}>+</Text>
-              </Pressable>
-            </View>
-          </View>
-          <View style={{ flex: 1, gap: 6 }}>
-            <Text style={[loopStyles.inputLabel, { color: colors.textMuted }]}>{t("hifz.to")}</Text>
-            <View style={[loopStyles.numberInputRow, { borderColor: withOpacity(colors.border, 0.8), backgroundColor: withOpacity(colors.primary, 0.04) }]}>
-              <Pressable
-                onPress={() => setEndVerse((v) => clamp(v - 1, startVerse, maxVerses))}
-                style={[loopStyles.stepBtn, { backgroundColor: withOpacity(colors.primary, 0.12) }]}
-              >
-                <Text style={[loopStyles.stepBtnText, { color: colors.primary }]}>−</Text>
-              </Pressable>
-              <Text style={[loopStyles.stepValue, { color: colors.textMain }]}>{endVerse}</Text>
-              <Pressable
-                onPress={() => setEndVerse((v) => clamp(v + 1, startVerse, maxVerses))}
-                style={[loopStyles.stepBtn, { backgroundColor: withOpacity(colors.primary, 0.12) }]}
-              >
-                <Text style={[loopStyles.stepBtnText, { color: colors.primary }]}>+</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-        <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
-          {t(endVerse - startVerse + 1 !== 1 ? "hifz.ayahsSelected_other" : "hifz.ayahsSelected_one", { count: endVerse - startVerse + 1 })}
-        </Text>
-      </View>
-
-      {/* Repeat Count */}
-      <View
-        style={[
-          loopStyles.card,
-          { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
-        ]}
-      >
-        <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>{t("hifz.repetitions")}</Text>
-        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-          {[2, 3, 5, 7, 10, 15, 20].map((n) => (
             <Pressable
-              key={n}
-              onPress={() => { void Haptics.selectionAsync(); setRepeatCount(n); }}
+              onPress={openReciterPicker}
               style={[
-                loopStyles.repeatChip,
+                loopStyles.selectorBtn,
                 {
-                  backgroundColor: repeatCount === n ? colors.primary : withOpacity(colors.primary, 0.08),
-                  borderColor: repeatCount === n ? colors.primary : withOpacity(colors.primary, 0.2),
+                  borderColor: withOpacity(colors.primary, 0.4),
+                  backgroundColor: withOpacity(colors.primary, 0.06),
                 },
               ]}
             >
-              <Text style={[loopStyles.repeatChipText, { color: repeatCount === n ? "#fff" : colors.primary }]}>
-                ×{n}
-              </Text>
+              <View
+                style={[
+                  loopStyles.reciterIcon,
+                  { backgroundColor: withOpacity(colors.primary, 0.15) },
+                ]}
+              >
+                <Mic size={18} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text
+                  style={[
+                    loopStyles.reciterNameMain,
+                    { color: colors.textMain },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {reciter.englishName}
+                </Text>
+                <Text
+                  style={[
+                    loopStyles.reciterNameSub,
+                    { color: colors.textMuted },
+                  ]}
+                >
+                  {reciter.name}
+                </Text>
+              </View>
+              <ChevronRight size={18} color={colors.primary} />
             </Pressable>
-          ))}
-        </View>
-        <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
-          {t("hifz.eachAyahRepeats", { count: repeatCount })}
-        </Text>
-      </View>
+          </View>
 
-      {/* Start Button */}
-      <Pressable
-        onPress={handleStartLoop}
-        style={({ pressed }) => [
-          loopStyles.startBtn,
-          { opacity: pressed ? 0.85 : 1 },
-        ]}
-      >
-        <LinearGradient
-          colors={[colors.primaryLight ?? "#0A8F7A", colors.primary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={loopStyles.startBtnGradient}
-        >
-          <Repeat size={18} color="#fff" />
-          <Text style={loopStyles.startBtnText}>{t("hifz.startLoop")}</Text>
-        </LinearGradient>
-      </Pressable>
-    </View>
-    </ScrollView>
+          {/* Chapter selector */}
+          <View
+            style={[
+              loopStyles.card,
+              {
+                backgroundColor: isDark
+                  ? withOpacity(colors.surface, 0.9)
+                  : colors.surface,
+                borderColor: withOpacity(colors.border, 0.7),
+              },
+            ]}
+          >
+            <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>
+              {t("hifz.surah")}
+            </Text>
+            <Pressable
+              onPress={openPicker}
+              style={[
+                loopStyles.selectorBtn,
+                {
+                  borderColor: withOpacity(colors.primary, 0.4),
+                  backgroundColor: withOpacity(colors.primary, 0.06),
+                },
+              ]}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text
+                  style={[loopStyles.selectorMain, { color: colors.textMain }]}
+                >
+                  {chapterInfo?.arabicName}
+                </Text>
+                <Text
+                  style={[loopStyles.selectorSub, { color: colors.textMuted }]}
+                >
+                  {selectedChapter}. {chapterInfo?.name} · {maxVerses} verses
+                </Text>
+              </View>
+              <ChevronDown size={18} color={colors.primary} />
+            </Pressable>
+          </View>
+
+          {/* Verse Range */}
+          <View
+            style={[
+              loopStyles.card,
+              {
+                backgroundColor: isDark
+                  ? withOpacity(colors.surface, 0.9)
+                  : colors.surface,
+                borderColor: withOpacity(colors.border, 0.7),
+              },
+            ]}
+          >
+            <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>
+              {t("hifz.ayahRange")}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ flex: 1, gap: 6 }}>
+                <Text
+                  style={[loopStyles.inputLabel, { color: colors.textMuted }]}
+                >
+                  {t("hifz.from")}
+                </Text>
+                <View
+                  style={[
+                    loopStyles.numberInputRow,
+                    {
+                      borderColor: withOpacity(colors.border, 0.8),
+                      backgroundColor: withOpacity(colors.primary, 0.04),
+                    },
+                  ]}
+                >
+                  <Pressable
+                    onPress={() =>
+                      setStartVerse((v) => clamp(v - 1, 1, endVerse))
+                    }
+                    style={[
+                      loopStyles.stepBtn,
+                      { backgroundColor: withOpacity(colors.primary, 0.12) },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        loopStyles.stepBtnText,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      −
+                    </Text>
+                  </Pressable>
+                  <Text
+                    style={[loopStyles.stepValue, { color: colors.textMain }]}
+                  >
+                    {startVerse}
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      setStartVerse((v) => clamp(v + 1, 1, endVerse))
+                    }
+                    style={[
+                      loopStyles.stepBtn,
+                      { backgroundColor: withOpacity(colors.primary, 0.12) },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        loopStyles.stepBtnText,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      +
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+              <View style={{ flex: 1, gap: 6 }}>
+                <Text
+                  style={[loopStyles.inputLabel, { color: colors.textMuted }]}
+                >
+                  {t("hifz.to")}
+                </Text>
+                <View
+                  style={[
+                    loopStyles.numberInputRow,
+                    {
+                      borderColor: withOpacity(colors.border, 0.8),
+                      backgroundColor: withOpacity(colors.primary, 0.04),
+                    },
+                  ]}
+                >
+                  <Pressable
+                    onPress={() =>
+                      setEndVerse((v) => clamp(v - 1, startVerse, maxVerses))
+                    }
+                    style={[
+                      loopStyles.stepBtn,
+                      { backgroundColor: withOpacity(colors.primary, 0.12) },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        loopStyles.stepBtnText,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      −
+                    </Text>
+                  </Pressable>
+                  <Text
+                    style={[loopStyles.stepValue, { color: colors.textMain }]}
+                  >
+                    {endVerse}
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      setEndVerse((v) => clamp(v + 1, startVerse, maxVerses))
+                    }
+                    style={[
+                      loopStyles.stepBtn,
+                      { backgroundColor: withOpacity(colors.primary, 0.12) },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        loopStyles.stepBtnText,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      +
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+            <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
+              {t(
+                endVerse - startVerse + 1 !== 1
+                  ? "hifz.ayahsSelected_other"
+                  : "hifz.ayahsSelected_one",
+                { count: endVerse - startVerse + 1 },
+              )}
+            </Text>
+          </View>
+
+          {/* Repeat Count */}
+          <View
+            style={[
+              loopStyles.card,
+              {
+                backgroundColor: isDark
+                  ? withOpacity(colors.surface, 0.9)
+                  : colors.surface,
+                borderColor: withOpacity(colors.border, 0.7),
+              },
+            ]}
+          >
+            <Text style={[loopStyles.cardLabel, { color: colors.textMuted }]}>
+              {t("hifz.repetitions")}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+              {[2, 3, 5, 7, 10, 15, 20].map((n) => (
+                <Pressable
+                  key={n}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setRepeatCount(n);
+                  }}
+                  style={[
+                    loopStyles.repeatChip,
+                    {
+                      backgroundColor:
+                        repeatCount === n
+                          ? colors.primary
+                          : withOpacity(colors.primary, 0.08),
+                      borderColor:
+                        repeatCount === n
+                          ? colors.primary
+                          : withOpacity(colors.primary, 0.2),
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      loopStyles.repeatChipText,
+                      { color: repeatCount === n ? "#fff" : colors.primary },
+                    ]}
+                  >
+                    ×{n}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={[loopStyles.rangeHint, { color: colors.textMuted }]}>
+              {t("hifz.eachAyahRepeats", { count: repeatCount })}
+            </Text>
+          </View>
+
+          {/* Start Button */}
+          <Pressable
+            onPress={handleStartLoop}
+            style={({ pressed }) => [
+              loopStyles.startBtn,
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <LinearGradient
+              colors={[colors.primaryLight ?? "#0A8F7A", colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={loopStyles.startBtnGradient}
+            >
+              <Repeat size={18} color="#fff" />
+              <Text style={loopStyles.startBtnText}>{t("hifz.startLoop")}</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       {/* Reciter Picker Sheet */}
       {reciterPickerVisible && (
-        <Modal transparent visible animationType="none" onRequestClose={closeReciterPicker} statusBarTranslucent>
+        <Modal
+          transparent
+          visible
+          animationType="none"
+          onRequestClose={closeReciterPicker}
+          statusBarTranslucent
+        >
           <TouchableWithoutFeedback onPress={closeReciterPicker}>
             <Animated.View
-              style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]}
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim },
+              ]}
             />
           </TouchableWithoutFeedback>
           <Animated.View
             style={[
               loopStyles.pickerSheet,
-              { backgroundColor: colors.background, transform: [{ translateY: reciterSheetAnim }] },
+              {
+                backgroundColor: colors.background,
+                transform: [{ translateY: reciterSheetAnim }],
+              },
             ]}
           >
             <View style={loopStyles.sheetHandleWrap}>
-              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+              <View
+                style={[
+                  loopStyles.sheetHandle,
+                  { backgroundColor: withOpacity(colors.border, 0.7) },
+                ]}
+              />
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingBottom: 12,
+              }}
+            >
               <View>
-                <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectReciter")}</Text>
-                <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>{t("hifz.selectReciterSubtitle")}</Text>
+                <Text
+                  style={[loopStyles.pickerTitle, { color: colors.textMain }]}
+                >
+                  {t("hifz.selectReciter")}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Satoshi",
+                    fontSize: 13,
+                    color: colors.textMuted,
+                  }}
+                >
+                  {t("hifz.selectReciterSubtitle")}
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={closeReciterPicker}
-                style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}
+                style={[
+                  loopStyles.closeBtn,
+                  { backgroundColor: withOpacity(colors.border, 0.4) },
+                ]}
               >
                 <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
@@ -475,7 +694,11 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
               data={reciters}
               keyExtractor={(item) => item.identifier}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 8 }}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: insets.bottom + 24,
+                gap: 8,
+              }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
@@ -490,21 +713,65 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
                         reciter.identifier === item.identifier
                           ? withOpacity(colors.primary, 0.1)
                           : withOpacity(colors.surface, 0.5),
-                      borderColor: reciter.identifier === item.identifier ? colors.primary : withOpacity(colors.border, 0.5),
+                      borderColor:
+                        reciter.identifier === item.identifier
+                          ? colors.primary
+                          : withOpacity(colors.border, 0.5),
                     },
                   ]}
                 >
-                  <View style={[loopStyles.reciterInitial, { backgroundColor: withOpacity(colors.primary, reciter.identifier === item.identifier ? 0.25 : 0.08) }]}>
-                    <Text style={{ fontFamily: "SatoshiBold", fontSize: 14, color: colors.primary }}>
+                  <View
+                    style={[
+                      loopStyles.reciterInitial,
+                      {
+                        backgroundColor: withOpacity(
+                          colors.primary,
+                          reciter.identifier === item.identifier ? 0.25 : 0.08,
+                        ),
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "SatoshiBold",
+                        fontSize: 14,
+                        color: colors.primary,
+                      }}
+                    >
                       {item.englishName.charAt(0)}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>{item.englishName}</Text>
-                    <Text style={{ fontFamily: "Satoshi", fontSize: 13, color: colors.textMuted }}>{item.name}</Text>
+                    <Text
+                      style={{
+                        fontFamily: "SatoshiBold",
+                        fontSize: 15,
+                        color: colors.textMain,
+                      }}
+                    >
+                      {item.englishName}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Satoshi",
+                        fontSize: 13,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      {item.name}
+                    </Text>
                   </View>
                   {reciter.identifier === item.identifier && (
-                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: colors.primary,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       <CheckCircle2 size={12} color="#fff" />
                     </View>
                   )}
@@ -517,26 +784,58 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 
       {/* Chapter Picker Sheet */}
       {chapterPickerVisible && (
-        <Modal transparent visible animationType="none" onRequestClose={closePicker} statusBarTranslucent>
+        <Modal
+          transparent
+          visible
+          animationType="none"
+          onRequestClose={closePicker}
+          statusBarTranslucent
+        >
           <TouchableWithoutFeedback onPress={closePicker}>
             <Animated.View
-              style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]}
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim },
+              ]}
             />
           </TouchableWithoutFeedback>
           <Animated.View
             style={[
               loopStyles.pickerSheet,
-              { backgroundColor: colors.background, transform: [{ translateY: sheetAnim }] },
+              {
+                backgroundColor: colors.background,
+                transform: [{ translateY: sheetAnim }],
+              },
             ]}
           >
             <View style={loopStyles.sheetHandleWrap}>
-              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+              <View
+                style={[
+                  loopStyles.sheetHandle,
+                  { backgroundColor: withOpacity(colors.border, 0.7) },
+                ]}
+              />
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
-              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectSurah")}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingBottom: 12,
+              }}
+            >
+              <Text
+                style={[loopStyles.pickerTitle, { color: colors.textMain }]}
+              >
+                {t("hifz.selectSurah")}
+              </Text>
               <TouchableOpacity
                 onPress={closePicker}
-                style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}
+                style={[
+                  loopStyles.closeBtn,
+                  { backgroundColor: withOpacity(colors.border, 0.4) },
+                ]}
               >
                 <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
@@ -545,7 +844,11 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
               data={ALL_CHAPTERS}
               keyExtractor={(item) => String(item.number)}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 6 }}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: insets.bottom + 24,
+                gap: 6,
+              }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
@@ -566,14 +869,62 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
                     },
                   ]}
                 >
-                  <View style={[loopStyles.chapterNum, { backgroundColor: withOpacity(colors.primary, selectedChapter === item.number ? 0.25 : 0.08) }]}>
-                    <Text style={[{ fontFamily: "SatoshiBold", fontSize: 13, color: colors.primary }]}>{item.number}</Text>
+                  <View
+                    style={[
+                      loopStyles.chapterNum,
+                      {
+                        backgroundColor: withOpacity(
+                          colors.primary,
+                          selectedChapter === item.number ? 0.25 : 0.08,
+                        ),
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        {
+                          fontFamily: "SatoshiBold",
+                          fontSize: 13,
+                          color: colors.primary,
+                        },
+                      ]}
+                    >
+                      {item.number}
+                    </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[{ fontFamily: "SatoshiMedium", fontSize: 14, color: colors.textMain }]}>{item.name}</Text>
-                    <Text style={[{ fontFamily: "Satoshi", fontSize: 12, color: colors.textMuted }]}>{item.verses} verses</Text>
+                    <Text
+                      style={[
+                        {
+                          fontFamily: "SatoshiMedium",
+                          fontSize: 14,
+                          color: colors.textMain,
+                        },
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text
+                      style={[
+                        {
+                          fontFamily: "Satoshi",
+                          fontSize: 12,
+                          color: colors.textMuted,
+                        },
+                      ]}
+                    >
+                      {item.verses} verses
+                    </Text>
                   </View>
-                  <Text style={{ fontFamily: "AmiriQuran", fontSize: 18, color: colors.primary }}>{item.arabicName}</Text>
+                  <Text
+                    style={{
+                      fontFamily: "AmiriQuran",
+                      fontSize: 18,
+                      color: colors.primary,
+                    }}
+                  >
+                    {item.arabicName}
+                  </Text>
                 </Pressable>
               )}
             />
@@ -585,7 +936,15 @@ function LoopTab({ colors, isDark, insets }: { colors: any; isDark: boolean; ins
 }
 
 // ─── Hide & Reveal Tab ───────────────────────────────────────────────────────
-function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
+function RevealTab({
+  colors,
+  isDark,
+  insets,
+}: {
+  colors: any;
+  isDark: boolean;
+  insets: any;
+}) {
   const { getVerseStatus, setVerseStatus } = useHifz();
   const { t } = useLanguage();
   const [selectedChapter, setSelectedChapter] = useState(1);
@@ -597,7 +956,10 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
   const backdropAnim = useRef(new Animated.Value(0)).current;
 
   const chapterInfo = ALL_CHAPTERS[selectedChapter - 1];
-  const verses = useMemo(() => getChapterVerses(selectedChapter), [selectedChapter]);
+  const verses = useMemo(
+    () => getChapterVerses(selectedChapter),
+    [selectedChapter],
+  );
   const translations = useMemo(
     () => verses.map((_, i) => getVerseTranslation(selectedChapter, i + 1)),
     [selectedChapter, verses],
@@ -606,15 +968,32 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
   const openPicker = () => {
     setChapterPickerVisible(true);
     Animated.parallel([
-      Animated.spring(sheetAnim, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 200 }),
-      Animated.timing(backdropAnim, { toValue: 1, duration: 240, useNativeDriver: true }),
+      Animated.spring(sheetAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 200,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 1,
+        duration: 240,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
   const closePicker = () => {
     Animated.parallel([
-      Animated.timing(sheetAnim, { toValue: SCREEN_HEIGHT, duration: 260, useNativeDriver: true }),
-      Animated.timing(backdropAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
+      Animated.timing(sheetAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
     ]).start(() => setChapterPickerVisible(false));
   };
 
@@ -642,7 +1021,8 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
     await setVerseStatus(selectedChapter, verseNum, next);
   };
 
-  const isRevealed = (verseNum: number) => !hideAll || revealedVerses.has(verseNum);
+  const isRevealed = (verseNum: number) =>
+    !hideAll || revealedVerses.has(verseNum);
 
   return (
     <View style={{ flex: 1 }}>
@@ -650,7 +1030,11 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
         data={verses}
         keyExtractor={(_, i) => String(i)}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: insets.bottom + 60 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 10,
+          paddingBottom: insets.bottom + 60,
+        }}
         ListHeaderComponent={
           <View style={{ gap: 16, marginBottom: 16 }}>
             {/* Controls Row */}
@@ -659,12 +1043,31 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
                 onPress={openPicker}
                 style={[
                   revealStyles.chapterBtn,
-                  { flex: 1, backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) },
+                  {
+                    flex: 1,
+                    backgroundColor: isDark
+                      ? withOpacity(colors.surface, 0.9)
+                      : colors.surface,
+                    borderColor: withOpacity(colors.border, 0.7),
+                  },
                 ]}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={[revealStyles.chapterBtnSub, { color: colors.textMuted }]}>{t("hifz.surah")}</Text>
-                  <Text style={[revealStyles.chapterBtnMain, { color: colors.textMain }]} numberOfLines={1}>
+                  <Text
+                    style={[
+                      revealStyles.chapterBtnSub,
+                      { color: colors.textMuted },
+                    ]}
+                  >
+                    {t("hifz.surah")}
+                  </Text>
+                  <Text
+                    style={[
+                      revealStyles.chapterBtnMain,
+                      { color: colors.textMain },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {chapterInfo?.name}
                   </Text>
                 </View>
@@ -672,23 +1075,53 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               </Pressable>
 
               <Pressable
-                onPress={() => { void Haptics.selectionAsync(); setHideAll((h) => !h); setRevealedVerses(new Set()); }}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setHideAll((h) => !h);
+                  setRevealedVerses(new Set());
+                }}
                 style={[
                   revealStyles.toggleBtn,
-                  { backgroundColor: hideAll ? withOpacity(colors.primary, 0.12) : withOpacity(colors.success, 0.12), borderColor: hideAll ? withOpacity(colors.primary, 0.4) : withOpacity(colors.success, 0.4) },
+                  {
+                    backgroundColor: hideAll
+                      ? withOpacity(colors.primary, 0.12)
+                      : withOpacity(colors.success, 0.12),
+                    borderColor: hideAll
+                      ? withOpacity(colors.primary, 0.4)
+                      : withOpacity(colors.success, 0.4),
+                  },
                 ]}
               >
-                {hideAll ? <EyeOff size={18} color={colors.primary} /> : <Eye size={18} color={colors.success} />}
-                <Text style={[revealStyles.toggleBtnText, { color: hideAll ? colors.primary : colors.success }]}>
+                {hideAll ? (
+                  <EyeOff size={18} color={colors.primary} />
+                ) : (
+                  <Eye size={18} color={colors.success} />
+                )}
+                <Text
+                  style={[
+                    revealStyles.toggleBtnText,
+                    { color: hideAll ? colors.primary : colors.success },
+                  ]}
+                >
                   {hideAll ? t("hifz.hidden") : t("hifz.shown")}
                 </Text>
               </Pressable>
             </View>
 
             {hideAll && (
-              <View style={[revealStyles.hintBox, { backgroundColor: withOpacity(colors.primary, 0.07), borderColor: withOpacity(colors.primary, 0.2) }]}>
+              <View
+                style={[
+                  revealStyles.hintBox,
+                  {
+                    backgroundColor: withOpacity(colors.primary, 0.07),
+                    borderColor: withOpacity(colors.primary, 0.2),
+                  },
+                ]}
+              >
                 <Eye size={14} color={colors.primary} />
-                <Text style={[revealStyles.hintText, { color: colors.primary }]}>
+                <Text
+                  style={[revealStyles.hintText, { color: colors.primary }]}
+                >
                   {t("hifz.tapAyahHint")}
                 </Text>
               </View>
@@ -706,7 +1139,9 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               style={[
                 revealStyles.verseCard,
                 {
-                  backgroundColor: isDark ? withOpacity(colors.surface, 0.85) : colors.surface,
+                  backgroundColor: isDark
+                    ? withOpacity(colors.surface, 0.85)
+                    : colors.surface,
                   borderColor:
                     status === "memorized"
                       ? withOpacity(colors.success, 0.5)
@@ -715,39 +1150,112 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               ]}
             >
               {/* Verse number badge */}
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <View style={[revealStyles.verseBadge, { backgroundColor: withOpacity(colors.primary, 0.1) }]}>
-                  <Text style={[revealStyles.verseBadgeText, { color: colors.primary }]}>{verseNum}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                }}
+              >
+                <View
+                  style={[
+                    revealStyles.verseBadge,
+                    { backgroundColor: withOpacity(colors.primary, 0.1) },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      revealStyles.verseBadgeText,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    {verseNum}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => void updateStatus(verseNum)}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   {status === "memorized" ? (
-                    <CheckCircle2 size={22} color={colors.success} fill={withOpacity(colors.success, 0.15)} />
+                    <CheckCircle2
+                      size={22}
+                      color={colors.success}
+                      fill={withOpacity(colors.success, 0.15)}
+                    />
                   ) : status === "learning" ? (
                     <Brain size={20} color={colors.warning} />
                   ) : (
-                    <Circle size={22} color={colors.textMuted} strokeWidth={1.5} />
+                    <Circle
+                      size={22}
+                      color={colors.textMuted}
+                      strokeWidth={1.5}
+                    />
                   )}
                 </TouchableOpacity>
               </View>
 
               {/* Arabic text */}
               {revealed ? (
-                <Text style={[revealStyles.arabicText, { color: colors.textMain }]}>{item}</Text>
+                <Text
+                  style={[revealStyles.arabicText, { color: colors.textMain }]}
+                >
+                  {item}
+                </Text>
               ) : (
-                <View style={[revealStyles.blurPlaceholder, { backgroundColor: withOpacity(colors.primary, 0.08) }]}>
-                  <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.18), width: "95%" }]} />
-                  <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.14), width: "80%" }]} />
-                  <View style={[revealStyles.blurLine, { backgroundColor: withOpacity(colors.primary, 0.10), width: "60%" }]} />
-                  <Text style={[revealStyles.tapRevealText, { color: colors.primary }]}>{t("hifz.tapToReveal")}</Text>
+                <View
+                  style={[
+                    revealStyles.blurPlaceholder,
+                    { backgroundColor: withOpacity(colors.primary, 0.08) },
+                  ]}
+                >
+                  <View
+                    style={[
+                      revealStyles.blurLine,
+                      {
+                        backgroundColor: withOpacity(colors.primary, 0.18),
+                        width: "95%",
+                      },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      revealStyles.blurLine,
+                      {
+                        backgroundColor: withOpacity(colors.primary, 0.14),
+                        width: "80%",
+                      },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      revealStyles.blurLine,
+                      {
+                        backgroundColor: withOpacity(colors.primary, 0.1),
+                        width: "60%",
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      revealStyles.tapRevealText,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    {t("hifz.tapToReveal")}
+                  </Text>
                 </View>
               )}
 
               {/* Translation */}
               {revealed && translations[index] && (
-                <Text style={[revealStyles.translationText, { color: colors.textMuted }]} numberOfLines={2}>
+                <Text
+                  style={[
+                    revealStyles.translationText,
+                    { color: colors.textMuted },
+                  ]}
+                  numberOfLines={2}
+                >
                   {translations[index]}
                 </Text>
               )}
@@ -758,17 +1266,59 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
 
       {/* Chapter Picker */}
       {chapterPickerVisible && (
-        <Modal transparent visible animationType="none" onRequestClose={closePicker} statusBarTranslucent>
+        <Modal
+          transparent
+          visible
+          animationType="none"
+          onRequestClose={closePicker}
+          statusBarTranslucent
+        >
           <TouchableWithoutFeedback onPress={closePicker}>
-            <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]} />
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim },
+              ]}
+            />
           </TouchableWithoutFeedback>
-          <Animated.View style={[loopStyles.pickerSheet, { backgroundColor: colors.background, transform: [{ translateY: sheetAnim }] }]}>
+          <Animated.View
+            style={[
+              loopStyles.pickerSheet,
+              {
+                backgroundColor: colors.background,
+                transform: [{ translateY: sheetAnim }],
+              },
+            ]}
+          >
             <View style={loopStyles.sheetHandleWrap}>
-              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+              <View
+                style={[
+                  loopStyles.sheetHandle,
+                  { backgroundColor: withOpacity(colors.border, 0.7) },
+                ]}
+              />
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12 }}>
-              <Text style={[loopStyles.pickerTitle, { color: colors.textMain }]}>{t("hifz.selectSurah")}</Text>
-              <TouchableOpacity onPress={closePicker} style={[loopStyles.closeBtn, { backgroundColor: withOpacity(colors.border, 0.4) }]}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingBottom: 12,
+              }}
+            >
+              <Text
+                style={[loopStyles.pickerTitle, { color: colors.textMain }]}
+              >
+                {t("hifz.selectSurah")}
+              </Text>
+              <TouchableOpacity
+                onPress={closePicker}
+                style={[
+                  loopStyles.closeBtn,
+                  { backgroundColor: withOpacity(colors.border, 0.4) },
+                ]}
+              >
                 <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
@@ -776,7 +1326,11 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
               data={ALL_CHAPTERS}
               keyExtractor={(item) => String(item.number)}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 6 }}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 24,
+                gap: 6,
+              }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
@@ -787,17 +1341,65 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
                   }}
                   style={[
                     loopStyles.chapterRow,
-                    { backgroundColor: selectedChapter === item.number ? withOpacity(colors.primary, 0.1) : "transparent", borderColor: withOpacity(colors.border, 0.5) },
+                    {
+                      backgroundColor:
+                        selectedChapter === item.number
+                          ? withOpacity(colors.primary, 0.1)
+                          : "transparent",
+                      borderColor: withOpacity(colors.border, 0.5),
+                    },
                   ]}
                 >
-                  <View style={[loopStyles.chapterNum, { backgroundColor: withOpacity(colors.primary, selectedChapter === item.number ? 0.25 : 0.08) }]}>
-                    <Text style={{ fontFamily: "SatoshiBold", fontSize: 13, color: colors.primary }}>{item.number}</Text>
+                  <View
+                    style={[
+                      loopStyles.chapterNum,
+                      {
+                        backgroundColor: withOpacity(
+                          colors.primary,
+                          selectedChapter === item.number ? 0.25 : 0.08,
+                        ),
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "SatoshiBold",
+                        fontSize: 13,
+                        color: colors.primary,
+                      }}
+                    >
+                      {item.number}
+                    </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: "SatoshiMedium", fontSize: 14, color: colors.textMain }}>{item.name}</Text>
-                    <Text style={{ fontFamily: "Satoshi", fontSize: 12, color: colors.textMuted }}>{item.verses} verses</Text>
+                    <Text
+                      style={{
+                        fontFamily: "SatoshiMedium",
+                        fontSize: 14,
+                        color: colors.textMain,
+                      }}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Satoshi",
+                        fontSize: 12,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      {item.verses} verses
+                    </Text>
                   </View>
-                  <Text style={{ fontFamily: "AmiriQuran", fontSize: 18, color: colors.primary }}>{item.arabicName}</Text>
+                  <Text
+                    style={{
+                      fontFamily: "AmiriQuran",
+                      fontSize: 18,
+                      color: colors.primary,
+                    }}
+                  >
+                    {item.arabicName}
+                  </Text>
                 </Pressable>
               )}
             />
@@ -809,11 +1411,21 @@ function RevealTab({ colors, isDark, insets }: { colors: any; isDark: boolean; i
 }
 
 // ─── Progress Dashboard Tab ───────────────────────────────────────────────────
-function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean; insets: any }) {
+function ProgressTab({
+  colors,
+  isDark,
+  insets,
+}: {
+  colors: any;
+  isDark: boolean;
+  insets: any;
+}) {
   const { getChapterStats, resetChapter } = useHifz();
   const { t } = useLanguage();
   const [viewMode, setViewMode] = useState<"surah" | "juz">("surah");
-  const [infoSheet, setInfoSheet] = useState<{ type: "memorized" | "learning" } | null>(null);
+  const [infoSheet, setInfoSheet] = useState<{
+    type: "memorized" | "learning";
+  } | null>(null);
 
   const sheetAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -821,15 +1433,32 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
   const openInfo = (type: "memorized" | "learning") => {
     setInfoSheet({ type });
     Animated.parallel([
-      Animated.spring(sheetAnim, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 200 }),
-      Animated.timing(backdropAnim, { toValue: 1, duration: 240, useNativeDriver: true }),
+      Animated.spring(sheetAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 200,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 1,
+        duration: 240,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
   const closeInfo = () => {
     Animated.parallel([
-      Animated.timing(sheetAnim, { toValue: SCREEN_HEIGHT, duration: 260, useNativeDriver: true }),
-      Animated.timing(backdropAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
+      Animated.timing(sheetAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
     ]).start(() => setInfoSheet(null));
   };
 
@@ -855,7 +1484,11 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
   const overallPct = Math.round((totalMemorized / totalVerses) * 100);
   const learningPct = Math.round((totalLearning / totalVerses) * 100);
 
-  const handleReset = (ch: { number: number; name: string; verses: number }) => {
+  const handleReset = (ch: {
+    number: number;
+    name: string;
+    verses: number;
+  }) => {
     Alert.alert(
       t("hifzExtra.resetTitle", { name: ch.name }),
       t("hifzExtra.resetMsg"),
@@ -866,7 +1499,9 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
           style: "destructive",
           onPress: () => {
             void resetChapter(ch.number, ch.verses);
-            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            void Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Warning,
+            );
           },
         },
       ],
@@ -879,145 +1514,411 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
 
   return (
     <>
-    <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 60 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={{ gap: 16 }}>
-      {/* Overall stats cards */}
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <Pressable style={{ flex: 1 }} onPress={() => openInfo("memorized")}>
-          <LinearGradient
-            colors={[withOpacity(colors.success, isDark ? 0.28 : 0.12), withOpacity(colors.success, isDark ? 0.14 : 0.06)]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[progressStyles.statCard, { borderColor: withOpacity(colors.success, 0.3) }]}
-          >
-            <CheckCircle2 size={20} color={colors.success} />
-            <Text style={[progressStyles.statValue, { color: colors.success }]}>{totalMemorized}</Text>
-            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.success, 0.8) }]}>{t("hifzExtra.memorized")}</Text>
-            <Text style={[progressStyles.statPct, { color: withOpacity(colors.success, 0.65) }]}>{overallPct}{t("hifzExtra.ofQuran")}</Text>
-          </LinearGradient>
-        </Pressable>
-
-        <Pressable style={{ flex: 1 }} onPress={() => openInfo("learning")}>
-          <LinearGradient
-            colors={[withOpacity(colors.warning, isDark ? 0.28 : 0.12), withOpacity(colors.warning, isDark ? 0.14 : 0.06)]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[progressStyles.statCard, { borderColor: withOpacity(colors.warning, 0.3) }]}
-          >
-            <Brain size={20} color={colors.warning} />
-            <Text style={[progressStyles.statValue, { color: colors.warning }]}>{totalLearning}</Text>
-            <Text style={[progressStyles.statLabel, { color: withOpacity(colors.warning, 0.8) }]}>{t("hifzExtra.learning")}</Text>
-            <Text style={[progressStyles.statPct, { color: withOpacity(colors.warning, 0.65) }]}>{learningPct}{t("hifzExtra.ofQuran")}</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
-
-      {/* Overall Progress Bar */}
-      <View style={[progressStyles.overallCard, { backgroundColor: isDark ? withOpacity(colors.surface, 0.9) : colors.surface, borderColor: withOpacity(colors.border, 0.7) }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <TrendingUp size={16} color={colors.primary} />
-            <Text style={[progressStyles.overallLabel, { color: colors.textMain }]}>{t("hifzExtra.overallProgress")}</Text>
-          </View>
-          <Text style={[progressStyles.overallPct, { color: colors.primary }]}>{overallPct}%</Text>
-        </View>
-        <View style={[progressStyles.bigTrack, { backgroundColor: withOpacity(colors.border, isDark ? 0.6 : 0.4) }]}>
-          <View
-            style={[progressStyles.bigFillMemorized, { width: `${overallPct}%`, backgroundColor: colors.success }]}
-          />
-          <View
-            style={[progressStyles.bigFillLearning, { width: `${learningPct}%`, left: `${overallPct}%`, backgroundColor: colors.warning }]}
-          />
-        </View>
-        <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success }} />
-            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>{t("hifzExtra.memorized")}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warning }} />
-            <Text style={[progressStyles.legendText, { color: colors.textMuted }]}>{t("hifzExtra.learning")}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Surah breakdown */}
-      {activeChapters.length === 0 ? (
-        <View style={[progressStyles.emptyState, { backgroundColor: isDark ? withOpacity(colors.surface, 0.6) : colors.surface, borderColor: withOpacity(colors.border, 0.5) }]}>
-          <Star size={32} color={withOpacity(colors.primary, 0.4)} />
-          <Text style={[progressStyles.emptyTitle, { color: colors.textMain }]}>{t("hifzExtra.noHifzTitle")}</Text>
-          <Text style={[progressStyles.emptySubtitle, { color: colors.textMuted }]}>
-            {t("hifzExtra.noHifzSubtitle")}
-          </Text>
-        </View>
-      ) : (
-        <View style={{ gap: 8 }}>
-          <Text style={[progressStyles.sectionLabel, { color: colors.textMuted }]}>{t("hifzExtra.bySurah")}</Text>
-          {activeChapters.map((ch) => {
-            const memPct = (ch.memorized / ch.total) * 100;
-            const learnPct = (ch.learning / ch.total) * 100;
-            return (
-              <View
-                key={ch.number}
-                style={[progressStyles.surahRow, { backgroundColor: isDark ? withOpacity(colors.surface, 0.85) : colors.surface, borderColor: withOpacity(colors.border, 0.6) }]}
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + 60 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ gap: 16 }}>
+          {/* Overall stats cards */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable
+              style={{ flex: 1 }}
+              onPress={() => openInfo("memorized")}
+            >
+              <LinearGradient
+                colors={[
+                  withOpacity(colors.success, isDark ? 0.28 : 0.12),
+                  withOpacity(colors.success, isDark ? 0.14 : 0.06),
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  progressStyles.statCard,
+                  { borderColor: withOpacity(colors.success, 0.3) },
+                ]}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 10 }}>
-                  <View style={[progressStyles.surahNum, { backgroundColor: withOpacity(colors.primary, 0.1) }]}>
-                    <Text style={[progressStyles.surahNumText, { color: colors.primary }]}>{ch.number}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[progressStyles.surahName, { color: colors.textMain }]}>{ch.name}</Text>
-                    <Text style={[progressStyles.surahMeta, { color: colors.textMuted }]}>
-                      {ch.memorized} {t("hifzExtra.memorizedLabel")} · {ch.learning} {t("hifzExtra.learningLabel")} · {ch.total} {t("hifzExtra.totalLabel")}
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => handleReset(ch)}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <RefreshCcw size={15} color={withOpacity(colors.textMuted, 0.7)} />
-                  </Pressable>
-                </View>
-                <View style={[progressStyles.miniTrack, { backgroundColor: withOpacity(colors.border, isDark ? 0.5 : 0.35) }]}>
-                  <View style={{ width: `${memPct}%`, height: "100%", backgroundColor: colors.success, borderRadius: 999 }} />
-                  <View style={{ width: `${learnPct}%`, height: "100%", backgroundColor: colors.warning, borderRadius: 999 }} />
-                </View>
+                <CheckCircle2 size={20} color={colors.success} />
+                <Text
+                  style={[progressStyles.statValue, { color: colors.success }]}
+                >
+                  {totalMemorized}
+                </Text>
+                <Text
+                  style={[
+                    progressStyles.statLabel,
+                    { color: withOpacity(colors.success, 0.8) },
+                  ]}
+                >
+                  {t("hifzExtra.memorized")}
+                </Text>
+                <Text
+                  style={[
+                    progressStyles.statPct,
+                    { color: withOpacity(colors.success, 0.65) },
+                  ]}
+                >
+                  {overallPct}
+                  {t("hifzExtra.ofQuran")}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+
+            <Pressable style={{ flex: 1 }} onPress={() => openInfo("learning")}>
+              <LinearGradient
+                colors={[
+                  withOpacity(colors.warning, isDark ? 0.28 : 0.12),
+                  withOpacity(colors.warning, isDark ? 0.14 : 0.06),
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  progressStyles.statCard,
+                  { borderColor: withOpacity(colors.warning, 0.3) },
+                ]}
+              >
+                <Brain size={20} color={colors.warning} />
+                <Text
+                  style={[progressStyles.statValue, { color: colors.warning }]}
+                >
+                  {totalLearning}
+                </Text>
+                <Text
+                  style={[
+                    progressStyles.statLabel,
+                    { color: withOpacity(colors.warning, 0.8) },
+                  ]}
+                >
+                  {t("hifzExtra.learning")}
+                </Text>
+                <Text
+                  style={[
+                    progressStyles.statPct,
+                    { color: withOpacity(colors.warning, 0.65) },
+                  ]}
+                >
+                  {learningPct}
+                  {t("hifzExtra.ofQuran")}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+
+          {/* Overall Progress Bar */}
+          <View
+            style={[
+              progressStyles.overallCard,
+              {
+                backgroundColor: isDark
+                  ? withOpacity(colors.surface, 0.9)
+                  : colors.surface,
+                borderColor: withOpacity(colors.border, 0.7),
+              },
+            ]}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <TrendingUp size={16} color={colors.primary} />
+                <Text
+                  style={[
+                    progressStyles.overallLabel,
+                    { color: colors.textMain },
+                  ]}
+                >
+                  {t("hifzExtra.overallProgress")}
+                </Text>
               </View>
-            );
-          })}
+              <Text
+                style={[progressStyles.overallPct, { color: colors.primary }]}
+              >
+                {overallPct}%
+              </Text>
+            </View>
+            <View
+              style={[
+                progressStyles.bigTrack,
+                {
+                  backgroundColor: withOpacity(
+                    colors.border,
+                    isDark ? 0.6 : 0.4,
+                  ),
+                },
+              ]}
+            >
+              <View
+                style={[
+                  progressStyles.bigFillMemorized,
+                  { width: `${overallPct}%`, backgroundColor: colors.success },
+                ]}
+              />
+              <View
+                style={[
+                  progressStyles.bigFillLearning,
+                  {
+                    width: `${learningPct}%`,
+                    left: `${overallPct}%`,
+                    backgroundColor: colors.warning,
+                  },
+                ]}
+              />
+            </View>
+            <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: colors.success,
+                  }}
+                />
+                <Text
+                  style={[
+                    progressStyles.legendText,
+                    { color: colors.textMuted },
+                  ]}
+                >
+                  {t("hifzExtra.memorized")}
+                </Text>
+              </View>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: colors.warning,
+                  }}
+                />
+                <Text
+                  style={[
+                    progressStyles.legendText,
+                    { color: colors.textMuted },
+                  ]}
+                >
+                  {t("hifzExtra.learning")}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Surah breakdown */}
+          {activeChapters.length === 0 ? (
+            <View
+              style={[
+                progressStyles.emptyState,
+                {
+                  backgroundColor: isDark
+                    ? withOpacity(colors.surface, 0.6)
+                    : colors.surface,
+                  borderColor: withOpacity(colors.border, 0.5),
+                },
+              ]}
+            >
+              <Star size={32} color={withOpacity(colors.primary, 0.4)} />
+              <Text
+                style={[progressStyles.emptyTitle, { color: colors.textMain }]}
+              >
+                {t("hifzExtra.noHifzTitle")}
+              </Text>
+              <Text
+                style={[
+                  progressStyles.emptySubtitle,
+                  { color: colors.textMuted },
+                ]}
+              >
+                {t("hifzExtra.noHifzSubtitle")}
+              </Text>
+            </View>
+          ) : (
+            <View style={{ gap: 8 }}>
+              <Text
+                style={[
+                  progressStyles.sectionLabel,
+                  { color: colors.textMuted },
+                ]}
+              >
+                {t("hifzExtra.bySurah")}
+              </Text>
+              {activeChapters.map((ch) => {
+                const memPct = (ch.memorized / ch.total) * 100;
+                const learnPct = (ch.learning / ch.total) * 100;
+                return (
+                  <View
+                    key={ch.number}
+                    style={[
+                      progressStyles.surahRow,
+                      {
+                        backgroundColor: isDark
+                          ? withOpacity(colors.surface, 0.85)
+                          : colors.surface,
+                        borderColor: withOpacity(colors.border, 0.6),
+                      },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 8,
+                        gap: 10,
+                      }}
+                    >
+                      <View
+                        style={[
+                          progressStyles.surahNum,
+                          { backgroundColor: withOpacity(colors.primary, 0.1) },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            progressStyles.surahNumText,
+                            { color: colors.primary },
+                          ]}
+                        >
+                          {ch.number}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            progressStyles.surahName,
+                            { color: colors.textMain },
+                          ]}
+                        >
+                          {ch.name}
+                        </Text>
+                        <Text
+                          style={[
+                            progressStyles.surahMeta,
+                            { color: colors.textMuted },
+                          ]}
+                        >
+                          {ch.memorized} {t("hifzExtra.memorizedLabel")} ·{" "}
+                          {ch.learning} {t("hifzExtra.learningLabel")} ·{" "}
+                          {ch.total} {t("hifzExtra.totalLabel")}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => handleReset(ch)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <RefreshCcw
+                          size={15}
+                          color={withOpacity(colors.textMuted, 0.7)}
+                        />
+                      </Pressable>
+                    </View>
+                    <View
+                      style={[
+                        progressStyles.miniTrack,
+                        {
+                          backgroundColor: withOpacity(
+                            colors.border,
+                            isDark ? 0.5 : 0.35,
+                          ),
+                        },
+                      ]}
+                    >
+                      <View
+                        style={{
+                          width: `${memPct}%`,
+                          height: "100%",
+                          backgroundColor: colors.success,
+                          borderRadius: 999,
+                        }}
+                      />
+                      <View
+                        style={{
+                          width: `${learnPct}%`,
+                          height: "100%",
+                          backgroundColor: colors.warning,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
-      )}
-      </View>
       </ScrollView>
 
       {/* Info Bottom Sheet */}
       {infoSheet && (
-        <Modal transparent visible animationType="none" onRequestClose={closeInfo} statusBarTranslucent>
+        <Modal
+          transparent
+          visible
+          animationType="none"
+          onRequestClose={closeInfo}
+          statusBarTranslucent
+        >
           <TouchableWithoutFeedback onPress={closeInfo}>
-            <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim }]} />
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: "rgba(0,0,0,0.55)", opacity: backdropAnim },
+              ]}
+            />
           </TouchableWithoutFeedback>
           <Animated.View
             style={[
               loopStyles.pickerSheet,
-              { backgroundColor: colors.background, transform: [{ translateY: sheetAnim }], paddingBottom: insets.bottom + 20 },
+              {
+                backgroundColor: colors.background,
+                transform: [{ translateY: sheetAnim }],
+                paddingBottom: insets.bottom + 20,
+              },
             ]}
           >
             <View style={loopStyles.sheetHandleWrap}>
-              <View style={[loopStyles.sheetHandle, { backgroundColor: withOpacity(colors.border, 0.7) }]} />
+              <View
+                style={[
+                  loopStyles.sheetHandle,
+                  { backgroundColor: withOpacity(colors.border, 0.7) },
+                ]}
+              />
             </View>
             <View style={{ paddingHorizontal: 24, paddingBottom: 10 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <View style={{ 
-                  width: 48, 
-                  height: 48, 
-                  borderRadius: 24, 
-                  backgroundColor: withOpacity(infoSheet?.type === "memorized" ? colors.success : colors.warning, 0.15),
+              <View
+                style={{
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center"
-                }}>
+                  gap: 12,
+                  marginBottom: 16,
+                }}
+              >
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: withOpacity(
+                      infoSheet?.type === "memorized"
+                        ? colors.success
+                        : colors.warning,
+                      0.15,
+                    ),
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   {infoSheet?.type === "memorized" ? (
                     <CheckCircle2 size={24} color={colors.success} />
                   ) : (
@@ -1025,10 +1926,24 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
                   )}
                 </View>
                 <View>
-                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 20, color: colors.textMain }}>
-                    {infoSheet?.type === "memorized" ? t("hifzExtra.memorizedVerses") : t("hifzExtra.learningVerses")}
+                  <Text
+                    style={{
+                      fontFamily: "SatoshiBold",
+                      fontSize: 20,
+                      color: colors.textMain,
+                    }}
+                  >
+                    {infoSheet?.type === "memorized"
+                      ? t("hifzExtra.memorizedVerses")
+                      : t("hifzExtra.learningVerses")}
                   </Text>
-                  <Text style={{ fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
+                  <Text
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontSize: 14,
+                      color: colors.textMuted,
+                    }}
+                  >
                     {t("hifzExtra.howTracked")}
                   </Text>
                 </View>
@@ -1036,47 +1951,118 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
 
               <View style={{ gap: 20, marginTop: 8 }}>
                 <View style={{ gap: 6 }}>
-                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>What this means</Text>
-                  <Text style={{ fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted, lineHeight: 20 }}>
-                    {infoSheet?.type === "memorized" 
+                  <Text
+                    style={{
+                      fontFamily: "SatoshiBold",
+                      fontSize: 15,
+                      color: colors.textMain,
+                    }}
+                  >
+                    What this means
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontSize: 14,
+                      color: colors.textMuted,
+                      lineHeight: 20,
+                    }}
+                  >
+                    {infoSheet?.type === "memorized"
                       ? "These are the verses you have confidently mastered. You've marked them as memorized in the Hide & Reveal tab."
                       : "These are verses you are currently working on. They are either added automatically when you start a Loop Session or manually marked in the Hide & Reveal tab."}
                   </Text>
                 </View>
 
                 <View style={{ gap: 12 }}>
-                  <Text style={{ fontFamily: "SatoshiBold", fontSize: 15, color: colors.textMain }}>How to increase this</Text>
-                  
+                  <Text
+                    style={{
+                      fontFamily: "SatoshiBold",
+                      fontSize: 15,
+                      color: colors.textMain,
+                    }}
+                  >
+                    How to increase this
+                  </Text>
+
                   <View style={{ flexDirection: "row", gap: 12 }}>
-                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: withOpacity(colors.primary, 0.1), alignItems: "center", justifyContent: "center" }}>
-                      <Text style={{ fontSize: 12, color: colors.primary, fontFamily: "SatoshiBold" }}>1</Text>
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: withOpacity(colors.primary, 0.1),
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.primary,
+                          fontFamily: "SatoshiBold",
+                        }}
+                      >
+                        1
+                      </Text>
                     </View>
-                    <Text style={{ flex: 1, fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
-                      {infoSheet?.type === "memorized" 
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontFamily: "Satoshi",
+                        fontSize: 14,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      {infoSheet?.type === "memorized"
                         ? "Go to the Hide & Reveal tab and tap the circle next to a verse until it turns into a green checkmark."
                         : "Start a new Loop Session. Any verses in your selected range will be marked as 'Learning' automatically."}
                     </Text>
                   </View>
 
                   <View style={{ flexDirection: "row", gap: 12 }}>
-                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: withOpacity(colors.primary, 0.1), alignItems: "center", justifyContent: "center" }}>
-                      <Text style={{ fontSize: 12, color: colors.primary, fontFamily: "SatoshiBold" }}>2</Text>
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: withOpacity(colors.primary, 0.1),
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.primary,
+                          fontFamily: "SatoshiBold",
+                        }}
+                      >
+                        2
+                      </Text>
                     </View>
-                    <Text style={{ flex: 1, fontFamily: "Satoshi", fontSize: 14, color: colors.textMuted }}>
-                      {infoSheet?.type === "memorized" 
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontFamily: "Satoshi",
+                        fontSize: 14,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      {infoSheet?.type === "memorized"
                         ? "Once you can recite a 'Learning' verse perfectly without looking, promote it to 'Memorized'."
                         : "You can also manually cycle a verse status to 'Learning' by tapping the circle indicator in the Hide & Reveal tab."}
                     </Text>
                   </View>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={closeInfo}
-                  style={{ 
+                  style={{
                     marginTop: 12,
-                    backgroundColor: colors.primary, 
-                    paddingVertical: 14, 
-                    borderRadius: 16, 
+                    backgroundColor: colors.primary,
+                    paddingVertical: 14,
+                    borderRadius: 16,
                     alignItems: "center",
                     shadowColor: colors.primary,
                     shadowOffset: { width: 0, height: 4 },
@@ -1084,7 +2070,15 @@ function ProgressTab({ colors, isDark, insets }: { colors: any; isDark: boolean;
                     shadowRadius: 8,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontFamily: "SatoshiBold", fontSize: 16 }}>Got it</Text>
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontFamily: "SatoshiBold",
+                      fontSize: 16,
+                    }}
+                  >
+                    Got it
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1119,36 +2113,72 @@ export default function HifzScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: withOpacity(colors.border, 0.5) }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 12,
+            borderBottomColor: withOpacity(colors.border, 0.5),
+          },
+        ]}
+      >
         <Pressable
           onPress={() => router.back()}
-          style={[styles.backBtn, { backgroundColor: withOpacity(colors.border, isDark ? 0.5 : 0.4) }]}
+          style={[
+            styles.backBtn,
+            { backgroundColor: withOpacity(colors.border, isDark ? 0.5 : 0.4) },
+          ]}
         >
           <ArrowLeft size={20} color={colors.textMain} />
         </Pressable>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={[styles.headerTitle, { color: colors.textMain }]}>Hifz</Text>
-          <Text style={[styles.headerSub, { color: colors.textMuted }]}>Memorization Suite</Text>
+          <Text style={[styles.headerTitle, { color: colors.textMain }]}>
+            Hifz
+          </Text>
+          <Text style={[styles.headerSub, { color: colors.textMuted }]}>
+            Memorization Suite
+          </Text>
         </View>
-        <View style={[styles.headerBadge, { backgroundColor: withOpacity(colors.primary, 0.12), borderColor: withOpacity(colors.primary, 0.3) }]}>
+        <View
+          style={[
+            styles.headerBadge,
+            {
+              backgroundColor: withOpacity(colors.primary, 0.12),
+              borderColor: withOpacity(colors.primary, 0.3),
+            },
+          ]}
+        >
           <Brain size={14} color={colors.primary} />
-          <Text style={[styles.headerBadgeText, { color: colors.primary }]}>Hifz</Text>
+          <Text style={[styles.headerBadgeText, { color: colors.primary }]}>
+            Hifz
+          </Text>
         </View>
       </View>
 
       {/* Tabs */}
-      <View style={[styles.tabBar, { borderBottomColor: withOpacity(colors.border, 0.5) }]}>
+      <View
+        style={[
+          styles.tabBar,
+          { borderBottomColor: withOpacity(colors.border, 0.5) },
+        ]}
+      >
         {tabConfig.map((tab) => (
           <Pressable
             key={tab.id}
-            onPress={() => { void Haptics.selectionAsync(); setActiveTab(tab.id); }}
+            onPress={() => {
+              void Haptics.selectionAsync();
+              setActiveTab(tab.id);
+            }}
             style={[
               styles.tabItem,
-              activeTab === tab.id && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
+              activeTab === tab.id && {
+                borderBottomColor: colors.primary,
+                borderBottomWidth: 2,
+              },
             ]}
           >
             <tab.Icon
@@ -1158,7 +2188,10 @@ export default function HifzScreen() {
             <Text
               style={[
                 styles.tabLabel,
-                { color: activeTab === tab.id ? colors.primary : colors.textMuted },
+                {
+                  color:
+                    activeTab === tab.id ? colors.primary : colors.textMuted,
+                },
               ]}
             >
               {tab.label}
@@ -1169,9 +2202,15 @@ export default function HifzScreen() {
 
       {/* Content */}
       <View style={{ flex: 1 }}>
-        {activeTab === "loop" && <LoopTab colors={colors} isDark={isDark} insets={insets} />}
-        {activeTab === "reveal" && <RevealTab colors={colors} isDark={isDark} insets={insets} />}
-        {activeTab === "progress" && <ProgressTab colors={colors} isDark={isDark} insets={insets} />}
+        {activeTab === "loop" && (
+          <LoopTab colors={colors} isDark={isDark} insets={insets} />
+        )}
+        {activeTab === "reveal" && (
+          <RevealTab colors={colors} isDark={isDark} insets={insets} />
+        )}
+        {activeTab === "progress" && (
+          <ProgressTab colors={colors} isDark={isDark} insets={insets} />
+        )}
       </View>
     </View>
   );
@@ -1238,7 +2277,12 @@ const loopStyles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardLabel: { fontFamily: "SatoshiMedium", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8 },
+  cardLabel: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   selectorBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -1266,7 +2310,12 @@ const loopStyles = StyleSheet.create({
     justifyContent: "center",
   },
   stepBtnText: { fontFamily: "SatoshiBold", fontSize: 20 },
-  stepValue: { fontFamily: "SatoshiBold", fontSize: 20, flex: 1, textAlign: "center" },
+  stepValue: {
+    fontFamily: "SatoshiBold",
+    fontSize: 20,
+    flex: 1,
+    textAlign: "center",
+  },
   rangeHint: { fontFamily: "Satoshi", fontSize: 12 },
   repeatChip: {
     borderRadius: 999,
@@ -1275,58 +2324,137 @@ const loopStyles = StyleSheet.create({
     paddingVertical: 8,
   },
   repeatChipText: { fontFamily: "SatoshiBold", fontSize: 14 },
-  startBtn: { borderRadius: 18, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 5 },
-  startBtnGradient: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16 },
+  startBtn: {
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  startBtnGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+  },
   startBtnText: { fontFamily: "SatoshiBold", fontSize: 16, color: "#fff" },
   pickerSheet: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    maxHeight: SCREEN_HEIGHT * 0.82, paddingTop: 10,
-    shadowColor: "#000", shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.18, shadowRadius: 20, elevation: 24,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: SCREEN_HEIGHT * 0.82,
+    paddingTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 24,
   },
   sheetHandleWrap: { alignItems: "center", paddingBottom: 8 },
   sheetHandle: { width: 36, height: 4, borderRadius: 2 },
   pickerTitle: { fontFamily: "SatoshiBold", fontSize: 18 },
-  closeBtn: { width: 32, height: 32, borderRadius: 999, alignItems: "center", justifyContent: "center" },
-  chapterRow: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    padding: 12, borderRadius: 14, borderWidth: 1,
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  chapterNum: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  reciterIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  chapterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  chapterNum: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reciterIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   reciterNameMain: { fontFamily: "SatoshiBold", fontSize: 15 },
   reciterNameSub: { fontFamily: "Satoshi", fontSize: 12 },
   reciterRow: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    padding: 14, borderRadius: 16, borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
   },
-  reciterInitial: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  reciterInitial: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 const revealStyles = StyleSheet.create({
   chapterBtn: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    borderRadius: 14, borderWidth: 1, padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
   },
   chapterBtnSub: { fontFamily: "SatoshiMedium", fontSize: 11 },
   chapterBtnMain: { fontFamily: "SatoshiBold", fontSize: 14 },
   toggleBtn: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   toggleBtnText: { fontFamily: "SatoshiBold", fontSize: 13 },
   hintBox: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   hintText: { fontFamily: "SatoshiMedium", fontSize: 12, flex: 1 },
   verseCard: {
-    borderRadius: 16, borderWidth: 1, padding: 14,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  verseBadge: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  verseBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   verseBadgeText: { fontFamily: "SatoshiBold", fontSize: 12 },
   arabicText: {
     fontFamily: "AmiriQuran",
@@ -1335,45 +2463,116 @@ const revealStyles = StyleSheet.create({
     textAlign: "right",
     paddingVertical: 4,
   },
-  blurPlaceholder: { borderRadius: 10, padding: 14, gap: 8, alignItems: "flex-end" },
+  blurPlaceholder: {
+    borderRadius: 10,
+    padding: 14,
+    gap: 8,
+    alignItems: "flex-end",
+  },
   blurLine: { height: 14, borderRadius: 999 },
-  tapRevealText: { fontFamily: "SatoshiMedium", fontSize: 11, alignSelf: "center", marginTop: 4 },
-  translationText: { fontFamily: "Satoshi", fontSize: 13, lineHeight: 19, marginTop: 6 },
+  tapRevealText: {
+    fontFamily: "SatoshiMedium",
+    fontSize: 11,
+    alignSelf: "center",
+    marginTop: 4,
+  },
+  translationText: {
+    fontFamily: "Satoshi",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 6,
+  },
 });
 
 const progressStyles = StyleSheet.create({
   statCard: {
-    flex: 1, borderRadius: 18, padding: 14, gap: 4, borderWidth: 1,
+    flex: 1,
+    borderRadius: 18,
+    padding: 14,
+    gap: 4,
+    borderWidth: 1,
     alignItems: "flex-start",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statValue: { fontFamily: "SatoshiBold", fontSize: 28, letterSpacing: -0.5 },
   statLabel: { fontFamily: "SatoshiBold", fontSize: 13 },
   statPct: { fontFamily: "Satoshi", fontSize: 11 },
   overallCard: {
-    borderRadius: 18, padding: 16, borderWidth: 1,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   overallLabel: { fontFamily: "SatoshiBold", fontSize: 15 },
   overallPct: { fontFamily: "SatoshiBold", fontSize: 15 },
-  bigTrack: { height: 12, borderRadius: 999, overflow: "hidden", position: "relative", flexDirection: "row" },
-  bigFillMemorized: { height: "100%", borderRadius: 999 },
-  bigFillLearning: { height: "100%", borderRadius: 999, position: "absolute", top: 0 },
-  legendText: { fontFamily: "Satoshi", fontSize: 12 },
-  sectionLabel: { fontFamily: "SatoshiBold", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8 },
-  surahRow: {
-    borderRadius: 16, padding: 14, borderWidth: 1,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+  bigTrack: {
+    height: 12,
+    borderRadius: 999,
+    overflow: "hidden",
+    position: "relative",
+    flexDirection: "row",
   },
-  surahNum: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  bigFillMemorized: { height: "100%", borderRadius: 999 },
+  bigFillLearning: {
+    height: "100%",
+    borderRadius: 999,
+    position: "absolute",
+    top: 0,
+  },
+  legendText: { fontFamily: "Satoshi", fontSize: 12 },
+  sectionLabel: {
+    fontFamily: "SatoshiBold",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  surahRow: {
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  surahNum: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   surahNumText: { fontFamily: "SatoshiBold", fontSize: 13 },
   surahName: { fontFamily: "SatoshiBold", fontSize: 14 },
   surahMeta: { fontFamily: "Satoshi", fontSize: 11, marginTop: 1 },
-  miniTrack: { height: 6, borderRadius: 999, overflow: "hidden", flexDirection: "row", marginTop: 4 },
+  miniTrack: {
+    height: 6,
+    borderRadius: 999,
+    overflow: "hidden",
+    flexDirection: "row",
+    marginTop: 4,
+  },
   emptyState: {
-    borderRadius: 18, borderWidth: 1, padding: 32,
-    alignItems: "center", gap: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: "center",
+    gap: 10,
   },
   emptyTitle: { fontFamily: "SatoshiBold", fontSize: 16 },
-  emptySubtitle: { fontFamily: "Satoshi", fontSize: 13, textAlign: "center", lineHeight: 20 },
+  emptySubtitle: {
+    fontFamily: "Satoshi",
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 20,
+  },
 });

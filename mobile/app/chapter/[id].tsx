@@ -228,7 +228,9 @@ export default function ChapterDetailScreen() {
     }: {
       viewableItems: { isViewable: boolean; item: VerseItem }[];
     }) => {
-      const firstVisible = viewableItems.find((entry) => entry.isViewable)?.item;
+      const firstVisible = viewableItems.find(
+        (entry) => entry.isViewable,
+      )?.item;
       if (!firstVisible) return;
 
       persistReadingProgress(firstVisible);
@@ -245,12 +247,13 @@ export default function ChapterDetailScreen() {
 
       // Finish surah haptic feedback
       const isLastVerseVisible = viewableItems.some(
-        (entry) =>
-          entry.isViewable && entry.item.verseNumber === verseCount,
+        (entry) => entry.isViewable && entry.item.verseNumber === verseCount,
       );
       if (isLastVerseVisible && !surahFinishedRef.current) {
         surahFinishedRef.current = true;
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        void Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        );
       }
     },
     [persistReadingProgress, verseCount],
@@ -463,7 +466,6 @@ export default function ChapterDetailScreen() {
     ],
   );
 
-
   const chapterPages = useMemo(() => {
     if (!chapterNumber) return [];
     return getChapterPages(chapterNumber);
@@ -483,12 +485,13 @@ export default function ChapterDetailScreen() {
     setActiveMushafPage(initialMushafPage);
   }, [initialMushafPage]);
 
-
-
   if (!chapterNumber || !chapterMeta) {
     return (
       <View
-        style={[styles.screen, { backgroundColor: colors.background, paddingTop: insets.top }]}
+        style={[
+          styles.screen,
+          { backgroundColor: colors.background, paddingTop: insets.top },
+        ]}
       >
         <StatusBar style={isDark ? "light" : "dark"} />
         <View style={styles.invalidStateContainer}>
@@ -514,7 +517,12 @@ export default function ChapterDetailScreen() {
 
   const renderHeader = () => {
     return (
-      <View style={[styles.headerSection, { paddingTop: readingView === "list" ? 0 : insets.top }]}>
+      <View
+        style={[
+          styles.headerSection,
+          { paddingTop: readingView === "list" ? 0 : insets.top },
+        ]}
+      >
         {readingView === "list" ? (
           <View style={{ height: 48 }} />
         ) : (
@@ -577,7 +585,7 @@ export default function ChapterDetailScreen() {
           />
         </View>
 
-        <Text style={[styles.resultsText, { color: colors.textMuted }]}> 
+        <Text style={[styles.resultsText, { color: colors.textMuted }]}>
           {filteredVerses.length} verse
           {filteredVerses.length === 1 ? "" : "s"}
         </Text>
@@ -593,7 +601,12 @@ export default function ChapterDetailScreen() {
           ]}
         >
           <SlidersHorizontal size={16} color={colors.textMain} />
-          <Text style={[styles.readerSettingsButtonText, { color: colors.textMain }]}> 
+          <Text
+            style={[
+              styles.readerSettingsButtonText,
+              { color: colors.textMain },
+            ]}
+          >
             Reading settings
           </Text>
         </Pressable>
@@ -645,7 +658,10 @@ export default function ChapterDetailScreen() {
                   disabled={currentVerseIndex === filteredVerses.length - 1}
                   onPress={() => {
                     setCurrentVerseIndex((p) => {
-                      const newIndex = Math.min(filteredVerses.length - 1, p + 1);
+                      const newIndex = Math.min(
+                        filteredVerses.length - 1,
+                        p + 1,
+                      );
                       if (
                         newIndex === filteredVerses.length - 1 &&
                         filteredVerses[newIndex].verseNumber === verseCount &&
@@ -694,8 +710,6 @@ export default function ChapterDetailScreen() {
         </ScrollView>
       );
     }
-
-
 
     if (readingView === "mushaf") {
       return (
@@ -792,9 +806,7 @@ export default function ChapterDetailScreen() {
   };
 
   return (
-    <View
-      style={[styles.screen, { backgroundColor: colors.background }]}
-    >
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -804,7 +816,7 @@ export default function ChapterDetailScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {readingView === "list" && (
@@ -833,7 +845,7 @@ export default function ChapterDetailScreen() {
               ]}
             >
               <ChevronLeft size={18} color={colors.textMain} />
-              <Text style={[styles.backButtonText, { color: colors.textMain }]}> 
+              <Text style={[styles.backButtonText, { color: colors.textMain }]}>
                 Chapters
               </Text>
             </Pressable>
@@ -886,7 +898,9 @@ export default function ChapterDetailScreen() {
             />
 
             <View style={styles.settingsSheetHeader}>
-              <Text style={[styles.settingsSheetTitle, { color: colors.textMain }]}>
+              <Text
+                style={[styles.settingsSheetTitle, { color: colors.textMain }]}
+              >
                 Reading settings
               </Text>
               <Pressable
@@ -894,11 +908,19 @@ export default function ChapterDetailScreen() {
                 style={[
                   styles.settingsDoneButton,
                   {
-                    backgroundColor: withOpacity(colors.primary, isDark ? 0.28 : 0.14),
+                    backgroundColor: withOpacity(
+                      colors.primary,
+                      isDark ? 0.28 : 0.14,
+                    ),
                   },
                 ]}
               >
-                <Text style={[styles.settingsDoneButtonText, { color: colors.primary }]}> 
+                <Text
+                  style={[
+                    styles.settingsDoneButtonText,
+                    { color: colors.primary },
+                  ]}
+                >
                   Done
                 </Text>
               </Pressable>
@@ -908,7 +930,9 @@ export default function ChapterDetailScreen() {
               contentContainerStyle={styles.settingsSheetContent}
               showsVerticalScrollIndicator={false}
             >
-              <Text style={[styles.settingGroupLabel, { color: colors.textMuted }]}> 
+              <Text
+                style={[styles.settingGroupLabel, { color: colors.textMuted }]}
+              >
                 Reading mode
               </Text>
               <View style={styles.modeSelectorRow}>
@@ -922,7 +946,9 @@ export default function ChapterDetailScreen() {
                     <Pressable
                       key={option.key}
                       onPress={() => {
-                        void setReadingView(option.key as "list" | "verse_by_verse" | "mushaf");
+                        void setReadingView(
+                          option.key as "list" | "verse_by_verse" | "mushaf",
+                        );
                       }}
                       style={[
                         styles.modeOption,
@@ -939,7 +965,9 @@ export default function ChapterDetailScreen() {
                       <Text
                         style={[
                           styles.modeOptionText,
-                          { color: selected ? colors.primary : colors.textMuted },
+                          {
+                            color: selected ? colors.primary : colors.textMuted,
+                          },
                         ]}
                       >
                         {option.label}
@@ -949,12 +977,22 @@ export default function ChapterDetailScreen() {
                 })}
               </View>
 
-              <View style={styles.settingsRow}> 
+              <View style={styles.settingsRow}>
                 <View style={styles.settingsRowTextWrap}>
-                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowTitle,
+                      { color: colors.textMain },
+                    ]}
+                  >
                     Show translations
                   </Text>
-                  <Text style={[styles.settingsRowSubtitle, { color: colors.textMuted }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowSubtitle,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     English translation under ayah
                   </Text>
                 </View>
@@ -971,12 +1009,22 @@ export default function ChapterDetailScreen() {
                 />
               </View>
 
-              <View style={styles.settingsRow}> 
+              <View style={styles.settingsRow}>
                 <View style={styles.settingsRowTextWrap}>
-                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowTitle,
+                      { color: colors.textMain },
+                    ]}
+                  >
                     Show transliterations
                   </Text>
-                  <Text style={[styles.settingsRowSubtitle, { color: colors.textMuted }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowSubtitle,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     Latin transliteration under ayah
                   </Text>
                 </View>
@@ -993,12 +1041,22 @@ export default function ChapterDetailScreen() {
                 />
               </View>
 
-              <View style={styles.sliderGroup}> 
+              <View style={styles.sliderGroup}>
                 <View style={styles.sliderHeaderRow}>
-                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowTitle,
+                      { color: colors.textMain },
+                    ]}
+                  >
                     Arabic text size
                   </Text>
-                  <Text style={[styles.settingsSliderValue, { color: colors.textMuted }]}> 
+                  <Text
+                    style={[
+                      styles.settingsSliderValue,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     {Math.round(arabicFontSize)}px
                   </Text>
                 </View>
@@ -1017,12 +1075,22 @@ export default function ChapterDetailScreen() {
                 />
               </View>
 
-              <View style={styles.sliderGroup}> 
+              <View style={styles.sliderGroup}>
                 <View style={styles.sliderHeaderRow}>
-                  <Text style={[styles.settingsRowTitle, { color: colors.textMain }]}> 
+                  <Text
+                    style={[
+                      styles.settingsRowTitle,
+                      { color: colors.textMain },
+                    ]}
+                  >
                     Translation text size
                   </Text>
-                  <Text style={[styles.settingsSliderValue, { color: colors.textMuted }]}> 
+                  <Text
+                    style={[
+                      styles.settingsSliderValue,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     {Math.round(translationFontSize)}px
                   </Text>
                 </View>

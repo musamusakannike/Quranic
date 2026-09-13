@@ -30,7 +30,7 @@ import {
   LayoutList,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
@@ -107,8 +107,12 @@ export default function Index() {
   const { colors, isDark } = useTheme();
   const { t, isRTL } = useLanguage();
   const fonts = useAppFonts();
-  const { reminderEnabled, reminderTime, quickActionsView, setQuickActionsView } =
-    useAppSettings();
+  const {
+    reminderEnabled,
+    reminderTime,
+    quickActionsView,
+    setQuickActionsView,
+  } = useAppSettings();
   const [lastRead, setLastRead] = useState<LastReadProgress | null>(null);
   const [juzSheetVisible, setJuzSheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -257,7 +261,7 @@ export default function Index() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <ScrollView
@@ -284,13 +288,34 @@ export default function Index() {
 
           <View style={styles.heroContent}>
             {/* ─── Header Row ─── */}
-            <View style={[styles.headerRow, isRTL && { flexDirection: "row-reverse" }]}>
+            <View
+              style={[
+                styles.headerRow,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
               <View style={styles.headerTextBlock}>
-                <Text style={[styles.greetingLabel, styles.heroGreetingLabel, { fontFamily: fonts.medium, textAlign: isRTL ? "right" : "left" }]}>
+                <Text
+                  style={[
+                    styles.greetingLabel,
+                    styles.heroGreetingLabel,
+                    {
+                      fontFamily: fonts.medium,
+                      textAlign: isRTL ? "right" : "left",
+                    },
+                  ]}
+                >
                   {t("home.greeting")}
                 </Text>
                 <Text
-                  style={[styles.greetingHeading, styles.heroGreetingHeading, { fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}
+                  style={[
+                    styles.greetingHeading,
+                    styles.heroGreetingHeading,
+                    {
+                      fontFamily: fonts.bold,
+                      textAlign: isRTL ? "right" : "left",
+                    },
+                  ]}
                 >
                   {greetingText} 🌙
                 </Text>
@@ -369,7 +394,12 @@ export default function Index() {
               }}
             >
               <View style={styles.continueCard}>
-                <View style={[styles.continueCardTop, isRTL && { flexDirection: "row-reverse" }]}>
+                <View
+                  style={[
+                    styles.continueCardTop,
+                    isRTL && { flexDirection: "row-reverse" },
+                  ]}
+                >
                   <View style={styles.continueCardLeft}>
                     <Text
                       style={[
@@ -382,7 +412,9 @@ export default function Index() {
                         },
                       ]}
                     >
-                      {lastRead ? t("home.continueReading") : t("home.startReading")}
+                      {lastRead
+                        ? t("home.continueReading")
+                        : t("home.startReading")}
                     </Text>
                     {lastRead && lastReadChapter ? (
                       <>
@@ -400,7 +432,9 @@ export default function Index() {
                           {lastReadChapter.arabicname}
                         </Text>
                         <Text style={[styles.continueMeta, { color: "#BBB" }]}>
-                          {t("home.ayah", { verse: lastRead.verse })} • {t("home.juz", { juz: lastRead.juz ?? "–" })} • {t("home.page", { page: lastRead.page ?? "–" })}
+                          {t("home.ayah", { verse: lastRead.verse })} •{" "}
+                          {t("home.juz", { juz: lastRead.juz ?? "–" })} •{" "}
+                          {t("home.page", { page: lastRead.page ?? "–" })}
                         </Text>
                       </>
                     ) : (
@@ -448,13 +482,25 @@ export default function Index() {
                         { color: colors.textMuted },
                       ]}
                     >
-                      {t("home.progressLabel", { percent: readingProgress.percentage })}
+                      {t("home.progressLabel", {
+                        percent: readingProgress.percentage,
+                      })}
                     </Text>
                   </View>
                 ) : null}
 
-                <View style={[styles.continueCtaRow, isRTL && { flexDirection: "row-reverse" }]}>
-                  <Text style={[styles.continueCta, { color: colors.success, fontFamily: fonts.medium }]}>
+                <View
+                  style={[
+                    styles.continueCtaRow,
+                    isRTL && { flexDirection: "row-reverse" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.continueCta,
+                      { color: colors.success, fontFamily: fonts.medium },
+                    ]}
+                  >
                     {lastRead ? t("home.resume") : t("home.openChapters")}
                   </Text>
                   <ChevronRight size={15} color={colors.success} />
@@ -467,10 +513,20 @@ export default function Index() {
         {/* ─── Quick Actions ─── */}
         <View style={[styles.sectionHeader, { paddingHorizontal: 16 }]}>
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.textMain, fontFamily: fonts.bold },
+              ]}
+            >
               {t("home.quickActions")}
             </Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+            <Text
+              style={[
+                styles.sectionSubtitle,
+                { color: colors.textMuted, fontFamily: fonts.regular },
+              ]}
+            >
               {t("home.quickActionsSubtitle")}
             </Text>
           </View>
@@ -604,13 +660,21 @@ export default function Index() {
                   style={styles.quickActionOverlay}
                 >
                   <View>
-                    <Text style={[styles.quickCardTitle, { color: "#FFFFFF", fontFamily: fonts.bold }]}>
+                    <Text
+                      style={[
+                        styles.quickCardTitle,
+                        { color: "#FFFFFF", fontFamily: fonts.bold },
+                      ]}
+                    >
                       {item.title}
                     </Text>
                     <Text
                       style={[
                         styles.quickCardSubtitle,
-                        { color: "rgba(255,255,255,0.8)", fontFamily: fonts.regular },
+                        {
+                          color: "rgba(255,255,255,0.8)",
+                          fontFamily: fonts.regular,
+                        },
                       ]}
                     >
                       {item.subtitle}
@@ -624,19 +688,43 @@ export default function Index() {
 
         {/* ─── Juz Navigator ─── */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 140, gap: 16 }}>
-          <View style={[styles.sectionHeader, isRTL && { flexDirection: "row-reverse" }]}>
+          <View
+            style={[
+              styles.sectionHeader,
+              isRTL && { flexDirection: "row-reverse" },
+            ]}
+          >
             <View>
-              <Text style={[styles.sectionTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: colors.textMain, fontFamily: fonts.bold },
+                ]}
+              >
                 {t("home.quickJuz")}
               </Text>
               <Text
-                style={[styles.sectionSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}
+                style={[
+                  styles.sectionSubtitle,
+                  { color: colors.textMuted, fontFamily: fonts.regular },
+                ]}
               >
                 {t("home.quickJuzSubtitle")}
               </Text>
             </View>
-            <Pressable onPress={openJuzSheet} style={[styles.seeAllBtn, isRTL && { flexDirection: "row-reverse" }]}>
-              <Text style={[styles.seeAllText, { color: colors.primary, fontFamily: fonts.medium }]}>
+            <Pressable
+              onPress={openJuzSheet}
+              style={[
+                styles.seeAllBtn,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.seeAllText,
+                  { color: colors.primary, fontFamily: fonts.medium },
+                ]}
+              >
                 {t("home.seeAll")}
               </Text>
               <ChevronRight size={14} color={colors.primary} />
@@ -688,7 +776,10 @@ export default function Index() {
                   <Text
                     style={[
                       styles.juzScrollLabel,
-                      { color: withOpacity(colors.primary, 0.75), fontFamily: fonts.regular },
+                      {
+                        color: withOpacity(colors.primary, 0.75),
+                        fontFamily: fonts.regular,
+                      },
                     ]}
                   >
                     {t("home.juzLabel")}
@@ -710,20 +801,36 @@ export default function Index() {
           >
             <LinearGradient
               colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
-            <View style={[styles.ayahCardTop, isRTL && { flexDirection: "row-reverse" }]}>
+            <View
+              style={[
+                styles.ayahCardTop,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
               <View style={{ gap: 2, flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: "#FFFFFF", fontFamily: fonts.bold }]}>
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    { color: "#FFFFFF", fontFamily: fonts.bold },
+                  ]}
+                >
                   {t("home.ayahOfDay")}
                 </Text>
                 <Text
                   style={[
                     styles.sectionSubtitle,
-                    { color: "rgba(255,255,255,0.7)", fontFamily: fonts.regular },
+                    {
+                      color: "rgba(255,255,255,0.7)",
+                      fontFamily: fonts.regular,
+                    },
                   ]}
                 >
-                  {t("home.surahAyah", { name: dailyAyah.chapterName, verse: dailyAyah.target.verse })}
+                  {t("home.surahAyah", {
+                    name: dailyAyah.chapterName,
+                    verse: dailyAyah.target.verse,
+                  })}
                 </Text>
               </View>
               <View
@@ -732,7 +839,12 @@ export default function Index() {
                   { backgroundColor: withOpacity(colors.primary, 0.25) },
                 ]}
               >
-                <Text style={[styles.dailyPillText, { color: "#FFFFFF", fontFamily: fonts.medium }]}>
+                <Text
+                  style={[
+                    styles.dailyPillText,
+                    { color: "#FFFFFF", fontFamily: fonts.medium },
+                  ]}
+                >
                   {t("home.daily")}
                 </Text>
               </View>
@@ -773,9 +885,19 @@ export default function Index() {
                   },
                 });
               }}
-              style={[styles.readAyahBtn, { backgroundColor: colors.primary, flexDirection: isRTL ? "row-reverse" : "row" }]}
+              style={[
+                styles.readAyahBtn,
+                {
+                  backgroundColor: colors.primary,
+                  flexDirection: isRTL ? "row-reverse" : "row",
+                },
+              ]}
             >
-              <Text style={[styles.readAyahBtnText, { fontFamily: fonts.bold }]}>{t("home.readAyah")}</Text>
+              <Text
+                style={[styles.readAyahBtnText, { fontFamily: fonts.bold }]}
+              >
+                {t("home.readAyah")}
+              </Text>
               <ChevronRight size={14} color="#fff" />
             </Pressable>
           </ImageBackground>
@@ -794,7 +916,7 @@ export default function Index() {
           <TouchableWithoutFeedback onPress={closeJuzSheet}>
             <Animated.View
               style={[
-                StyleSheet.absoluteFillObject,
+                StyleSheet.absoluteFill,
                 styles.sheetBackdrop,
                 { opacity: backdropOpacity },
               ]}
@@ -821,12 +943,27 @@ export default function Index() {
               />
             </View>
 
-            <View style={[styles.sheetHeader, isRTL && { flexDirection: "row-reverse" }]}>
+            <View
+              style={[
+                styles.sheetHeader,
+                isRTL && { flexDirection: "row-reverse" },
+              ]}
+            >
               <View>
-                <Text style={[styles.sheetTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+                <Text
+                  style={[
+                    styles.sheetTitle,
+                    { color: colors.textMain, fontFamily: fonts.bold },
+                  ]}
+                >
                   {t("home.allJuz")}
                 </Text>
-                <Text style={[styles.sheetSubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+                <Text
+                  style={[
+                    styles.sheetSubtitle,
+                    { color: colors.textMuted, fontFamily: fonts.regular },
+                  ]}
+                >
                   {t("home.allJuzSubtitle")}
                 </Text>
               </View>
@@ -878,7 +1015,10 @@ export default function Index() {
                     <Text
                       style={[
                         styles.sheetJuzLabel,
-                        { color: withOpacity(colors.primary, 0.65), fontFamily: fonts.regular },
+                        {
+                          color: withOpacity(colors.primary, 0.65),
+                          fontFamily: fonts.regular,
+                        },
                       ]}
                     >
                       {t("home.juzLabel")}
@@ -911,7 +1051,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   heroContent: {
     padding: 16,
@@ -1072,7 +1212,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   quickActionOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     padding: 16,
     justifyContent: "flex-end",
     gap: 10,

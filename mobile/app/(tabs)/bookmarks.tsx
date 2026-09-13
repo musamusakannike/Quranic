@@ -36,7 +36,9 @@ export default function BookmarksScreen() {
 
   if (bookmarks.length === 0) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.screen, { backgroundColor: colors.background }]}
+      >
         <StatusBar style={isDark ? "light" : "dark"} />
         <LinearGradient
           colors={[
@@ -44,16 +46,31 @@ export default function BookmarksScreen() {
             withOpacity(colors.primary, isDark ? 0.1 : 0.05),
             colors.background,
           ]}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
         />
         <View style={styles.emptyContainer}>
-          <View style={[styles.emptyIconCircle, { backgroundColor: withOpacity(colors.primary, 0.1) }]}>
+          <View
+            style={[
+              styles.emptyIconCircle,
+              { backgroundColor: withOpacity(colors.primary, 0.1) },
+            ]}
+          >
             <Bookmark size={40} color={colors.primary} strokeWidth={1.5} />
           </View>
-          <Text style={[styles.emptyTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+          <Text
+            style={[
+              styles.emptyTitle,
+              { color: colors.textMain, fontFamily: fonts.bold },
+            ]}
+          >
             {t("bookmarks.emptyTitle")}
           </Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textMuted, fontFamily: fonts.regular }]}>
+          <Text
+            style={[
+              styles.emptySubtitle,
+              { color: colors.textMuted, fontFamily: fonts.regular },
+            ]}
+          >
             {t("bookmarks.emptySubtitle")}
           </Text>
           <Pressable
@@ -71,7 +88,9 @@ export default function BookmarksScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -79,15 +98,30 @@ export default function BookmarksScreen() {
           withOpacity(colors.primary, isDark ? 0.1 : 0.05),
           colors.background,
         ]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
-      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        <View style={[styles.headerWrapper, isRTL && { alignItems: "flex-end" }]}>
-          <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[styles.headerWrapper, isRTL && { alignItems: "flex-end" }]}
+        >
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: colors.textMain, fontFamily: fonts.bold },
+            ]}
+          >
             {t("bookmarks.title")}
           </Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              { color: colors.textMuted, fontFamily: fonts.medium },
+            ]}
+          >
             {t(
               bookmarks.length === 1
                 ? "bookmarks.savedVerses_one"
@@ -101,7 +135,10 @@ export default function BookmarksScreen() {
           const meta = getChapterMetadata(bookmark.chapter);
           const verses = getChapterVerses(bookmark.chapter);
           const arabicText = verses[bookmark.verse - 1];
-          const translation = getVerseTranslation(bookmark.chapter, bookmark.verse);
+          const translation = getVerseTranslation(
+            bookmark.chapter,
+            bookmark.verse,
+          );
 
           return (
             <Pressable
@@ -118,15 +155,40 @@ export default function BookmarksScreen() {
               }}
               style={[
                 styles.bookmarkCard,
-                { backgroundColor: colors.surface, borderColor: withOpacity(colors.border, 0.8) },
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: withOpacity(colors.border, 0.8),
+                },
               ]}
             >
-              <View style={[styles.cardHeader, isRTL && { flexDirection: "row-reverse" }]}>
-                <View style={[styles.badge, { backgroundColor: withOpacity(colors.primary, 0.15) }]}>
-                  <Bookmark size={14} color={colors.primary} fill={colors.primary} />
+              <View
+                style={[
+                  styles.cardHeader,
+                  isRTL && { flexDirection: "row-reverse" },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: withOpacity(colors.primary, 0.15) },
+                  ]}
+                >
+                  <Bookmark
+                    size={14}
+                    color={colors.primary}
+                    fill={colors.primary}
+                  />
                 </View>
-                <Text style={[styles.chapterInfo, { color: colors.primary, fontFamily: fonts.bold }]}>
-                  {t("bookmarks.surahAyah", { name: meta?.englishname, verse: bookmark.verse })}
+                <Text
+                  style={[
+                    styles.chapterInfo,
+                    { color: colors.primary, fontFamily: fonts.bold },
+                  ]}
+                >
+                  {t("bookmarks.surahAyah", {
+                    name: meta?.englishname,
+                    verse: bookmark.verse,
+                  })}
                 </Text>
                 <Pressable
                   onPress={async () => {
@@ -136,7 +198,12 @@ export default function BookmarksScreen() {
                   style={styles.removeBtn}
                   hitSlop={15}
                 >
-                  <Text style={[styles.removeTxt, { color: colors.textMuted, fontFamily: fonts.medium }]}>
+                  <Text
+                    style={[
+                      styles.removeTxt,
+                      { color: colors.textMuted, fontFamily: fonts.medium },
+                    ]}
+                  >
                     {t("bookmarks.remove")}
                   </Text>
                 </Pressable>
@@ -145,7 +212,11 @@ export default function BookmarksScreen() {
               <Text
                 style={[
                   styles.arabicText,
-                  { color: colors.textMain, fontSize: arabicFontSize, lineHeight: arabicFontSize * 1.8 },
+                  {
+                    color: colors.textMain,
+                    fontSize: arabicFontSize,
+                    lineHeight: arabicFontSize * 1.8,
+                  },
                 ]}
                 numberOfLines={2}
               >

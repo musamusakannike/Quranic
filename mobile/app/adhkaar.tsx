@@ -13,7 +13,14 @@ import { useAppFonts } from "../lib/i18n/useAppFonts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { ChevronLeft, Sun, Moon, Clock, BookOpen, Shield } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Sun,
+  Moon,
+  Clock,
+  BookOpen,
+  Shield,
+} from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 const ADHKAAR_CATEGORIES = [
@@ -70,24 +77,38 @@ const CategoryCard = ({ category, colors, fonts, onPress }: any) => {
       style={({ pressed }) => [
         styles.masonryCard,
         { height: category.height },
-        { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+        {
+          opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
       ]}
       onPress={onPress}
     >
-      <ImageBackground source={category.image} style={styles.cardImageBackground} imageStyle={styles.cardImage}>
+      <ImageBackground
+        source={category.image}
+        style={styles.cardImageBackground}
+        imageStyle={styles.cardImage}
+      >
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.85)"]}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0.3 }}
           end={{ x: 0, y: 1 }}
         />
         <View style={styles.cardContent}>
-          <View style={[styles.iconWrapSmall, { backgroundColor: category.color }]}>
+          <View
+            style={[styles.iconWrapSmall, { backgroundColor: category.color }]}
+          >
             <category.icon color="#FFF" size={20} />
           </View>
           <View style={styles.cardTextWrap}>
-            <Text style={[styles.cardTitle, { fontFamily: fonts.bold }]}>{category.title}</Text>
-            <Text style={[styles.cardSubtitle, { fontFamily: fonts.regular }]} numberOfLines={2}>
+            <Text style={[styles.cardTitle, { fontFamily: fonts.bold }]}>
+              {category.title}
+            </Text>
+            <Text
+              style={[styles.cardSubtitle, { fontFamily: fonts.regular }]}
+              numberOfLines={2}
+            >
               {category.subtitle}
             </Text>
           </View>
@@ -161,7 +182,9 @@ export default function AdhkaarScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBar style={isDark ? "light" : "dark"} />
       <LinearGradient
         colors={[
@@ -171,52 +194,87 @@ export default function AdhkaarScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* Header */}
       <View style={[styles.header, isRTL && { flexDirection: "row-reverse" }]}>
-        <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={() => router.back()}>
+        <Pressable
+          style={[styles.backBtn, { backgroundColor: colors.surface }]}
+          onPress={() => router.back()}
+        >
           <ChevronLeft color={colors.textMain} size={24} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.textMain, fontFamily: fonts.bold }]}>
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colors.textMain, fontFamily: fonts.bold },
+          ]}
+        >
           {t("adhkaar.title")}
         </Text>
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.introSection, isRTL && { alignItems: "flex-end" }]}>
-          <Text style={[styles.introTitle, { color: colors.textMain, fontFamily: fonts.bold, textAlign: isRTL ? "right" : "left" }]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[styles.introSection, isRTL && { alignItems: "flex-end" }]}
+        >
+          <Text
+            style={[
+              styles.introTitle,
+              {
+                color: colors.textMain,
+                fontFamily: fonts.bold,
+                textAlign: isRTL ? "right" : "left",
+              },
+            ]}
+          >
             {t("adhkaar.introTitle")}
           </Text>
-          <Text style={[styles.introSubtitle, { color: colors.textMuted, fontFamily: fonts.regular, textAlign: isRTL ? "right" : "left" }]}>
+          <Text
+            style={[
+              styles.introSubtitle,
+              {
+                color: colors.textMuted,
+                fontFamily: fonts.regular,
+                textAlign: isRTL ? "right" : "left",
+              },
+            ]}
+          >
             {t("adhkaar.introSubtitle")}
           </Text>
         </View>
 
         <View style={styles.masonryContainer}>
           <View style={styles.masonryColumn}>
-            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 === 0).map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                colors={colors}
-                fonts={fonts}
-                onPress={() => router.push(`/adhkaar/${category.id}` as any)}
-              />
-            ))}
+            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 === 0).map(
+              (category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  colors={colors}
+                  fonts={fonts}
+                  onPress={() => router.push(`/adhkaar/${category.id}` as any)}
+                />
+              ),
+            )}
           </View>
           <View style={styles.masonryColumn}>
-            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 !== 0).map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                colors={colors}
-                fonts={fonts}
-                onPress={() => router.push(`/adhkaar/${category.id}` as any)}
-              />
-            ))}
+            {ADHKAAR_CATEGORIES.filter((_, i) => i % 2 !== 0).map(
+              (category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  colors={colors}
+                  fonts={fonts}
+                  onPress={() => router.push(`/adhkaar/${category.id}` as any)}
+                />
+              ),
+            )}
           </View>
         </View>
       </ScrollView>

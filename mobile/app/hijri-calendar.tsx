@@ -222,15 +222,12 @@ export default function HijriCalendarScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* ── Header ── */}
       <View
-        style={[
-          styles.headerRow,
-          isRTL && { flexDirection: "row-reverse" },
-        ]}
+        style={[styles.headerRow, isRTL && { flexDirection: "row-reverse" }]}
       >
         <Pressable
           onPress={() => router.back()}
@@ -293,10 +290,7 @@ export default function HijriCalendarScreen() {
           style={[
             styles.todayCard,
             {
-              borderColor: withOpacity(
-                colors.primary,
-                isDark ? 0.44 : 0.24,
-              ),
+              borderColor: withOpacity(colors.primary, isDark ? 0.44 : 0.24),
             },
           ]}
         >
@@ -475,10 +469,7 @@ export default function HijriCalendarScreen() {
                   cellBg = withOpacity(colors.primary, isDark ? 0.45 : 0.18);
                   cellBorder = colors.primary;
                 } else if (cell.isToday) {
-                  cellBg = withOpacity(
-                    colors.primary,
-                    isDark ? 0.28 : 0.12,
-                  );
+                  cellBg = withOpacity(colors.primary, isDark ? 0.28 : 0.12);
                   cellBorder = withOpacity(colors.primary, 0.55);
                 }
 
@@ -487,9 +478,7 @@ export default function HijriCalendarScreen() {
                     key={cell.id}
                     style={styles.dayCellWrapper}
                     onPress={() =>
-                      setSelectedKey(
-                        isSelected ? null : cell.dateKey,
-                      )
+                      setSelectedKey(isSelected ? null : cell.dateKey)
                     }
                   >
                     <View
@@ -505,9 +494,7 @@ export default function HijriCalendarScreen() {
                         style={[
                           styles.hijriDayNumber,
                           {
-                            color: isSelected
-                              ? colors.primary
-                              : textColor,
+                            color: isSelected ? colors.primary : textColor,
                             fontFamily: fonts.bold,
                           },
                         ]}
@@ -581,10 +568,7 @@ export default function HijriCalendarScreen() {
                   style={[
                     styles.todayBadge,
                     {
-                      backgroundColor: withOpacity(
-                        colors.primary,
-                        0.15,
-                      ),
+                      backgroundColor: withOpacity(colors.primary, 0.15),
                     },
                   ]}
                 >
@@ -768,10 +752,7 @@ export default function HijriCalendarScreen() {
                   ]}
                 >
                   <View
-                    style={[
-                      styles.eventListDot,
-                      { backgroundColor: ev.color },
-                    ]}
+                    style={[styles.eventListDot, { backgroundColor: ev.color }]}
                   />
                 </View>
                 <View style={styles.eventListTextWrap}>

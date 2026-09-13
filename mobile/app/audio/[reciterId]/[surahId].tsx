@@ -132,7 +132,7 @@ export default function AudioPlayerScreen() {
     currentTrack?.mode === "verse_by_verse" &&
     currentTrack?.surahId === surahId &&
     currentTrack?.reciterId === reciterId
-      ? currentTrack.verseNumber ?? 1
+      ? (currentTrack.verseNumber ?? 1)
       : 1;
 
   const verseTracks = useMemo(() => {
@@ -165,7 +165,15 @@ export default function AudioPlayerScreen() {
         verseNumber,
       };
     });
-  }, [isVerseMode, surahId, matchedDownload, server, reciterId, surahName, reciterName]);
+  }, [
+    isVerseMode,
+    surahId,
+    matchedDownload,
+    server,
+    reciterId,
+    surahName,
+    reciterName,
+  ]);
 
   const playPressed = useSharedValue(0);
   const skipBackPressed = useSharedValue(0);
@@ -292,7 +300,7 @@ export default function AudioPlayerScreen() {
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* ── Header ── */}
@@ -533,10 +541,7 @@ export default function AudioPlayerScreen() {
                           ? withOpacity(colors.primary, 0.5)
                           : "transparent",
                         backgroundColor: isActive
-                          ? withOpacity(
-                              colors.primary,
-                              isDark ? 0.12 : 0.07,
-                            )
+                          ? withOpacity(colors.primary, isDark ? 0.12 : 0.07)
                           : "transparent",
                         // subtle glow on active
                         shadowColor: colors.primary,
@@ -562,9 +567,7 @@ export default function AudioPlayerScreen() {
                         style={[
                           styles.readAlongVerseNum,
                           {
-                            color: isActive
-                              ? colors.primary
-                              : colors.textMuted,
+                            color: isActive ? colors.primary : colors.textMuted,
                           },
                         ]}
                       >
@@ -622,8 +625,12 @@ export default function AudioPlayerScreen() {
       {/* ── Playback controls ── */}
       <View style={styles.controlsContainer}>
         <AnimatedPressable
-          onPressIn={() => { skipBackPressed.value = 1; }}
-          onPressOut={() => { skipBackPressed.value = 0; }}
+          onPressIn={() => {
+            skipBackPressed.value = 1;
+          }}
+          onPressOut={() => {
+            skipBackPressed.value = 0;
+          }}
           onPress={seekBackward}
           style={[{ padding: 12 }, skipBackAnimatedStyle]}
         >
@@ -631,8 +638,12 @@ export default function AudioPlayerScreen() {
         </AnimatedPressable>
 
         <AnimatedPressable
-          onPressIn={() => { playPressed.value = 1; }}
-          onPressOut={() => { playPressed.value = 0; }}
+          onPressIn={() => {
+            playPressed.value = 1;
+          }}
+          onPressOut={() => {
+            playPressed.value = 0;
+          }}
           onPress={handleTogglePlayback}
           style={[
             styles.playButton,
@@ -650,8 +661,12 @@ export default function AudioPlayerScreen() {
         </AnimatedPressable>
 
         <AnimatedPressable
-          onPressIn={() => { skipForwardPressed.value = 1; }}
-          onPressOut={() => { skipForwardPressed.value = 0; }}
+          onPressIn={() => {
+            skipForwardPressed.value = 1;
+          }}
+          onPressOut={() => {
+            skipForwardPressed.value = 0;
+          }}
           onPress={handleNextTrack}
           style={[{ padding: 12 }, skipForwardAnimatedStyle]}
         >
@@ -672,7 +687,7 @@ export default function AudioPlayerScreen() {
       >
         <View style={styles.modalOverlay}>
           <Pressable
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             onPress={() => setIsQueueVisible(false)}
           />
           <View
