@@ -46,7 +46,7 @@ export default function MiniPlayer() {
   // Adjust bottom offset dynamically whether we are over the tab bar or full-screen
   let bottomOffset = insets.bottom + 10;
   if (isTabs) {
-    bottomOffset = Platform.OS === "ios" ? 105 : 78;
+    bottomOffset = 58 + Math.max(insets.bottom, 12);
   }
 
   const handleTogglePlayback = () => {

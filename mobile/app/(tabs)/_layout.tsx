@@ -1,239 +1,169 @@
+import React from "react";
 import { Tabs } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { Home, BookOpen, Bookmark, Settings } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { useTheme } from "../../lib/ThemeContext";
 import { useLanguage } from "../../lib/LanguageContext";
-import { Home, BookOpen, Bookmark, Settings } from "lucide-react-native";
-import { Platform, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
-import { BlurView } from "expo-blur";
-import {
-  GlassView,
-  isGlassEffectAPIAvailable,
-  isLiquidGlassAvailable,
-} from "expo-glass-effect";
+import { isLiquidGlassSupported } from "../../hooks/useLiquidGlass";
+import FallbackTabBar, {
+  type FallbackTabBarProps,
+} from "../../components/navigation/FallbackTabBar";
 
-const withOpacity = (hexColor: string, opacity: number) => {
-  const sanitized = hexColor.replace("#", "");
-  const bigint = Number.parseInt(sanitized, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-};
-
-function TabIcon({
-  focused,
-  activeColor,
-  inactiveColor,
-  Icon,
-}: {
-  focused: boolean;
-  activeColor: string;
-  inactiveColor: string;
-  Icon: typeof Home;
-}) {
-  if (focused) {
-    return (
-      <LinearGradient
-        colors={[withOpacity(activeColor, 0.9), activeColor]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          minWidth: 46,
-          height: 32,
-          borderRadius: 16,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon size={20} color="#FFFFFF" strokeWidth={2.7} />
-      </LinearGradient>
-    );
-  }
+function IosLiquidGlassTabs() {
+  const { colors, isDark } = useTheme();
+  const { t, isRTL } = useLanguage();
 
   return (
-    <View
-      style={{
-        minWidth: 46,
-        height: 32,
-        borderRadius: 16,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "transparent",
+    <NativeTabs
+      minimizeBehavior="onScrollDown"
+      tintColor={colors.primary}
+      iconColor={{ default: colors.icon, selected: colors.primary }}
+      labelStyle={{
+        default: {
+          color: colors.icon,
+          fontFamily: isRTL ? "CairoMedium" : "SatoshiMedium",
+          fontSize: 11,
+        },
+        selected: {
+          color: colors.primary,
+          fontFamily: isRTL ? "CairoBold" : "SatoshiBold",
+          fontSize: 11,
+        },
+      }}
+      blurEffect={
+        isDark ? "systemChromeMaterialDark" : "systemChromeMaterialLight"
+      }
+      shadowColor="transparent"
+      disableTransparentOnScrollEdge
+      screenListeners={{
+        tabPress: () => {
+          void Haptics.selectionAsync();
+        },
       }}
     >
-      <Icon size={20} color={inactiveColor} strokeWidth={2.5} />
-    </View>
+      <NativeTabs.Trigger
+        name="index"
+        contentStyle={{ backgroundColor: colors.background }}
+      >
+        <NativeTabs.Trigger.Label>{t("tabs.home")}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "house", selected: "house.fill" }}
+          md="home"
+        />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger
+        name="chapters"
+        contentStyle={{ backgroundColor: colors.background }}
+      >
+        <NativeTabs.Trigger.Label>
+          {t("tabs.chapters")}
+        </NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "book", selected: "book.fill" }}
+          md="menu_book"
+        />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger
+        name="bookmarks"
+        contentStyle={{ backgroundColor: colors.background }}
+      >
+        <NativeTabs.Trigger.Label>
+          {t("tabs.bookmarks")}
+        </NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "bookmark", selected: "bookmark.fill" }}
+          md="bookmark"
+        />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger
+        name="settings"
+        contentStyle={{ backgroundColor: colors.background }}
+      >
+        <NativeTabs.Trigger.Label>
+          {t("tabs.settings")}
+        </NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "gearshape", selected: "gearshape.fill" }}
+          md="settings"
+        />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }
 
-export default function TabLayout() {
-  const { colors, isDark } = useTheme();
-  const { t, isRTL } = useLanguage();
-  const canUseLiquidGlass =
-    Platform.OS === "ios" && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
-
-  const handleTabPress = () => {
-    void Haptics.selectionAsync();
-  };
+function FallbackTabs() {
+  const { colors } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Tabs
+      tabBar={(props) => (
+        <FallbackTabBar {...(props as unknown as FallbackTabBarProps)} />
+      )}
+      screenListeners={{
+        tabPress: () => {
+          void Haptics.selectionAsync();
+        },
+      }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.icon,
-        tabBarHideOnKeyboard: true,
-        tabBarBackground: () => (
-          <View style={{ flex: 1 }}>
-            {Platform.OS === "ios" && canUseLiquidGlass ? (
-              <GlassView
-                style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
-                glassEffectStyle="regular"
-                colorScheme={isDark ? "dark" : "light"}
-                tintColor={withOpacity(colors.primary, isDark ? 0.16 : 0.1)}
-              />
-            ) : null}
-            {Platform.OS === "ios" && !canUseLiquidGlass ? (
-              <BlurView
-                style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
-                tint={isDark ? "dark" : "light"}
-                intensity={58}
-              />
-            ) : null}
-            <LinearGradient
-              colors={
-                Platform.OS === "ios"
-                  ? [
-                      withOpacity(colors.surface, isDark ? 0.36 : 0.46),
-                      withOpacity(colors.primary, isDark ? 0.22 : 0.14),
-                    ]
-                  : [
-                      withOpacity(colors.surface, 0.98),
-                      withOpacity(colors.primary, isDark ? 0.17 : 0.1),
-                    ]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ flex: 1 }}
-            />
-            {Platform.OS === "ios" ? (
-              <LinearGradient
-                colors={[withOpacity("#FFFFFF", isDark ? 0.16 : 0.32), "transparent"]}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={{ position: "absolute", top: 0, right: 0, left: 0, height: 24 }}
-              />
-            ) : null}
-          </View>
-        ),
-        tabBarStyle: {
-          backgroundColor: Platform.OS === "ios" ? "transparent" : colors.surface,
-          borderWidth: 0,
-          borderTopColor:
-            Platform.OS === "ios"
-              ? withOpacity(colors.border, 0.28)
-              : withOpacity(colors.border, 0.7),
-          borderTopWidth: Platform.OS === "ios" ? 0.6 : 1,
-          elevation: 0,
-          shadowColor: "#000000",
-          shadowOpacity: Platform.OS === "ios" ? (isDark ? 0.4 : 0.22) : 0,
-          shadowRadius: Platform.OS === "ios" ? 24 : 0,
-          shadowOffset: { width: 0, height: -8 },
-          height: Platform.OS === "ios" ? 70 : 68,
-          paddingBottom: Platform.OS === "ios" ? 26 : 12,
-          paddingTop: 10,
-          position: Platform.OS === "ios" ? "absolute" : "relative",
-          left: Platform.OS === "ios" ? 12 : 0,
-          right: Platform.OS === "ios" ? 12 : 0,
-          bottom: Platform.OS === "ios" ? 20 : 0,
-          marginHorizontal: Platform.OS === "ios" ? 10 : 0,
-          marginBottom: 0,
-          borderRadius: Platform.OS === "ios" ? 28 : 0,
-          overflow: "hidden",
-        },
-        tabBarLabelStyle: {
-          fontFamily: isRTL ? "CairoMedium" : "SatoshiMedium",
-          fontSize: 12,
-          marginTop: 4,
-        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: t("tabs.home"),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              activeColor={colors.primary}
-              inactiveColor={colors.icon}
-              Icon={Home}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <Home size={size ?? 20} color={color} strokeWidth={2.2} />
           ),
-        }}
-        listeners={{
-          tabPress: handleTabPress,
         }}
       />
       <Tabs.Screen
         name="chapters"
         options={{
           title: t("tabs.chapters"),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              activeColor={colors.primary}
-              inactiveColor={colors.icon}
-              Icon={BookOpen}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <BookOpen size={size ?? 20} color={color} strokeWidth={2.2} />
           ),
-        }}
-        listeners={{
-          tabPress: handleTabPress,
         }}
       />
       <Tabs.Screen
         name="bookmarks"
         options={{
           title: t("tabs.bookmarks"),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              activeColor={colors.primary}
-              inactiveColor={colors.icon}
-              Icon={Bookmark}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <Bookmark size={size ?? 20} color={color} strokeWidth={2.2} />
           ),
-        }}
-        listeners={{
-          tabPress: handleTabPress,
-        }}
-      />
-      <Tabs.Screen
-        name="ai-chat"
-        options={{
-          href: null,
-          tabBarStyle: { display: "none" },
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t("tabs.settings"),
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              activeColor={colors.primary}
-              inactiveColor={colors.icon}
-              Icon={Settings}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <Settings size={size ?? 20} color={color} strokeWidth={2.2} />
           ),
         }}
-        listeners={{
-          tabPress: handleTabPress,
+      />
+      <Tabs.Screen
+        name="ai-chat"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
   );
+}
+
+export default function TabLayout() {
+  if (isLiquidGlassSupported()) {
+    return <IosLiquidGlassTabs />;
+  }
+  return <FallbackTabs />;
 }

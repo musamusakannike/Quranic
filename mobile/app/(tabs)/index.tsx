@@ -616,7 +616,7 @@ export default function Index() {
               title: t("home.aiChat"),
               subtitle: t("home.aiChatSubtitle"),
               icon: Sparkles,
-              path: "/(tabs)/ai-chat" as const,
+              path: "/ai-chat" as const,
               image: require("../../assets/images/quick-actions/ai.jpeg"),
             },
           ]}
