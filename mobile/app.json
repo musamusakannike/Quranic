@@ -121,7 +121,8 @@
           ]
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-widgets"
     ],
     "experiments": {
       "typedRoutes": true,
