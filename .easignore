@@ -1,0 +1,78 @@
+# -----------------------------------------------------------------------------
+# EAS Build Ignore File (.easignore)
+# 
+# EAS CLI uses this file instead of .gitignore to determine which files to upload
+# to EAS Build servers. Excluded files will not be included in the archive.
+# -----------------------------------------------------------------------------
+
+# Monorepo packages & non-mobile projects
+/frontend/
+/server/
+/assets/
+/.agents/
+/.vscode/
+/.windsurf/
+/.kiro/
+/LICENSE
+/skills-lock.json
+/*.md
+
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+
+# Expo & Web builds
+.expo/
+*/.expo/
+dist/
+*/dist/
+web-build/
+*/web-build/
+expo-env.d.ts
+*/expo-env.d.ts
+.metro-health-check*
+
+# Native build folders & artifacts
+/mobile/ios/
+/mobile/android/
+ios/
+android/
+.kotlin/
+*/.kotlin/
+*.orig.*
+*.tsbuildinfo
+
+# Credentials & secrets
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+.env*.local
+.env
+.env*
+google-services.json
+GoogleService-Info.plist
+
+# Mobile non-build documentation & AI configs
+/mobile/agent-docs/
+/mobile/.agents/
+/mobile/.claude/
+/mobile/.vscode/
+/mobile/scripts/
+/mobile/images/
+/mobile/*.md
+/mobile/docs/*.md
+
+# Ensure critical mobile data files are retained
+!/mobile/docs/*.json
+
+# System & IDE files
+.DS_Store
+*/.DS_Store
+*.log

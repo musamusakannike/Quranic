@@ -1,0 +1,54 @@
+# -----------------------------------------------------------------------------
+# EAS Build Ignore File (.easignore) for mobile
+# -----------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+
+# Expo & Web builds
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Native build folders & artifacts
+ios/
+android/
+.kotlin/
+*.orig.*
+*.tsbuildinfo
+
+# Credentials & secrets
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+.env*.local
+.env
+.env*
+google-services.json
+GoogleService-Info.plist
+
+# Non-build documentation, scripts, and AI configs
+agent-docs/
+.agents/
+.claude/
+.vscode/
+scripts/
+images/
+*.md
+docs/*.md
+
+# Ensure critical data files are retained
+!docs/*.json
+
+# System & IDE files
+.DS_Store
+*.log
