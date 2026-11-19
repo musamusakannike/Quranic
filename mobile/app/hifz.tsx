@@ -563,7 +563,7 @@ function LoopTab({
               {t("hifz.repetitions")}
             </Text>
             <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-              {[2, 3, 5, 7, 10, 15, 20].map((n) => (
+              {[1, 2, 3, 5, 7, 10, 15, 20].map((n) => (
                 <Pressable
                   key={n}
                   onPress={() => {
