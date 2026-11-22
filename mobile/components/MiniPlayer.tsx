@@ -35,7 +35,7 @@ export default function MiniPlayer() {
 
   // Hide it if we are on the full player screen
   const isAudioStack = segments[0] === "audio";
-  const isFullPlayer = isAudioStack && segments.length === 3; // e.g., ["audio", "[reciterId]", "[surahId]"]
+  const isFullPlayer = isAudioStack && (segments as string[]).length === 3; // e.g., ["audio", "[reciterId]", "[surahId]"]
 
   const isTabs = segments[0] === "(tabs)";
 

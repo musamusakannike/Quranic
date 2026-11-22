@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import { X, Share2 } from "lucide-react-native";
-import ViewShot from "react-native-view-shot";
+import ViewShot, { ViewShotRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -47,7 +47,7 @@ export default function ShareVerseModal({
   translationFontSize,
 }: ShareVerseModalProps) {
   const { colors, isDark } = useTheme();
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShotRef>(null);
   const [isSharing, setIsSharing] = useState(false);
 
   if (!verse) return null;
