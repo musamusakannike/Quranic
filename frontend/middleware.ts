@@ -81,10 +81,11 @@ export const config = {
   matcher: [
     /*
      * Match only the root path and skip:
+     * - api (API route handlers)
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, images, etc.
      */
-    "/((?!_next/static|_next/image|favicon.ico|images|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|images|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)).*)",
   ],
 };
