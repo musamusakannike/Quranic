@@ -611,14 +611,14 @@ export default function Index() {
               path: "/hifz" as const,
               image: require("../../assets/images/quick-actions/hifz.webp"),
             },
-            {
-              id: "ai-chat",
-              title: t("home.aiChat"),
-              subtitle: t("home.aiChatSubtitle"),
-              icon: Sparkles,
-              path: "/ai-chat" as const,
-              image: require("../../assets/images/quick-actions/ai.jpeg"),
-            },
+            // {
+            //   id: "ai-chat",
+            //   title: t("home.aiChat"),
+            //   subtitle: t("home.aiChatSubtitle"),
+            //   icon: Sparkles,
+            //   path: "/ai-chat" as const,
+            //   image: require("../../assets/images/quick-actions/ai.jpeg"),
+            // },
           ]}
           key={quickActionsView}
           keyExtractor={(item) => item.id}
