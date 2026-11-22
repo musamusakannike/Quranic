@@ -268,7 +268,7 @@ export default function AIChatScreen() {
   const fonts = useAppFonts();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const [session, setSession] = useState<ChatSession>(createNewSession);
   const [inputText, setInputText] = useState("");
@@ -574,7 +574,7 @@ export default function AIChatScreen() {
                 onVersePress={handleVersePress}
               />
             )}
-            ListFooterComponent={isLoading ? <TypingIndicator colors={colors} /> : null}
+            ListFooterComponent={isLoading ? <TypingIndicator colors={colors} /> : undefined}
           />
         )}
 

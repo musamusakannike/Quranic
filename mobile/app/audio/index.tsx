@@ -483,9 +483,13 @@ export default function AudioRecitersScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlashList
+        <FlashList<Reciter | VerseByVerseReciter>
           data={listData}
-          renderItem={isVerseMode ? renderVerseItem : renderChapterItem}
+          renderItem={({ item, index }) =>
+            isVerseMode
+              ? renderVerseItem({ item: item as VerseByVerseReciter, index })
+              : renderChapterItem({ item: item as Reciter, index })
+          }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}

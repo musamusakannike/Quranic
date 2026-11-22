@@ -39,7 +39,7 @@ export default function GlobalSearchScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   useEffect(() => {
     // Focus automatically when screen mounts
