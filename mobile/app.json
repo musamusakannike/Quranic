@@ -3,7 +3,7 @@
     "name": "Quranic",
     "slug": "Quranic",
     "owner": "codiac-org",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quranic",
@@ -14,7 +14,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "25"
+      "buildNumber": "27"
     },
     "android": {
       "adaptiveIcon": {
