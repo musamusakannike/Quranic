@@ -73,6 +73,7 @@ GoogleService-Info.plist
 !/mobile/docs/*.json
 
 # System & IDE files
+.git/
 .DS_Store
 */.DS_Store
 *.log
