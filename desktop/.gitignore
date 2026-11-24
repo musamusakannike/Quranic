@@ -7,3 +7,4 @@ test-results
 playwright-report
 dist-artifacts
 tsconfig.tsbuildinfo
+src-tauri/gen
