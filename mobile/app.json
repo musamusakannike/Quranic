@@ -122,7 +122,8 @@
         }
       ],
       "expo-status-bar",
-      "expo-widgets"
+      "expo-widgets",
+      "./plugins/withOptionalHardwareFeatures"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://quranic.app/sitemap.xml
+Sitemap: https://quranic.codiac.online/sitemap.xml

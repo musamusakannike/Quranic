@@ -140,7 +140,7 @@ export async function sendMessage(
     headers: {
       Authorization: `Bearer ${OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://quranic.app",
+      "HTTP-Referer": "https://quranic.codiac.online",
       "X-Title": "Quranic App",
     },
     body: JSON.stringify(body),

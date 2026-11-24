@@ -146,7 +146,7 @@ export default function PrivacyPolicy() {
               <Section 
                 icon={<Mail size={20} />} 
                 title="6. Contact Us"
-                content="If you have any questions or concerns about our Privacy Policy or data practices, please contact us at support@quranic.app."
+                content="If you have any questions or concerns about our Privacy Policy or data practices, please contact us at support@codiac.online."
               />
             </div>
 
