@@ -5,3 +5,5 @@ src-tauri/target
 .DS_Store
 test-results
 playwright-report
+dist-artifacts
+tsconfig.tsbuildinfo
