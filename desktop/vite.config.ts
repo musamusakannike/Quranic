@@ -28,6 +28,9 @@ export default defineConfig({
       ignored: ["**/src-tauri/**"],
     },
   },
+  worker: {
+    format: "es",
+  },
   build: {
     target: ["es2022", "chrome105", "safari15"],
     minify: "esbuild",
