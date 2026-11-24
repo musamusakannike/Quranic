@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("../assets/fonts/Satoshi-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("../assets/fonts/Satoshi-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("../assets/fonts/Satoshi-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-latin);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  html[lang="ar"],
+  html[lang="ar"] body {
+    font-family: var(--font-arabic-ui);
+  }
+
+  /* Focus ring standard */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-hover);
+    outline-offset: 2px;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Subtle native-like scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+  }
+}
+
+.font-quran {
+  font-family: var(--font-quran);
+  line-height: 2.15;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+.font-arabic-ui {
+  font-family: var(--font-arabic-ui);
+}
+
+/* Verse flash animation when deep-linking / jumping to a verse */
+@keyframes verse-flash {
+  0% {
+    background-color: var(--color-accent-tint);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.verse-flash {
+  animation: verse-flash 1.4s ease-out;
+}
+
+/* Circled verse end marker (cross-webview safe, no U+06DD reliance) */
+.verse-end-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55em;
+  height: 1.55em;
+  padding-inline: 0.25em;
+  margin-inline-start: 0.35em;
+  border: 1.25px solid var(--color-accent);
+  border-radius: 999px;
+  font-family: var(--font-arabic-ui);
+  font-size: 0.44em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-accent-text);
+  vertical-align: middle;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --color-primary-tint: var(--color-surface-2);
+    --color-accent-tint: var(--color-surface-2);
+  }
+}

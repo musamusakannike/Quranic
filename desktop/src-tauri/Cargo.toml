@@ -1,0 +1,43 @@
+[package]
+name = "quranic-desktop"
+version = "1.0.0"
+description = "Quranic Desktop — Fast, offline-first Quran reader, audio, prayer times, and Hifz suite"
+authors = ["Musa Musa Kannike"]
+license = "MIT"
+repository = "https://github.com/musamusakannike/Quranic"
+edition = "2021"
+
+[lib]
+name = "quranic_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "protocol-asset", "image-png"] }
+tauri-plugin-notification = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-os = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+tokio = { version = "1", features = ["fs", "io-util", "sync", "time", "macros", "rt-multi-thread"] }
+futures-util = "0.3"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
